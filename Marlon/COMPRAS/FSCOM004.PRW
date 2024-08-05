@@ -103,7 +103,7 @@ Static Function AlteraDt()
 		If SC7->(DBSeek(xFilial("SC7")+cGet1+cGet5)) //Localiza registro na SC7 para alterar data de entrega
 
 			RecLock('SC7', .F.) //altera data de entrega
-			SC7->C7_XDTPRF := cNovaDt
+			SC7->C7_XDTPRF := cNovaDt //campo customizado 
 			SC7->(MsUnlock())
 
 		EndIF

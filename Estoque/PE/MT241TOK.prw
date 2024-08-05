@@ -54,11 +54,11 @@ User Function MT241TOK()
 
 	Next nX
 
-	If lValidUser
+	If lValidUser//se variável for verdadeira, apresenta alerta
 		FWAlertInfo("Usuário não autorizado à movimentar TM selecionada","Atenção!!!")
 	EndIf
 
-	If lValidOs
+	If lValidOs//se variável for verdadeira, apresenta alerta
 		FWAlertInfo("Preencher campo da OS","Atenção!!!")
 	EndIf
 
