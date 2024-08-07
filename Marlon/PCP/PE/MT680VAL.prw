@@ -94,7 +94,7 @@ User Function MT680VAL()
 
 	If  nTotal1 > 0
 		nValid += nTotal1
-		cMensagem += '<b>'+cValtochar(nTotal1)+'</b> Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!' +CHR(13)
+		cMensagem += '<font color="red"><b>'+cValtochar(nTotal1)+'</b></font> Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!' +CHR(13)
 	EndIf
 
 	TSCP->(DbCloseArea())
@@ -116,7 +116,7 @@ User Function MT680VAL()
 
 	If  nTotal2 > 0
 		nValid += nTotal2
-		cMensagem += 'Ordem de Produção possui <b>'+cValtochar(nTotal2)+'</b> empenhos em aberto ou Parcialmente Baixado!!!' 
+		cMensagem += 'Ordem de Produção possui <font color="red"><b>'+cValtochar(nTotal2)+'</b></font> empenhos em aberto ou Parcialmente Baixado!!!' 
 	EndIf
 
 	TSD4->(DbCloseArea())
