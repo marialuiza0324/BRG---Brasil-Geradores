@@ -24,10 +24,14 @@ Caso for utilizada a rotina automática do MATA241 - Movimentação Interna, pelo p
 @version 0.0001
 @example
 (examples)
-@see (
-    https://tdn.totvs.com/pages/releaseview.action?pageId=330837624
 )
 /*/
+
+/*Ajuste 07/08/2024 - Autora: Maria Luiza - Solicitante: Bruno Martins 
+- se houver pendência de baixa de produtos não pode ser permitido apontamento;
+- em caso de devolução de produto (via movimentação múltipla), o produto só 
+deve ser movimentado após confirmação de que ele realmente está dentro da OP.*/
+
 User Function MT680VAL()
 
 	Local lRet      := .T.
@@ -37,6 +41,14 @@ User Function MT680VAL()
 	Local cMotor    := Alltrim(M->H6_XMOTOR)
 	Local cLoteCtl  := Posicione('SB1', 1, FWxFilial('SB1') + M->H6_PRODUTO, 'B1_RASTRO')
 	Local cLote     := M->H6_LOTECTL
+	Local cOp       := Alltrim(M->H6_OP)
+	Local cQuery    := ""
+	Local cQry      := ""
+	Local cMensagem := ""
+	Local nTotal1   := 0
+	Local nTotal2   := 0
+	Local nValid    := 0
+
 
 	While  cOper == 'M1'
 
@@ -63,10 +75,65 @@ User Function MT680VAL()
 		Endif
 	EndDo
 
+	If Select("TSCP") > 0
+		TSCP->(dbCloseArea())
+	EndIf
+
+	cQuery := "SELECT COUNT(CP_FILIAL) AS TOTAL_SA FROM SCP010 SCP "
+	cQuery += "WHERE SCP.D_E_L_E_T_ <> '*' "
+	cQuery += "AND SCP.CP_PREREQU = 'S' "
+	cQuery += "AND SCP.CP_STATUS <> 'E' "
+	cQuery += "AND SCP.CP_QUANT <> SCP.CP_QUJE "
+	cQuery += "AND SCP.CP_OP = '"+cOp+"' "
+
+	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSCP",.T.,.T.)
+
+	DbSelectArea("TSCP") //query retorna se existe título na SE2 com chave informada
+
+	nTotal1 := TSCP->TOTAL_SA
+
+	If  nTotal1 > 0
+		nValid += nTotal1
+		cMensagem += '<b>'+cValtochar(nTotal1)+'</b> Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!' +CHR(13)
+	EndIf
+
+	TSCP->(DbCloseArea())
+
+	If Select("TSD4") > 0
+		TSD4->(dbCloseArea())
+	EndIf
+
+	cQry := "SELECT COUNT(D4_FILIAL) AS TOTAL FROM SD4010 SD4 "
+	cQry += "WHERE SD4.D_E_L_E_T_ <> '*' "
+	cQry += "AND SD4.D4_OP = '"+cOp+"' "
+	cQry += "AND SD4.D4_QUANT > 0 "
+
+	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TSD4",.T.,.T.)
+
+	DbSelectArea("TSD4") //query retorna se existe título na SE2 com chave informada
+
+	nTotal2 := TSD4->TOTAL
+
+	If  nTotal2 > 0
+		nValid += nTotal2
+		cMensagem += 'Ordem de Produção possui <b>'+cValtochar(nTotal2)+'</b> empenhos em aberto ou Parcialmente Baixado!!!' 
+	EndIf
+
+	TSD4->(DbCloseArea())
+
+
+	If nValid > 0
+		FWAlertInfo(cMensagem,"Atenção!!!")
+		lRet := .F.
+	ELSE
+		lRet := .T.
+	EndIf
+
+
 
 Return lRet
 
-User Function ValidaLote()  
+User Function ValidaLote()
 
 	Local cProduto  := M->H6_PRODUTO
 	Local cLote    := M->H6_LOTECTL
@@ -85,8 +152,7 @@ User Function ValidaLote()
 Return
 
 /*
-Validar apontamento de OP (Testando envio de informações simultaneas com a Maria)
+Validar apontamento de OP (Testando envio de informações simultaneas com a Maria) Teste
 */
-
 
 
