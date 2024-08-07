@@ -85,7 +85,7 @@ User Function ValidaLote()
 Return
 
 /*
-Validar apontamento de OP
+Validar apontamento  
 */
 
 
