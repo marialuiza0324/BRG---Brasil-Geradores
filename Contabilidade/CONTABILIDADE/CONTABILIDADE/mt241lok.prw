@@ -40,9 +40,8 @@ user function MT241LOK()
 			_lok := .F.//não permite salvar
 		EndIf
 	ElseIf SF5->F5_XOS == "N" .AND. !Empty(_Os) //se TM não movimentar estoque, não permite preencher o campo se OS
-		FWAlertInfo("Campo da OS não pode ser preenchido pois TM não movimenta estoque","Atenção!!!")
+		FWAlertInfo("Campo da OS não pode ser preenchido pois TM não movimenta estoque para operação selecionada","Atenção!!!")
 		_lok := .F.//não permite salvar
 	EndIf
-
 
 return(_lok)
