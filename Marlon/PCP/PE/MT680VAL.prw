@@ -84,5 +84,9 @@ User Function ValidaLote()
 	EndIf
 Return
 
+/*
+Validar apontamento de OP
+*/
+
 
 
