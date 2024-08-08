@@ -48,6 +48,7 @@ User Function MT680VAL()
 	Local nTotal1   := 0
 	Local nTotal2   := 0
 	Local nValid    := 0
+	Local lValida   := .F.
 
 
 	While  cOper == 'M1'
@@ -66,8 +67,7 @@ User Function MT680VAL()
 	While cOper == "Z1"
 
 		if Empty(cLote) .AND. cLoteCtl ==  "L"
-			FWAlertInfo("Preencher o campo LOTE, pois produto possui restreabilidade.","Atenção!")
-			lRet := .F.
+		lValida := .T.
 			Exit
 		Else
 			lRet := .T.
@@ -116,20 +116,24 @@ User Function MT680VAL()
 
 	If  nTotal2 > 0
 		nValid += nTotal2
-		cMensagem += 'Ordem de Produção possui <font color="red"><b>'+cValtochar(nTotal2)+'</b></font> empenhos em aberto ou Parcialmente Baixado!!!' 
+		cMensagem += 'Ordem de Produção possui <font color="red"><b>'+cValtochar(nTotal2)+'</b></font> empenhos em aberto ou Parcialmente Baixado!!!' +CHR(13)
 	EndIf
 
 	TSD4->(DbCloseArea())
 
 
-	If nValid > 0
-		FWAlertInfo(cMensagem,"Atenção!!!")
+	If nValid > 0 
 		lRet := .F.
-	ELSE
-		lRet := .T.
 	EndIf
 
+	if lValida = .T. 
+	cMensagem += 'Preencher o campo LOTE, pois produto possui restreabilidade.'
+	lRet := .F.
+	EndIf
 
+	If cMensagem <> ""
+		FWAlertInfo(cMensagem,"Atenção!!!")
+	EndIf
 
 Return lRet
 
