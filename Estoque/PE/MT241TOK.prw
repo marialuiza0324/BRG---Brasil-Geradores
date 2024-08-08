@@ -29,8 +29,8 @@ User Function MT241TOK()
 	Local n         := 1
 	Local cRastro   := ""
 	Local nX        := 0
-	Local lValidUser := .F.
-	Local lValidOs   := .F.
+	Local cLoteCtl  := ""
+
 
 	_cod  := Acols[n,cCod]
 	_lote := Acols[n,cLote]
@@ -38,29 +38,29 @@ User Function MT241TOK()
 	_Os   := Acols[n,nOstec]
 	_local:= Acols[n,cLocal]
 
-	For nX := 1 To Len(ACOLS) //valida todas as linhas
 
-		If _Tm $ _MovTm //verifica se TM está contida no parâmetro
-			If !(cUserid $ cUser) //verifica se usuário está contido no parâmetro
-				lValidUser := .T. //alimenta variável para informar ou não alerta em tela
-				lRet := .F.//não permite salvar
-			EndIf
-		ElseIf SF5->F5_XOS == "S" //verifica se TM movimenta estoque
-			If Empty(Acols[nX][9]) //se movimentar, verifica se o campo de OS esta vazio
-				lValidOs := .T. //alimenta variável para informar ou não alerta em tela
-				lRet := .F.//não permite salvar
-			EndIf
+	If _Tm $ _MovTm //verifica se TM está contida no parâmetro
+		If !(cUserid $ cUser) //verifica se usuário está contido no parâmetro
+			FWAlertInfo("Usuário não autorizado à movimentar TM selecionada","Atenção!!!")
+			lRet := .F.//não permite salvar
 		EndIf
+	ElseIf SF5->F5_XOS == "S" //verifica se TM movimenta estoque
+		If Empty(Acols[nX][9]) //se movimentar, verifica se o campo de OS esta vazio
+			FWAlertInfo("Preencher campo da OS","Atenção!!!")
+			lRet := .F.//não permite salvar
+		EndIf
+	EndIf 
 
-	Next nX
+	cLoteCtl  := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_RASTRO')
 
-	If lValidUser//se variável for verdadeira, apresenta alerta
-		FWAlertInfo("Usuário não autorizado à movimentar TM selecionada","Atenção!!!")
+	If SF5->F5_QTDZERO == "2" .AND. cLoteCtl ==  "L"//Valida se produto possiu rastro
+		If Empty(_lote) //valida se campo de lote esta vazio
+			FWAlertInfo("Preencher o campo LOTE, pois produto possui restreabilidade","Atenção!!")
+			lRet := .F.//não permite salvar
+		EndIf
 	EndIf
 
-	If lValidOs//se variável for verdadeira, apresenta alerta
-		FWAlertInfo("Preencher campo da OS","Atenção!!!")
-	EndIf
+	
 
 	/*If cFilAnt $ "0101/0901"    //000041 - Guilherme engenharia    //000049 - Guilherme BRG
 		IF !(__CUSERID $ "000000/000031/000049/000004/000120/000150")
