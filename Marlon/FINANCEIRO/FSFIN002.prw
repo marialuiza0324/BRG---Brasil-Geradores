@@ -4,7 +4,7 @@
 #INCLUDE "TBICONN.CH"
 
 
-/*/{Protheus.doc} FSCOM004
+/*/{Protheus.doc} FSFIN002
     (Função para verificar título 
     existente, excluir e gerar novo com 
     nova data de vencimento)
