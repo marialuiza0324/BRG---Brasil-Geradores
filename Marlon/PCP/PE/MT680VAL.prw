@@ -143,7 +143,7 @@ User Function ValidaLote()
 	SB8->(DbSetOrder(5))
 	SB8->(DbGoTop())
 
-	If SB8->(MsSeek(FWxFilial("SB8")+ cProduto + clote))
+	If SB8->(MsSeek(FWxFilial("SB8")+ cProduto + clote)) .AND. SB8->B8_SALDO > 0 //Valida se lote cadastrado na SB8 possui saldo 
 		FWAlertInfo("Lote já cadastrado na tabela de saldos","Atenção!")
 		Return .F.
 	Else
