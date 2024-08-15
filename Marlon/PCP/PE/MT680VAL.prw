@@ -129,8 +129,6 @@ User Function MT680VAL()
 		lRet := .T.
 	EndIf
 
-
-
 Return lRet
 
 User Function ValidaLote()
