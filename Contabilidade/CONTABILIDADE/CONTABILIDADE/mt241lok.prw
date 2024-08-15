@@ -24,8 +24,13 @@ user function MT241LOK()
 	local _lok:=.t.
 	Local nPosOP := aScan(aHeader,{|x| AllTrim(x[2])=="D3_OP"})
 	Local nOstec    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_OSTEC"})
+	Local cLote     := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOTECTL"})
+	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
+	Local cLoteCtl  := ""
 
 	_Os   := Acols[n,nOstec]
+	_lote := Acols[n,cLote]
+	_cod  := Acols[n,cCod]
 
 	if empty(aCols[n,nPosOP]) .or. 'OS'$aCols[n,nPosOP]
 		if empty(cCc)
@@ -42,6 +47,15 @@ user function MT241LOK()
 	ElseIf SF5->F5_XOS == "N" .AND. !Empty(_Os) //se TM não movimentar estoque, não permite preencher o campo se OS
 		FWAlertInfo("Campo da OS não pode ser preenchido pois TM não movimenta estoque para operação selecionada","Atenção!!!")
 		_lok := .F.//não permite salvar
+	EndIf
+
+	cLoteCtl  := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_RASTRO')
+
+	If SF5->F5_QTDZERO == "2" .AND. cLoteCtl ==  "L"//Valida se produto possiu rastro
+		If Empty(_lote) //valida se campo de lote esta vazio
+			FWAlertInfo("Preencher o campo LOTE, pois produto possui restreabilidade","Atenção!!")
+			_lok := .F.//não permite salvar
+		EndIf
 	EndIf
 
 return(_lok)

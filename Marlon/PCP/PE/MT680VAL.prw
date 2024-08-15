@@ -48,6 +48,7 @@ User Function MT680VAL()
 	Local nTotal1   := 0
 	Local nTotal2   := 0
 	Local nValid    := 0
+	Local lValida   := .F.
 
 
 	While  cOper == 'M1'
@@ -63,70 +64,71 @@ User Function MT680VAL()
 
 	EndDo
 
-	While cOper == "Z1"
+	If cOper == "Z1"
 
-		if Empty(cLote) .AND. cLoteCtl ==  "L"
-			FWAlertInfo("Preencher o campo LOTE, pois produto possui restreabilidade.","Atenção!")
+			if Empty(cLote) .AND. cLoteCtl ==  "L"
+			    lValida := .T.
+			Endif
+
+		If Select("TSCP") > 0
+			TSCP->(dbCloseArea())
+		EndIf
+
+		cQuery := "SELECT COUNT(CP_FILIAL) AS TOTAL_SA FROM SCP010 SCP "
+		cQuery += "WHERE SCP.D_E_L_E_T_ <> '*' "
+		cQuery += "AND SCP.CP_PREREQU = 'S' "
+		cQuery += "AND SCP.CP_STATUS <> 'E' "
+		cQuery += "AND SCP.CP_QUANT <> SCP.CP_QUJE "
+		cQuery += "AND SCP.CP_OP = '"+cOp+"' "
+
+		DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSCP",.T.,.T.)
+
+		DbSelectArea("TSCP") 
+
+		nTotal1 := TSCP->TOTAL_SA
+
+		If  nTotal1 > 0
+			nValid += nTotal1
+			cMensagem += '<font color="red"><b>'+cValtochar(nTotal1)+'</b></font> Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!' +CHR(13)
+		EndIf
+
+		TSCP->(DbCloseArea())
+
+		If Select("TSD4") > 0
+			TSD4->(dbCloseArea())
+		EndIf
+
+		cQry := "SELECT COUNT(D4_FILIAL) AS TOTAL FROM SD4010 SD4 "
+		cQry += "WHERE SD4.D_E_L_E_T_ <> '*' "
+		cQry += "AND SD4.D4_OP = '"+cOp+"' "
+		cQry += "AND SD4.D4_QUANT > 0 "
+
+		DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TSD4",.T.,.T.)
+
+		DbSelectArea("TSD4") 
+
+		nTotal2 := TSD4->TOTAL
+
+		If  nTotal2 > 0
+			nValid += nTotal2
+			cMensagem += 'Ordem de Produção possui <font color="red"><b>'+cValtochar(nTotal2)+'</b></font> empenhos em aberto ou Parcialmente Baixado!!!' +CHR(13)
+		EndIf
+
+		TSD4->(DbCloseArea())
+
+
+		If nValid > 0 
 			lRet := .F.
-			Exit
-		Else
-			lRet := .T.
-			Exit
-		Endif
-	EndDo
+		EndIf
 
-	If Select("TSCP") > 0
-		TSCP->(dbCloseArea())
-	EndIf
-
-	cQuery := "SELECT COUNT(CP_FILIAL) AS TOTAL_SA FROM SCP010 SCP "
-	cQuery += "WHERE SCP.D_E_L_E_T_ <> '*' "
-	cQuery += "AND SCP.CP_PREREQU = 'S' "
-	cQuery += "AND SCP.CP_STATUS <> 'E' "
-	cQuery += "AND SCP.CP_QUANT <> SCP.CP_QUJE "
-	cQuery += "AND SCP.CP_OP = '"+cOp+"' "
-
-	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSCP",.T.,.T.)
-
-	DbSelectArea("TSCP") //query retorna se existe título na SE2 com chave informada
-
-	nTotal1 := TSCP->TOTAL_SA
-
-	If  nTotal1 > 0
-		nValid += nTotal1
-		cMensagem += '<font color="red"><b>'+cValtochar(nTotal1)+'</b></font> Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!' +CHR(13)
-	EndIf
-
-	TSCP->(DbCloseArea())
-
-	If Select("TSD4") > 0
-		TSD4->(dbCloseArea())
-	EndIf
-
-	cQry := "SELECT COUNT(D4_FILIAL) AS TOTAL FROM SD4010 SD4 "
-	cQry += "WHERE SD4.D_E_L_E_T_ <> '*' "
-	cQry += "AND SD4.D4_OP = '"+cOp+"' "
-	cQry += "AND SD4.D4_QUANT > 0 "
-
-	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TSD4",.T.,.T.)
-
-	DbSelectArea("TSD4") //query retorna se existe título na SE2 com chave informada
-
-	nTotal2 := TSD4->TOTAL
-
-	If  nTotal2 > 0
-		nValid += nTotal2
-		cMensagem += 'Ordem de Produção possui <font color="red"><b>'+cValtochar(nTotal2)+'</b></font> empenhos em aberto ou Parcialmente Baixado!!!' 
-	EndIf
-
-	TSD4->(DbCloseArea())
-
-
-	If nValid > 0
-		FWAlertInfo(cMensagem,"Atenção!!!")
+		if lValida = .T. 
+		cMensagem += 'Preencher o campo LOTE, pois produto possui restreabilidade.'
 		lRet := .F.
-	ELSE
-		lRet := .T.
+		EndIf
+
+		If cMensagem <> ""
+			FWAlertInfo(cMensagem,"Atenção!!!")
+		EndIf
 	EndIf
 
 Return lRet
@@ -141,7 +143,7 @@ User Function ValidaLote()
 	SB8->(DbSetOrder(5))
 	SB8->(DbGoTop())
 
-	If SB8->(MsSeek(FWxFilial("SB8")+ cProduto + clote))
+	If SB8->(MsSeek(FWxFilial("SB8")+ cProduto + clote)) .AND. SB8->B8_SALDO > 0 //Valida se lote cadastrado na SB8 possui saldo 
 		FWAlertInfo("Lote já cadastrado na tabela de saldos","Atenção!")
 		Return .F.
 	Else
