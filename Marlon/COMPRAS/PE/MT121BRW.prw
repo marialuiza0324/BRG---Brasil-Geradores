@@ -8,8 +8,7 @@ Coloca Rotina de Aprovar Pedido de Compra
 @version 1.0
 */
 User Function MT121BRW()
-	aAdd(aRotina, {"Aprov/Estornar Pedido", "U_Aprovar()", 0, 7, 0, Nil})
-	aAdd(aRotina, {"Altera Vencimento", "U_FSCOM001()", 0, 7, 0, Nil})
+	
 	aAdd(aRotina, {"Altera Data de Entrega", "U_FSCOM004()", 0, 7, 0, Nil})
 
 Return
