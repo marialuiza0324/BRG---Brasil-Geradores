@@ -34,7 +34,7 @@ User Function FSCOM004()
 	Private cGet3 := CtoD("  /  /  ") //Nova Data de Entrega
 	Private cGet4 := Space(210) //Justificativa da alteração
 	Private cGet5 := SC7->C7_ITEM //Item do pedido
-	Private cGet6 := SC7->C7_DATPRF //Data de entrega permanente 
+	Private cGet6 := SC7->C7_DATPRF //Data de entrega permanente
 
 	/*
 	DT LEAD TIME - NAO ALTERA
@@ -85,7 +85,7 @@ Static Function AlteraDt()
 		FWAlertInfo("Preencha a justificativa para alteração da data do pedido","Atenção!!!")
 		lRet := .F.
 
-		ElseIf Len(Alltrim(cGet4)) < 30 //valida se justificativa tem menos de 30 caracteres
+	ElseIf Len(Alltrim(cGet4)) < 30 //valida se justificativa tem menos de 30 caracteres
 
 		FWAlertInfo("Justificativa deve conter mais informações.","Atenção!!!")
 		lRet := .F.
@@ -102,12 +102,11 @@ Static Function AlteraDt()
 
 		If SC7->(DBSeek(xFilial("SC7")+cGet1+cGet5)) //Localiza registro na SC7 para alterar data de entrega
 
-			RecLock('SC7', .F.) //altera data de entrega
-			SC7->C7_XDTPRF := cNovaDt //campo customizado 
-			SC7->(MsUnlock())
+				RecLock("SC7", .F.) 
+				SC7->C7_XDTPRF := cNovaDt //campo customizado
+				SC7->(MsUnlock())
 
-		EndIF
-
+		EndIf
 		SC7->(DbCloseArea())
 
 		RecLock('Z11', .T.) //grava os dados de log na tabela auxiliar
