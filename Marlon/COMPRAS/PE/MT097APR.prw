@@ -72,7 +72,7 @@ User Function MT097APR()
 		aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)
 
 		For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
-			_Venc  := aParc[i,1] //vencimento
+			_Venc  := Lastday(aParc[i,1],3)//vencimento
 			_Total := aParc[i,2] //valor da parcela
 			_Parc  := cvaltochar(i) //Nº da parcela
 

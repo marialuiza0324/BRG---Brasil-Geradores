@@ -35,6 +35,7 @@ User Function FSFIN002()
 	Private lMsErroAuto := .F.
 	Private cNumPC  := ""
 	Private cItemPc := ""
+	Private dDataVld := ''
 
 	cNumPC  := cGet1 //SC7->C7_NUM
 	cItemPc := cGet5 //SC7->C7_ITEM
@@ -68,6 +69,7 @@ User Function FSFIN002()
 
 	EndIf
 
+
 	_Lj     := TSC7->C7_LOJA
 	_Forn   := AllTrim(TSC7->C7_FORNECE)
 	cCond   := TSC7->C7_COND //Condição de pagamento
@@ -77,7 +79,7 @@ User Function FSFIN002()
 	TSC7->(DbCloseArea())
 
 	For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
-		_Venc  := aParc[i,1] //vencimento
+		_Venc  := Lastday(aParc[i,1],3) //vencimento
 		_Total := aParc[i,2] //valor da parcela
 		_Parc  := cvaltochar(i) //Nº da parcela
 
