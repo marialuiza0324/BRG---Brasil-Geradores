@@ -33,13 +33,13 @@ user function MT241LOK()
 	_cod  := Acols[n,cCod]
 
 	if empty(aCols[n,nPosOP]) .or. 'OS'$aCols[n,nPosOP]
-		if empty(cCc)
+		if empty(cCc)    
 			_lok:=.f.
 			FWAlertInfo("MT241LOK: Para este tipo de movimento o centro de custo deve ser informado!")
 		endif
 	endif
 
-	If SF5->F5_XOS == "S" //valida se TM movimenta estoque
+	If SF5->F5_XOS == "S" .AND. FunName() <> "MATA185" //valida se TM movimenta estoque e na rotina de baixa, não verifica campo da OS
 		If Empty(_Os) //se movimentar, verifica se o campo de OS esta vazio
 			FWAlertInfo("Preencher campo da OS","Atenção!!!")
 			_lok := .F.//não permite salvar

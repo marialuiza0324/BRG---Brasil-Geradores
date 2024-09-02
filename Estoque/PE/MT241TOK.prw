@@ -28,7 +28,6 @@ User Function MT241TOK()
 	Local _Os       := ""
 	Local n         := 1
 	Local cRastro   := ""
-	Local nX        := 0
 	Local cLoteCtl  := ""
 
 
@@ -44,8 +43,8 @@ User Function MT241TOK()
 			FWAlertInfo("Usuário não autorizado à movimentar TM selecionada","Atenção!!!")
 			lRet := .F.//não permite salvar
 		EndIf
-	ElseIf SF5->F5_XOS == "S" //verifica se TM movimenta estoque
-		If Empty(Acols[nX][9]) //se movimentar, verifica se o campo de OS esta vazio
+	ElseIf SF5->F5_XOS == "S" .AND. FunName() <> "MATA185" //verifica se TM movimenta estoque e na rotina de baixa, não verifica campo da OS
+		If Empty(_Os) //se movimentar, verifica se o campo de OS esta vazio
 			FWAlertInfo("Preencher campo da OS","Atenção!!!")
 			lRet := .F.//não permite salvar
 		EndIf
