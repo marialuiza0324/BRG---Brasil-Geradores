@@ -66,11 +66,11 @@ pergunte(cPerg,.T.)    // sem tela de pergunta
 
 //³Define Tamanho do Papel                                                  ³
 
-//#define DMPAPER_A4 9 //Papel A4
-//oPrint:setPaperSize( DMPAPER_A4 )
+#define DMPAPER_A4 9 //Papel A4
+oPrint:setPaperSize( DMPAPER_A4 )
 
-oPrint:SetPortrait()///Define a orientacao da impressao como retrato
-//oPrint:SetLandscape() ///Define a orientacao da impressao como paisagem
+//oPrint:SetPortrait()///Define a orientacao da impressao como retrato
+oPrint:SetLandscape() ///Define a orientacao da impressao como paisagem
 //³Monta Query com os dados que serão impressos no relatório            ³
 
 oPrint:StartPage()
@@ -122,7 +122,7 @@ aAdd(_aBmp,"\system\DANFE01" + cFilAnt+ ".bmp")
 	  oPrint:Say(nLin, 2350, ("Endereço"), oFont8)
 	  oPrint:Say(nLin, 2620, ("Ord. Produção"), oFont8)  
 	  oPrint:Say(nLin, 2920, ("N. Lote"), oFont8)  
-	  oPrint:Say(nLin, 3250, ("Dt. Emissão"), oFont8)
+	  oPrint:Say(nLin, 3150, ("Dt. Emissão"), oFont8)
 	   nLin+=100
 	  _user := TMP->CP_SOLICIT  
 	
@@ -140,7 +140,7 @@ aAdd(_aBmp,"\system\DANFE01" + cFilAnt+ ".bmp")
    		    oPrint:Say(nLin, 2360, TMP->CP_XENDERE, oFont8N)
    		    oPrint:Say(nLin, 2630, TMP->CP_OP, oFont8N)  	
    		    oPrint:Say(nLin, 2930, TMP->CP_LOTE, oFont8N)  
-   		    oPrint:Say(nLin, 3260, CVALTOCHAR(STOD(TMP->CP_EMISSAO)), oFont8N)  
+   		    oPrint:Say(nLin, 3150, CVALTOCHAR(STOD(TMP->CP_EMISSAO)), oFont8N)  
    		    //oPrint:Say(nLin, 3560, TMP->CP_OBS, oFont8N)  	
 		    nLin+=50
 		    If nLin >= 2500 // veja o tamanho adequado da página que este numero pode variar
