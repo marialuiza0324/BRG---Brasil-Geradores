@@ -88,6 +88,7 @@ User Function CN121EST()
 		{ "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
 		{ "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
 		{ "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
+		
 		If Select("TSE2") > 0
 			TSE2->(dbCloseArea())
 		EndIf

@@ -44,7 +44,7 @@ User Function FSFIN002()
 		TSC7->(dbCloseArea())
 	EndIf
 
-	_cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE, C7_DATPRF, C7_XDTPRF,C7_LOJA, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
+	_cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE, C7_DATPRF, C7_XDTPRF,C7_LOJA, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL,C7_NUMSC "
 	_cQry += "FROM " + retsqlname("SC7")+" SC7 "
 	_cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
 	_cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
@@ -52,7 +52,7 @@ User Function FSFIN002()
 	_cQry += "AND   SC7.C7_ITEM = '" + cItemPc + "' "
 	_cQry += "AND   SC7.C7_ENCER = '' "
 	_cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
-	_cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_XDTPRF,C7_LOJA "
+	_cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_XDTPRF,C7_LOJA,C7_NUMSC "
 	_cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF,C7_XDTPRF,C7_LOJA "
 
 	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //filtrando pedido na SC7
@@ -93,8 +93,7 @@ User Function FSFIN002()
 			{ "E2_EMISSAO" , dData, NIL },;
 			{ "E2_VENCTO" ,_Venc, NIL },;
 			{ "E2_VENCREA" ,_Venc, NIL },;
-			{ "E2_VALOR" ,_Total, NIL },;
-			{ "E2_CCD","030101", NIL }}
+			{ "E2_VALOR" ,_Total, NIL }}
 
 		aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
 		{ "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },;//Validando tamanho do campo na SX3

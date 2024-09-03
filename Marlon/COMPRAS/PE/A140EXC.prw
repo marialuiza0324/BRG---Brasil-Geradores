@@ -81,8 +81,8 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 			{ "E2_EMISSAO" , dData, NIL },;
 			{ "E2_VENCTO" ,_Venc, NIL },;
 			{ "E2_VENCREA" ,_Venc, NIL },;
-			{ "E2_VALOR" ,_Total, NIL },;
-			{ "E2_CCD","030101", NIL }}
+			{ "E2_VALOR" ,_Total, NIL }}
+		
 
 		aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
 		{ "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
