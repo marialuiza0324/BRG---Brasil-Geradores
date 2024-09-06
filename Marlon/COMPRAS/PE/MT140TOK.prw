@@ -34,9 +34,28 @@ Local nTotal := 0
 Local lMsErroAuto := .F.
 Local cNumPC  := ""
 Local cItemPc := ""
-Local lRet := .F. 
+Local lRet := .T. 
+Local cRateio := "" // Variável que vai armazenar o rateio
+Local cCentroCusto := "" // Variável para o centro de custo
 
 For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
+
+    // Obtendo o centro de custo e o rateio
+    cCentroCusto := ACOLS[nX][13] 
+    cRateio := ACOLS[nX][41] 
+
+    // Verificando se o centro de custo está vazio e se o rateio está informado
+    If Empty(cCentroCusto) .and. cRateio == "1"
+        // Se o centro de custo está vazio e há rateio, permite a confirmação
+        lRetorno := .T. // Permite continuar sem erro
+    ElseIf Empty(cCentroCusto) .and. cRateio == "2"
+        // Se ambos estão vazios, bloqueia a gravação e exibe uma mensagem
+        FWAlertInfo("Informe um centro de custo ou rateio", "Atenção!!!")
+        lRetorno := .F. // Bloqueia a confirmação
+    ElseIf !Empty(cCentroCusto) .and. cRateio == "1"
+        FWAlertInfo("O campo de Centro de Custo e rateio estão preenchidos, preencha somente um", "Atenção!!!")
+        lRetorno := .F. // Bloqueia a confirmação
+    EndIf
 
   cNumPC := ACOLS[nX][25] //Num Pc
   cItemPc := ACOLS[nX][1] //Item Pc 
