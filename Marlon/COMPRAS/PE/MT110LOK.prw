@@ -5,11 +5,10 @@
 
 /*/{Protheus.doc} MT110LOK
 O ponto se encontra no final da função e deve ser utilizado 
-para validações especificas do usuario onde será controlada 
-pelo retorno do ponto de entrada o qual 
-se for .F. o processo será interrompido e se .T. será validado.
+para validações se for .F. o processo será interrompido 
+e se .T. será validado.
 Responsável pela validação de cada linha
- do GetDados da Solicitação de Compras .
+do GetDados da Solicitação de Compras .
 @type  Function
 @author Maria Luiza
 @since 03/09/2024 */
@@ -17,8 +16,8 @@ Responsável pela validação de cada linha
 User Function MT110LOK() 
 
 Local lRet := .T. // Retorno padrão .T. para seguir o fluxo normal
- Local cRateio := "" // Variável que vai armazenar o rateio
- Local cCentroCusto := "" // Variável para o centro de custo
+Local cRateio := "" // Variável que vai armazenar o rateio
+Local cCentroCusto := "" // Variável para o centro de custo
 
     // Obtendo o centro de custo e o rateio
     cCentroCusto := ACOLS[1][6] 
@@ -30,9 +29,8 @@ Local lRet := .T. // Retorno padrão .T. para seguir o fluxo normal
         lRet := .T. // Permite continuar sem erro
     ElseIf Empty(cCentroCusto) .and. cRateio == "2"
         // Se ambos estão vazios, bloqueia a gravação e exibe uma mensagem
-        FWAlertInfo("O campo de Centro de Custo é obrigatório quando não há rateio.", "Atenção")
+        FWAlertInfo("Informe um centro de custo ou rateio.", "Atenção!!!")
         lRet := .F. // Bloqueia a confirmação
     EndIf
-
 
 Return lRet

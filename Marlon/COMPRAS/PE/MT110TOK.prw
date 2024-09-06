@@ -8,7 +8,6 @@ O ponto se encontra no final da função e deve ser utilizado
 para validações especificas do usuario onde será controlada 
 pelo retorno do ponto de entrada o qual 
 se for .F. o processo será interrompido e se .T. será validado.
-@type  Function
 @author Maria Luiza
 @since 03/09/2024 */
 
