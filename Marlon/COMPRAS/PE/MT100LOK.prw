@@ -18,6 +18,7 @@ Local ExpL1 := .T.
 Local cRateio := "" // Variável que vai armazenar o rateio
 Local cCentroCusto := "" // Variável para o centro de custo
 
+If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
     // Obtendo o centro de custo e o rateio
     cCentroCusto := ACOLS[1][16] 
     cRateio := ACOLS[1][57] 
@@ -31,5 +32,6 @@ Local cCentroCusto := "" // Variável para o centro de custo
         FWAlertInfo("Informe um centro de custo ou rateio", "Atenção!!!")
         ExpL1 := .F. // Bloqueia a confirmação
     EndIf
+EndIf
 
 Return ExpL1
