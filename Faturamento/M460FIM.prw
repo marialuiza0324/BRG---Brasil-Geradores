@@ -88,9 +88,9 @@ User Function M460FIM()
 	Local cQry  := ''
 	Local cMsg := ""
 
-	If !Empty(SC5->C5_MENNOTA)
+	If !Empty(SC5->C5_MENNOTA) //verifica se o campo de mensagem da nota está vazio no PV
 
-		cMsg := SUBSTR(SC5->C5_XMENNOT,1,40)
+		cMsg := SUBSTR(SC5->C5_XMENNOT,1,40) //mensagem pra nota no PV
 
 		cQry:= "SELECT * FROM "+RetSqlName("SE1")+" SE1 "
 		cQry+= "WHERE E1_FILIAL = '"+xFilial("SE1")+"'" "
@@ -101,19 +101,19 @@ User Function M460FIM()
 		cQry+= "AND D_E_L_E_T_ <> '*'
 
 		cQry := ChangeQuery(cQry)
-		dbUseArea(.T., "TOPCONN", tcGenQry(,, cQry), "TSE1", .F., .T.)
+		dbUseArea(.T., "TOPCONN", tcGenQry(,, cQry), "TSE1", .F., .T.) //busca os títulos criados
 
 		DbSelectArea("TSE1")
 		TSE1->(DBGotop())
 
-		If !Empty(TSE1->E1_PARCELA)
+		If !Empty(TSE1->E1_PARCELA) //verifica o campo de parcela, pois só é preenchido com mais de 1 título 
 
 			While TSE1->(!EOF())
-				If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero+TSE1->E1_PARCELA))
+				If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero+TSE1->E1_PARCELA)) //caso tenha mais de um título, utiliza a parcela como filtro 
 
 					Reclock('SE1', .F.)
 
-					SE1->E1_HIST := cMsg
+					SE1->E1_HIST := cMsg //grava a informação no campo de histórico
 
 					SE1->(MsUnlock())
 
@@ -121,12 +121,12 @@ User Function M460FIM()
 
 				TSE1->(DbSkip())
 			EndDo
-		Else
+		Else //caso a parcela esteja vazia significa que é apenas um título, então não utiliza a parcela como filtro nem while, grava somente na linha encontrada
 			If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero))
 
 				Reclock('SE1', .F.)
 
-				SE1->E1_HIST := cMsg
+				SE1->E1_HIST := cMsg //grava a informação no campo de histórico
 
 				SE1->(MsUnlock())
 
