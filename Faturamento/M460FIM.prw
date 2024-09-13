@@ -308,7 +308,7 @@ EndIf
 					EndDo
 				EndIf
 				RestArea(aAreaSX1)
-				U_FSFIN003()
+				//U_FSFIN003()
 			EndIf
 		Else
 			If MsgYesNo("Deseja Gerar Boleto para o Banco Itaú ?","ATENÇÃO")
