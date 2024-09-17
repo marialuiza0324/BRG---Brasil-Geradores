@@ -28,7 +28,8 @@ Local nX := 1
 Local cTipo := "PR"
 Local cNumPC  := ""
 Local cItemPc := ""
-Local ExpL1 := .F. 
+Local ExpL1 := .T. 
+Local lMsg  := .F.
 Local _Forn   := ""
 Local _Lj     := SD1->D1_LOJA
 Local lAchou := .F.
@@ -41,6 +42,12 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 
   cNumPC := ACOLS[nX][25]
   cItemPc := ACOLS[nX][1] //Item Pc 
+
+		If Empty(cNumPc)
+			lMsg := .F.
+		Else
+			lMsg := .T.
+		EndIf
 
 	If Select("TSC7") > 0
 		TSC7->(dbCloseArea())
@@ -122,9 +129,11 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 					MostraErro()
 					DisarmTransaction()
 					ExpL1 := .F.
+					lMsg := .F.
 				Else
 					lMsErroAuto:= .F.
                     ExpL1 := .T.
+					lMsg:= .T.
 				Endif
              EndIf
               
@@ -134,10 +143,12 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 					FWAlertInfo("Não foi possível incluir o titulo, verifique","Atenção!!!")
 					MostraErro()
 					DisarmTransaction()
+					lMsg := .F.
 					Return
 				Else
 					lMsErroAuto:= .F.
                      ExpL1 := .T.
+					 lMsg := .T.
 				Endif
     
 		End Transaction
@@ -150,6 +161,8 @@ Next nX
 
         FwRestArea(aArea)
 
-		FWAlertInfo("Título financeiro criado com sucesso.","Atenção!!!")
+		If lMsg = .T.
+			FWAlertInfo("Título financeiro criado com sucesso.","Atenção!!!")
+		EndIf
 
 Return ExpL1

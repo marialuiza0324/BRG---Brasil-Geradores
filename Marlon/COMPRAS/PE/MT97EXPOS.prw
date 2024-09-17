@@ -33,6 +33,7 @@ Local nTotal := 0
 Local lMsErroAuto := .F.
 Local cNumPC  := ""
 Local cItemPc := ""
+Local lMsg := .F. 
 
 
 	cNumPC := Alltrim(SCR->CR_NUM) //Num Pc
@@ -108,10 +109,12 @@ Local cItemPc := ""
 						FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
 						MostraErro()
 						DisarmTransaction()
+						lMsg := .F.
 						lContinua := .F.
 					Else
 						lMsErroAuto:= .F.
 						lContinua := .T.
+						lMsg := .T.
 					Endif
 				EndIf
 
@@ -128,6 +131,8 @@ Local cItemPc := ""
 
         FwRestArea(aArea)
 
-		FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
+		If lMsg = .T.
+			FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
+		EndIf
 
 Return lContinua

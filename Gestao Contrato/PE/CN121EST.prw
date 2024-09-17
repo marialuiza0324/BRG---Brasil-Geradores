@@ -36,6 +36,7 @@ User Function CN121EST()
     Local aDelet := {}
     Local nTotal := 0
     Local nTot   := 0 
+	Local lMsg   := .F.
 
     If  lInTrans = .F. 
   
@@ -120,9 +121,11 @@ User Function CN121EST()
                         FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
                         MostraErro()
                         DisarmTransaction()
+						lMsg := .F.
                     Else
                         lMsErroAuto:= .F.
                         lRet := .T.
+						lMsg := .T.
                     Endif
                 EndIf
 
@@ -134,9 +137,11 @@ User Function CN121EST()
 
         FwRestArea(aArea)
 
-            FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
-
-     EndIf
+		 
+			If lMsg = .T.
+            	FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
+			EndIf
+    EndIf
 
   
 

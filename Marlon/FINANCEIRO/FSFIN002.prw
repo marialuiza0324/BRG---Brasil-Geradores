@@ -32,6 +32,7 @@ User Function FSFIN002()
 	Local cQuery := ""
 	Local aDelet := {}
 	Local nTotal := 0
+	Local lMsg := .F.
 	Private lMsErroAuto := .F.
 	Private cNumPC  := ""
 	Private cItemPc := ""
@@ -132,9 +133,11 @@ User Function FSFIN002()
 					FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
 					MostraErro()
 					DisarmTransaction()
+					lMsg := .F.
 					Return
 				Else
 					lMsErroAuto:= .F.
+					lMsg := .T.
 				Endif
 
 			EndIf
@@ -146,9 +149,11 @@ User Function FSFIN002()
 				FWAlertInfo("Não foi possível incluir o titulo, verifique","Atenção!!!")
 				MostraErro()
 				DisarmTransaction()
+				lMsg := .F.
 				Return
 			Else
 				lMsErroAuto:= .F.
+				lMsg := .T.
 			Endif
 
 		End Transaction
@@ -159,6 +164,8 @@ User Function FSFIN002()
 
 	RestArea(aArea)
 
-	FWAlertInfo("Titulo financeiro criado com sucesso!","Atenção!!!")
+	If lMsg = .T.
+		FWAlertInfo("Titulo financeiro criado com sucesso!","Atenção!!!")
+	EndIf
 
 Return

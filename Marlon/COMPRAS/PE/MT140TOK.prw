@@ -37,6 +37,7 @@ Local cItemPc := ""
 Local lRet := .T. 
 Local cRateio := "" // Variável que vai armazenar o rateio
 Local cCentroCusto := "" // Variável para o centro de custo
+Local lMsg :=.F.
 
 For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 
@@ -125,9 +126,11 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 					FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
 					MostraErro()
 					DisarmTransaction()
+					lMsg := .F.
 				Else
 					lMsErroAuto:= .F.
 					lRet := .T.
+					lMsg := .T.
 				Endif
 			Else 
 			lRet := .T.
@@ -142,6 +145,8 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 Next nX
         FwRestArea(aArea)
 
-		FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
+		If lMsg = .T.
+			FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
+		EndIf 
 
 Return lRet

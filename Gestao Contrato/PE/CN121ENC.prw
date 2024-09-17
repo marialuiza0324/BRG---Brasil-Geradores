@@ -36,6 +36,7 @@ User Function CN121ENC()
     Local aDelet := {}
     Local nTotal := 0
     Local nTot   := 0 
+    Local lMsg   := .F.
     Private lMsErroAuto := .F. 
  
       cNumPC := SC7->C7_NUM
@@ -130,9 +131,11 @@ User Function CN121ENC()
                         FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
                         MostraErro()
                         DisarmTransaction()
+                        lMsg:= .F.
                         Return
                     Else
                         lMsErroAuto:= .F.
+                        lMsg := .T.
                     Endif
 
                 EndIf
@@ -143,9 +146,11 @@ User Function CN121ENC()
                         FWAlertInfo("Não foi possível incluir o titulo, verifique","Atenção!!!")
                         MostraErro()
                         DisarmTransaction()
+                        lMsg := .F.
                         Return
                     Else
                         lMsErroAuto:= .F.
+                        lMsg := .T.
                     Endif
         
             End Transaction
@@ -156,7 +161,7 @@ User Function CN121ENC()
 
            FwRestArea(aArea)
 
-If  lInTrans = .F.  .AND. lMsErroAuto = .F.// repetir mensagem apenas 1 vez
+If  lInTrans = .F.  .AND. lMsErroAuto = .F. .AND. lMsg = .T.// repetir mensagem apenas 1 vez
 
 		FWAlertInfo("Título financeiro criado com sucesso.","Atenção!!!")
 
