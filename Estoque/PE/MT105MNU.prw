@@ -8,7 +8,7 @@
 user function MT105MNU()
 
 aAdd(aRotina,{ "Doc Desmontado", "U_Documento)", 0 , 3, 0, .F.})
-//aAdd(aRotina,{ "Liberar Solic ", "U_Libera)", 0 , 4, 0, .F.})
+aAdd(aRotina,{ "Novo Termo Retirada", "U_Termo()", 0, 3, 0, .F.})
 
 Return aRotina
 
