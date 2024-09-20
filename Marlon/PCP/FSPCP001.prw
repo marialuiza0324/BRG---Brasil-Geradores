@@ -3,109 +3,194 @@
 
 //U_FSPCP001
 USER FUNCTION FSPCP001()
-  
-  Local cAlias := "Z10"
-  Local cTitulo := "AmarraÃ§Ã£o OP x Pedido de Venda"
-  Local cFunExc := "U_FSPCPA()"
-  Local cFunAlt := "U_FSPCPB()"
 
-  
-  AxCadastro(cAlias,cTitulo,cFunExc,cFunAlt)
+	Local cAlias := "Z10"
+	Local cTitulo := "Amarração OP x Pedido de Venda"
+	Local cFunExc := "U_FSPCPA()"
+	Local cFunAlt := "U_FSPCPB()"
+
+
+	AxCadastro(cAlias,cTitulo,cFunExc,cFunAlt)
 
 RETURN
-//TESTE
-
 
 /*/{Protheus.doc} FSPCP001A
-  (
-    FunÃ§Ã£o de exclusÃ£o da amarraÃ§Ã£o do Pedido com a Ordem de ProduÃ§Ã£o
-  )
+  (Função de exclusão da amarração do Pedido com a Ordem de Produção)
   @type  USER FUNCTION
   @author Marlon Pablo
   @since 28/08/2023
 /*/
 USER FUNCTION FSPCPA()
-  
-  Local lRet := MSGBOX("Tem Certeza que deseja excluir o registro?","ConfirmaÃ§Ã£o","YESNO") 
+
+	Local lRet := MsgYesNo("Tem Certeza que deseja excluir o registro?","Confirmação")
 
 Return lRet
 
 /*/{Protheus.doc} FSPCP001B
   (
-    FunÃ§Ã£o que trata a inclusÃ£o de um novo registro
+    Função que trata a inclusão de um novo registro
   )
   @type  USER FUNCTION
   @author Marlon Pablo
   @since 28/08/2023
 /*/
 USER FUNCTION FSPCPB()
-  
-  Local lRet  := .F.
-  Local lOp   := .T.
-  Local lPed  := .T.  
-  Local lIte  := .T.  
-  Local cMsg := ""
 
-  IF INCLUI
-    cMsg := "Confirma a inclusÃ£o do Registro?"
-  ELSE
-    cMsg := "Confirma alteraÃ§Ã£o do registro?"
-  ENDIF
+	Local lRet  := .F.
+	Local lOp   := .T.
+	Local lPed  := .T.
+	Local lIte  := .T.
+	Local cMsg := ""
+	Local nCont := 0
+	Local lAmarra := .T.
+	Local cPedido := ""
+	Local cItem   := ""
+	Local _cQry  := ""
+	Local nTotal := 0
 
-  lRet := MSGBOX(cMsg,"ConfirmaÃ§Ã£o","YESNO")
+	IF INCLUI
+		cMsg := "Confirma a inclusão do Registro?
+		If MsgYesNo(cMsg,"Confirmação")
 
-  IF lRet
-  
-    dbSelectArea("SC6")
-    dbSetOrder(1)      
-    dbSeek(xFilial("SC6") + PADR(M->Z10_PEDIDO, TAMSX3("C5_NUM")[1]))
+			dbSelectArea("SC6")
+			dbSetOrder(1)
+			dbSeek(xFilial("SC6") + PADR(M->Z10_PEDIDO, TAMSX3("C5_NUM")[1]))
 
-    //Validar 
-    //Validar se o pedido esta aberto Abrir area do CabeÃ§alho do pedido para validar a emissÃ£o da nota  
-    IF SC6->C2_OK <> "" .AND. C2_QUANT = C2_QUJE .AND. C2_DATRF <> ''
-      MSGINFO( "Ordem de produÃ§Ã£o apontada. Selecione outra", "ValidaÃ§Ã£o de Ordem de ProduÃ§Ã£o!" )
-      lPed := .F.
-    ENDIF    
+			//Validar
+			//Validar se o pedido esta aberto Abrir area do Cabeçalho do pedido para validar a emissão da nota
+			IF !Empty(SC2->C2_OK) .AND. SC2->C2_QUANT = SC2->C2_QUJE .AND. !Empty(SC2->C2_DATRF)
+				FWAlertWarning( "Ordem de produção apontada. Selecione outra", "Validação de Ordem de Produção!" )
+				lPed := .F.
+			ENDIF
 
-    //Validar se a Op esta aberta.  
-    //Permitir OP Firme; Prevista e Apontada
-    dbSelectArea("SC2")
-    dbSetOrder(1)      
-    dbSeek(xFilial("SC2")+PADR(SubStr(M->Z10_PEDIDO,1,6), TAMSX3("C2_NUM")[1])+PADR(SubStr(M->Z10_PEDIDO,7,2), TAMSX3("C2_ITEM")[1])+PADR(SubStr(M->Z10_PEDIDO,9), TAMSX3("C2_SEQUEN")[1]))
-    
-    IF SC6->C6_NOTA == ""
-      MSGINFO( "Pedido jÃ¡ Faturado! Escolha outro item.", "ValidaÃ§Ã£o de Pedido" )
-      lOp := .F.
-    ENDIF
+			//Validar se a Op esta aberta.
+			//Permitir OP Firme; Prevista e Apontada
+			dbSelectArea("SC2")
+			dbSetOrder(1)
+			dbSeek(xFilial("SC2")+PADR(SubStr(M->Z10_PEDIDO,1,6), TAMSX3("C2_NUM")[1])+PADR(SubStr(M->Z10_PEDIDO,7,2), TAMSX3("C2_ITEM")[1])+PADR(SubStr(M->Z10_PEDIDO,9), TAMSX3("C2_SEQUEN")[1]))
 
-    //Validar se o cÃ³digo do produto selecionado Ã© o mesmo da OP
-    IF SC6->C6_PRODUTO <> C2_PRODUTO
-      MSGINFO( "Item da OP diferente do item do Pedido", "ValidaÃ§Ã£o de Produto" )
-      lIte := .F.
-    ENDIF
+			IF SC6->C6_NOTA == ""
+				FWAlertWarning( "Pedido já Faturado! Escolha outro item.", "Validação de Pedido" )
+				lOp := .F.
+			ENDIF
 
-    IF lIte = .T. .OR. lOp = .T. .OR. lPed = .T.
-      lRet = .T.
-    ELSE
-      MSGINFO( "Verifique inconsistÃªncias para continuar!"+CHR(13);
-              +"OP Aberta: "+lOp+CHR(13);
-              +"Pedido Faturado: "+lOp+CHR(13);
-              +"Itens Iguais: "+lOp+CHR(13);
-              , "ValidaÃ§Ã£o de AmarraÃ§Ã£o" )
-      lRet = .F.
-    /*
-      Validar o faturamento se o pedido vai ter retorno por devoluÃ§Ã£o de documento de saida para que seja feita a alteraÃ§Ã£o do status da amarraÃ§Ã£o para inativa
+			cProdutoOp:= Posicione("SC2",1,FWxFilial('SC2')+SUBSTR(Z10_ORDEM,1,6)+SUBSTR(Z10_ORDEM,7,2)+SUBSTR(Z10_ORDEM,9,3),'C2_PRODUTO')
+
+			//Validar se o código do produto selecionado é o mesmo da OP
+			IF M->Z10_PRODUT <> cProdutoOp
+				lIte := .F.
+				nCont := 1
+			ENDIF
+
+			If Select("TZ10") > 0
+				TZ10->(dbCloseArea())
+			EndIf
+
+			_cQry := "SELECT * FROM " + retsqlname("Z10")+" Z10 "
+			_cQry += "WHERE D_E_L_E_T_ = '' "
+			_cQry += "AND Z10_PEDIDO = '"+M->Z10_PEDIDO+"' "
+			_cQry += "AND Z10_ITEM = '"+M->Z10_ITEM+"' "
+			_cQry += "AND Z10_PRODUT = '"+M->Z10_PRODUT+"' "
+			_cQry += "AND Z10_STATUS = '1' "
+
+			DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TZ10",.T.,.T.) //Filtra pedido na SC7
+
+			DbSelectArea("TZ10")
+
+			Count to nTotal
+
+			IF nTotal > 0
+				lAmarra := .F.
+				nCont := nCont +1
+				cPedido := M->Z10_PEDIDO
+				cItem  := M->Z10_ITEM
+			EndIf
+
+			TZ10->(DbCloseArea())
 
 
-    */
-    
-    /*IF SE6->(DBSEEK(FWXFILIAL('SE6')+M->Z10_PEDIDO))
-      ALERT("Entrou no IFF")
-      RECLOCK('SE6',.F.)
-        E6_OP := M->Z10_PEDIDO
-      SE6->(MSUNLOCK())
-    ENDIF*/
+			IF  lOp = .F. .OR. lPed = .F.
+				lRet := .F.
 
-  ENDIF
+
+			ELSEIF lIte = .F. .AND. lAmarra = .F.
+				FWAlertWarning("<br><br><font color='#FF0000'>Total de Ocorrências: " + cValtoChar(nCont) + CHR(13) + ;
+					"1-Produtos Divergentes!" + CHR(13) + ;
+					"Escolha um item do pedido que tenha o mesmo produto da Ordem de Produção." + CHR(13) + ;
+					"2-Ordem de produção amarrada ao pedido Nº: " + cPedido + CHR(13) + ;
+					"Item do pedido: " + cItem + "</font>", "Avisos de Inconsistências!!!")
+				lRet = .F.
+
+			ELSEIF lAmarra = .F.
+				FWAlertWarning("<br><br><font color='#FF0000'>Total de Ocorrências: "+cValtoChar(nCont)+CHR(13);
+					+"1-Ordem de produção amarrada ao pedido Nº: "+cPedido+CHR(13);
+					+"Item do pedido: "+cItem+ "</font>", "Avisos de Inconsistências!!!")
+				lRet = .F.
+
+			ELSEIF lIte = .F.
+				FWAlertWarning("<br><br><font color='#FF0000'>Total de Ocorrências: "+cValtochar(nCont)+CHR(13);
+					+"1-Produtos Divergentes!"+CHR(13);
+					+"Escolha um item do pedido que tenha o mesmo produto da Ordem de Produção."+CHR(13);
+					+"</font>", "Avisos de Inconsistências!!!")
+				lRet = .F.
+
+			ELSE
+
+				dbSelectArea("SC6")
+				dbSetOrder(1)
+
+				If SC6->(Dbseek(xFilial("SC6")+M->Z10_PEDIDO+M->Z10_ITEM+M->Z10_PRODUT))
+					Reclock("SC6",.F.)
+
+					SC6->C6_NUMOP := M->Z10_ORDEM
+
+					SC6->(MsUnlock())
+				EndIF
+				lRet := .T.
+			ENDIF
+		EndIf
+
+	Elseif  ALTERA
+
+		cMsg := "Confirma alteração do registro?"
+
+		If MsgYesNo(cMsg,"Confirmação")
+			dbSelectArea("SC6")
+			dbSetOrder(1)
+
+			If SC6->(Dbseek(xFilial("SC6")+M->Z10_PEDIDO+M->Z10_ITEM+M->Z10_PRODUT))
+
+				Reclock("SC6",.F.)
+
+				SC6->C6_NUMOP := ''
+
+				SC6->(MsUnlock())
+
+			EndIf
+			lRet := .T.
+		EndIf
+
+	EndIf
 
 Return lRet
+
+
+User Function xDesc()
+
+Local cDescri := POSICIONE("SC6",1,FWxFilial('SC6')+M->Z10_PEDIDO+M->Z10_ITEM+M->Z10_PRODUT,'C6_DESCRI')
+
+
+Return cDescri
+
+
+User Function xNomCli()
+
+Local cCodCli := Posicione("SC5",1,FWxFilial('SC5')+M->Z10_PEDIDO,'C5_CLIENTE')
+Local cNomCli := Posicione("SC5",1,FWxFilial('SC5')+M->Z10_PEDIDO,'C5_XNOMCLI')
+Local cNome := ''
+
+cNome := Alltrim(cCodCli)+ ' - ' +Alltrim(cNomCli)
+
+
+Return cNome
+
