@@ -64,7 +64,7 @@ User Function MT680VAL()
 
 	EndDo
 
-	If cOper == "Z1"
+	If cOper == "Z1"  .AND. M->H6_PT = "T"
 
 			if Empty(cLote) .AND. cLoteCtl ==  "L"
 			    lValida := .T.
