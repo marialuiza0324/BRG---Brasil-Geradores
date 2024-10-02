@@ -80,6 +80,7 @@ Private	_LtCtl  := " "
 Private _Prod   := " " 
 Private _NumSeq := " "
 Private _AlqDif := 0
+Private cLogo := ''
 
 If SC5->C5_TPDOC <> "F"
    MSGINFO("Tipo de Documento Incorreto para a impressão. !!! "," Atenção ") 
@@ -122,19 +123,21 @@ oPrint:StartPage()
 cStartPath := GetPvProfString(GetEnvServer(),"StartPath","ERROR",GetAdv97())
 cStartPath += If(Right(cStartPath, 1) <> "\", "\", "")  
 
-//aAdd(_aBmp,"\system\LGMID010501.png") 
+cLogo := "\system\danfe"+cEmpAnt+cFilAnt+".bmp"
+
+/*aAdd(_aBmp,"\system\LGMID010501.png") 
 aAdd(_aBmp,"\system\danfe010401.bmp") 
 aAdd(_aBmp,"\system\danfe010501.bmp") 
 aAdd(_aBmp,"\system\danfe020801.bmp") 
 aAdd(_aBmp,"\system\danfe021001.bmp") 
-aAdd(_aBmp,"\system\danfe010601.bmp") 
+aAdd(_aBmp,"\system\danfe010601.bmp")*/
  
     //R. 261-B, Nº 449 - Setor Leste Universitário, Goiânia - GO, 74610-270
  
     //oPrint:SayBitmap(010, 0650, _aBmp[2], 1700, 3190) //FAzendo teste
-	If cFilAnt =="0401"
-       oPrint:SayBitmap(nLin+010, 0160, _aBmp[1], 350, 300)	 //350     220
-	elseIF cFilAnt =="0501"
+	//If cFilAnt =="0401"
+       oPrint:SayBitmap(nLin+010, 0160, cLogo, 350, 300)	 //350     220
+	/*elseIF cFilAnt =="0501"
 	   oPrint:SayBitmap(nLin+010, 0160, _aBmp[2], 350, 300)
 	elseIF cFilAnt =="0801"  
 	   oPrint:SayBitmap(nLin+010, 0160, _aBmp[3], 350, 300)
@@ -142,7 +145,7 @@ aAdd(_aBmp,"\system\danfe010601.bmp")
 	   oPrint:SayBitmap(nLin+010, 0160, _aBmp[4], 350, 300)
 	elseIF cFilAnt =="0601"  
 	   oPrint:SayBitmap(nLin+010, 0160, _aBmp[5], 350, 300)
-	EndIf	
+	EndIf	*/
 
     nLin+=100      
     oPrint:Say(nLin,550,SM0->M0_NOMECOM,oFont10) //550
