@@ -10,7 +10,7 @@
 User Function MT241TOK()
 	Local lRet := .T.//-- Validações do usuário para inclusão do movimento
 	Local _Tm  := CTM
-	Local _MovTm := GetMv("MV_MOVTM") //002,005,502,505 (bloquear)
+	Local _MovTm := GetMv("MV_MOVTM") //002,502 (bloquear)
 	Local cUser  := GetMv("MV_BLOQUSE")
 	Local cUserid := RetCodUsr()
 	//Local cCodUser  := RetCodUsr() //Retorna o Codigo do Usuario
