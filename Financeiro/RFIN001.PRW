@@ -89,8 +89,8 @@ titulos = 000099995, 000099996 e 000099997
 
 */                  
 
-User Function RFIN001()
-
+User Function RFIN001(_Exec)
+	Local	aPergs  := {}
 	Local   _cQry 	:= ""
 
 	Private lJob 	:= .F.
@@ -137,11 +137,10 @@ User Function RFIN001()
 	PRIVATE nVlJuros   	:= 0	   //Valor do Juros
 	PRIVATE nVlMulta   	:= 0		//Valor Multa
 	PRIVATE oTempTable
-	PRIVATE	aPergs  := {}
-	Private _Exec 		:= {}
 	DEFAULT calias 		:= "TSE1"
+	DEFAULT _Exec 		:= {}
 
-	AjustaSx1()
+	CriaSX1(cPerg)
 
 	_MsExec	:= iif( FunName() == "MATA410" .OR. FunName() == "MATA410" ,.F. ,len(_Exec) > 0 )
 
@@ -290,7 +289,7 @@ User Function RFIN001()
 	endif
 
 	_cQry += " AND E1_SALDO > 0 "
-	_cQry += " AND A1_XBOLETO = 'S'
+	//_cQry += " AND A1_XBOLETO = 'S'
 	//AND A1_XBOLETO = 'S'
 
 	MemoWrite("D:\Consulta\rfin001.sql",_cQry)
@@ -2665,32 +2664,56 @@ Return
 	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 
-Static Function AjustaSx1()
+Static Function CriaSX1(cPerg)
 
-	Aadd(_Exec,{"01","De Prefixo"      ,"De Prefixo"      ,"De Prefixo"      ,"mv_ch1","C",03,0,0,"G","","","","","MV_PAR01","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"02","Ate Prefixo"     ,"Ate Prefixo"     ,"Ate Prefixo"     ,"mv_ch2","C",03,0,0,"G","","","","","MV_PAR02","","","","ZZZ"     ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"03","De Numero"       ,"De Numero"       ,"De Numero"       ,"mv_ch3","C",09,0,0,"G","","","","","MV_PAR03","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"04","Ate Numero"      ,"Ate Numero"      ,"Ate Numero"      ,"mv_ch4","C",09,0,0,"G","","","","","MV_PAR04","","","","ZZZZZZ"  ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"05","De Parcela"      ,"De Parcela"      ,"De Parcela"      ,"mv_ch5","C",03,0,0,"G","","","","","MV_PAR05","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"06","Ate Parcela"     ,"Ate Parcela"     ,"Ate Parcela"     ,"mv_ch6","C",03,0,0,"G","","","","","MV_PAR06","","","","Z"       ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"07","De Portador"     ,"De Portador"     ,"De Portador"     ,"mv_ch7","C",03,0,0,"G","","SA6","","","MV_PAR07","","","","001"     ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"08","Ate Portador"    ,"Ate Portador"    ,"Ate Portador"    ,"mv_ch8","C",03,0,0,"G","","SA6","","","MV_PAR08","","","","001"     ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"09","De Cliente"      ,"De Cliente"      ,"De Cliente"      ,"mv_ch9","C",06,0,0,"G","","SA1","","","MV_PAR09","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"10","Ate Cliente"     ,"Ate Cliente"     ,"Ate Cliente"     ,"mv_cha","C",06,0,0,"G","","SA1","","","MV_PAR10","","","","ZZZZZZ"  ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"11","De Loja"         ,"De Loja"         ,"De Loja"         ,"mv_chb","C",02,0,0,"G","","","","","MV_PAR11","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"12","Ate Loja"        ,"Ate Loja"        ,"Ate Loja"        ,"mv_chc","C",02,0,0,"G","","","","","MV_PAR12","","","","ZZ"      ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"13","De Emissao"      ,"De Emissao"      ,"De Emissao"      ,"mv_chd","D",08,0,0,"G","","","","","MV_PAR13","","","","01/01/01","","","","","","","","","","","",""})
-	Aadd(_Exec,{"14","Ate Emissao"     ,"Ate Emissao"     ,"Ate Emissao"     ,"mv_che","D",08,0,0,"G","","","","","MV_PAR14","","","","31/12/10","","","","","","","","","","","",""})
-	Aadd(_Exec,{"15","De Vencimento"   ,"De Vencimento"   ,"De Vencimento"   ,"mv_chf","D",08,0,0,"G","","","","","MV_PAR15","","","","01/01/01","","","","","","","","","","","",""})
-	Aadd(_Exec,{"16","Ate Vencimento"  ,"Ate Vencimento"  ,"Ate Vencimento"  ,"mv_chg","D",08,0,0,"G","","","","","MV_PAR16","","","","31/12/10","","","","","","","","","","","",""})
-	Aadd(_Exec,{"17","Do Bordero"      ,"Do Bordero"      ,"Do Bordero"      ,"mv_chh","C",06,0,0,"G","","","","","MV_PAR17","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"18","Ate Bordero"     ,"Ate Bordero"     ,"Ate Bordero"     ,"mv_chi","C",06,0,0,"G","","","","","MV_PAR18","","","","ZZZZZZ"  ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"19","Da Carga"        ,"Da Carga"        ,"Da Carga"        ,"mv_chj","C",06,0,0,"G","","DAK","","","MV_PAR19","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"20","Ate Carga"       ,"Ate Carga"       ,"Ate Carga"       ,"mv_chl","C",06,0,0,"G","","DAK","","","MV_PAR20",""   ,""   ,"","ZZZZZZ"  ,"","","","","","","","","",""})
-	Aadd(_Exec,{"21","Mensagem 1"      ,"Mensagem 1"      ,"Mensagem 1"      ,"mv_chm","C",50,0,0,"G","","","","","MV_PAR21","","","",""        ,"","","","","","","","","","","",""})
-	Aadd(_Exec,{"22","Mensagem 2"      ,"Mensagem 2"      ,"Mensagem 2"      ,"mv_chn","C",50,0,0,"G","","","","","MV_PAR22","","","",""        ,"","","","","","","","","","","",""})
+	Local _sAlias 	:= Alias()
+	Local aRegs 	:= {}
+	Local i,j
 
-Return _Exec
+	aAdd(aRegs,{cPerg,"01","De Prefixo"      ,"De Prefixo"      ,"De Prefixo"      ,"mv_ch1","C",03,0,0,"G","","","","","MV_PAR01","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"02","Ate Prefixo"     ,"Ate Prefixo"     ,"Ate Prefixo"     ,"mv_ch2","C",03,0,0,"G","","","","","MV_PAR02","","","","ZZZ"     ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"03","De Numero"       ,"De Numero"       ,"De Numero"       ,"mv_ch3","C",09,0,0,"G","","","","","MV_PAR03","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"04","Ate Numero"      ,"Ate Numero"      ,"Ate Numero"      ,"mv_ch4","C",09,0,0,"G","","","","","MV_PAR04","","","","ZZZZZZ"  ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"05","De Parcela"      ,"De Parcela"      ,"De Parcela"      ,"mv_ch5","C",03,0,0,"G","","","","","MV_PAR05","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"06","Ate Parcela"     ,"Ate Parcela"     ,"Ate Parcela"     ,"mv_ch6","C",03,0,0,"G","","","","","MV_PAR06","","","","Z"       ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"07","De Portador"     ,"De Portador"     ,"De Portador"     ,"mv_ch7","C",03,0,0,"G","","SA6","","","MV_PAR07","","","","001"     ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"08","Ate Portador"    ,"Ate Portador"    ,"Ate Portador"    ,"mv_ch8","C",03,0,0,"G","","SA6","","","MV_PAR08","","","","001"     ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"09","De Cliente"      ,"De Cliente"      ,"De Cliente"      ,"mv_ch9","C",06,0,0,"G","","SA1","","","MV_PAR09","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"10","Ate Cliente"     ,"Ate Cliente"     ,"Ate Cliente"     ,"mv_cha","C",06,0,0,"G","","SA1","","","MV_PAR10","","","","ZZZZZZ"  ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"11","De Loja"         ,"De Loja"         ,"De Loja"         ,"mv_chb","C",02,0,0,"G","","","","","MV_PAR11","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"12","Ate Loja"        ,"Ate Loja"        ,"Ate Loja"        ,"mv_chc","C",02,0,0,"G","","","","","MV_PAR12","","","","ZZ"      ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"13","De Emissao"      ,"De Emissao"      ,"De Emissao"      ,"mv_chd","D",08,0,0,"G","","","","","MV_PAR13","","","","01/01/01","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"14","Ate Emissao"     ,"Ate Emissao"     ,"Ate Emissao"     ,"mv_che","D",08,0,0,"G","","","","","MV_PAR14","","","","31/12/10","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"15","De Vencimento"   ,"De Vencimento"   ,"De Vencimento"   ,"mv_chf","D",08,0,0,"G","","","","","MV_PAR15","","","","01/01/01","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"16","Ate Vencimento"  ,"Ate Vencimento"  ,"Ate Vencimento"  ,"mv_chg","D",08,0,0,"G","","","","","MV_PAR16","","","","31/12/10","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"17","Do Bordero"      ,"Do Bordero"      ,"Do Bordero"      ,"mv_chh","C",06,0,0,"G","","","","","MV_PAR17","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"18","Ate Bordero"     ,"Ate Bordero"     ,"Ate Bordero"     ,"mv_chi","C",06,0,0,"G","","","","","MV_PAR18","","","","ZZZZZZ"  ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"19","Da Carga"        ,"Da Carga"        ,"Da Carga"        ,"mv_chj","C",06,0,0,"G","","DAK","","","MV_PAR19","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"20","Ate Carga"       ,"Ate Carga"       ,"Ate Carga"       ,"mv_chl","C",06,0,0,"G","","DAK","","","MV_PAR20",""   ,""   ,"","ZZZZZZ"  ,"","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"21","Mensagem 1"      ,"Mensagem 1"      ,"Mensagem 1"      ,"mv_chm","C",50,0,0,"G","","","","","MV_PAR21","","","",""        ,"","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"22","Mensagem 2"      ,"Mensagem 2"      ,"Mensagem 2"      ,"mv_chn","C",50,0,0,"G","","","","","MV_PAR22","","","",""        ,"","","","","","","","","","","",""})
+
+	DbSelectArea("SX1")
+	SX1->(DbGoTop())
+
+	For i:=1 to Len(aRegs)
+		If !dbSeek(cPerg+aRegs[i,2])
+			RecLock("SX1",.T.)
+			For j:=1 to FCount()
+				If j <= Len(aRegs[i])
+					FieldPut(j,aRegs[i,j])
+				Endif
+			Next
+			MsUnlock()
+		Endif
+	Next
+
+	SX1->(dbCloseArea())
+
+	dbSelectArea(_sAlias)
+
+
+Return
 
 /******************************************************************************************************************/
 Static Function Modu11(cLinha,cBase,cTipo)
