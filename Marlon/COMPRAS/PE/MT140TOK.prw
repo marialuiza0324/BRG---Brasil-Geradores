@@ -38,12 +38,25 @@ Local lRet := .T.
 Local cRateio := "" // Variável que vai armazenar o rateio
 Local cCentroCusto := "" // Variável para o centro de custo
 Local lMsg :=.F.
+Local lRastro := .T.
 
 For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 
-    // Obtendo o centro de custo e o rateio
-    cCentroCusto := ACOLS[nX][13] 
-    cRateio := ACOLS[nX][41] 
+	 DbSelectArea("SB1")
+     DbSetOrder(1)   
+
+    IF dbSeek(xFilial("SB1")+ACOLS[nX][2])//busca produto na SB1
+        If SB1->B1_RASTRO == "L" .AND. Empty(ACOLS[nX][7])//se produto possuir ratreabilidade e lote estiver vazio
+            lRet  := .F. //não permite inclusão do doc 
+			lRastro := .F.
+            FWAlertInfo("Item com Rastreabilidade, informe o Lote"," Atenção!!!")
+			Return
+        EndIf
+    EndIf
+
+		// Obtendo o centro de custo e o rateio
+		cCentroCusto := ACOLS[nX][13] 
+		cRateio := ACOLS[nX][41] 
 
     // Verificando se o centro de custo está vazio e se o rateio está informado
     If Empty(cCentroCusto) .and. cRateio == "1"
@@ -139,13 +152,18 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
         End Transaction
 
            lAchou := .F. // zera variável
-		   
     Next i
 
 Next nX
+
+		SB1->(DbCloseArea())
         FwRestArea(aArea)
 
-		If lMsg = .T.
+		If lRastro = .F. 
+			lRet := .F.
+		EndIf
+
+		If lMsg = .T. .AND. lRastro = .T.
 			FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
 		EndIf 
 
