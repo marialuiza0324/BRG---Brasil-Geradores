@@ -61,14 +61,14 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
     // Verificando se o centro de custo está vazio e se o rateio está informado
     If Empty(cCentroCusto) .and. cRateio == "1"
         // Se o centro de custo está vazio e há rateio, permite a confirmação
-        lRetorno := .T. // Permite continuar sem erro
+        lRet := .T. // Permite continuar sem erro
     ElseIf Empty(cCentroCusto) .and. cRateio == "2"
         // Se ambos estão vazios, bloqueia a gravação e exibe uma mensagem
         FWAlertInfo("Informe um centro de custo ou rateio", "Atenção!!!")
-        lRetorno := .F. // Bloqueia a confirmação
+        lRet := .F. // Bloqueia a confirmação
     ElseIf !Empty(cCentroCusto) .and. cRateio == "1"
         FWAlertInfo("O campo de Centro de Custo e rateio estão preenchidos, preencha somente um", "Atenção!!!")
-        lRetorno := .F. // Bloqueia a confirmação
+        lRet := .F. // Bloqueia a confirmação
     EndIf
 
   cNumPC := ACOLS[nX][25] //Num Pc
