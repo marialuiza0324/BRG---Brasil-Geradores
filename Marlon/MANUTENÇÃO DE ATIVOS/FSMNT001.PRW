@@ -1,8 +1,7 @@
 //Bibliotecas
 #Include "TOTVS.ch"
-#INCLUDE "rwmake.ch"
 #INCLUDE "topconn.ch"
-
+#include "fwmvcdef.ch"
 
 /*/{Protheus.doc} User Function FSMNT001
 Exemplo de consumo de REST usando Httpget
@@ -35,6 +34,12 @@ User Function FSMNT001()
 	Local nVarDia  := 0
 	Local nContAcu := 0
 	Local nViradas  := 0
+
+	Local cGERAPREV := AllTrim(GETMv("MV_NGGERPR"))
+	Local oSTP := Nil
+	//Local lRet
+	//Local TIPOACOM := .F.
+
 	Private cSerie := ''
 
 	// Buscar página web
@@ -74,20 +79,24 @@ User Function FSMNT001()
 				TMP1->(DbCloseArea())  // Fecha a área de trabalho se estiver aberta
 			EndIf
 
-
-			cQry := "SELECT T9_CODBEM,T9_DTULTAC,T9_CCUSTO,T9_CENTRAB,T9_VARDIA,T9_CONTACU,T9_VIRADAS,R_E_C_N_O_ "
+			cQry := "SELECT ST9.T9_CODBEM,ST9.T9_DTULTAC,ST9.T9_CCUSTO,ST9.T9_CENTRAB,ST9.T9_VARDIA,ST9.T9_CONTACU,ST9.T9_VIRADAS,ST9.R_E_C_N_O_ AS RECNOST9 "
 			cQry += "FROM " + retsqlname("ST9")+" ST9 "
-			cQry += "WHERE T9_SERIE LIKE '"+cSerie+"' "
-			cQry += "AND D_E_L_E_T_ <> '*' "
-			cQry += "ORDER BY T9_CODBEM,T9_DTULTAC,T9_CCUSTO,T9_CENTRAB,T9_VARDIA,T9_CONTACU,T9_VIRADAS "
+			cQry += "WHERE ST9.T9_SERIE LIKE '"+cSerie+"' "
+			cQry += "AND ST9.D_E_L_E_T_ <> '*' "
+			cQry += "AND ST9.T9_SITBEM = 'A'" // Somente bem ativo
+			cQry += "ORDER BY ST9.T9_CODBEM,ST9.T9_DTULTAC,ST9.T9_CCUSTO,ST9.T9_CENTRAB,ST9.T9_VARDIA,ST9.T9_CONTACU,ST9.T9_VIRADAS "
 
-			DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TMP1",.T.,.T.) //filtrando o bem
+			cQry := ChangeQuery(cQry)
+			TcQuery cQry New Alias "TMP1"
 
-			Count To nTotal
+			//DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TMP1",.T.,.T.) //filtrando o bem
 
-			If nTotal = 1 //verifica se a query retorna algum registro
+			//Count To nTotal
 
-				dbselectarea("TMP1") //alimenta as variáveis com o resultado da query
+			//If nTotal = 1 //verifica se a query retorna algum registro
+			If TMP1->(!EOF())
+
+				ST9->(DbGoTo(TMP1->RECNOST9))
 
 				cCodBem := TMP1->T9_CODBEM
 				dDtUltLan := TMP1->T9_DTULTAC
@@ -104,7 +113,7 @@ User Function FSMNT001()
 				STP->TP_CODBEM   := Alltrim(cCodBem)
 				STP->TP_SEQUENC  := 0 //validar
 				STP->TP_DTORIGI  := DATE() //validar
-				STP->TP_POSCONT  := GetDToVal(aPares[i][2])
+				STP->TP_POSCONT  := GetDToVal(aPares[i][2]) //Val()
 				STP->TP_DTREAL   := DATE() //validar
 				STP->TP_DTLEITU  := DATE() //validar
 				STP->TP_SITUACA  := "L" //validar
@@ -122,8 +131,37 @@ User Function FSMNT001()
 				STP->TP_HORA     := cHora
 				STP->TP_ORIGEM   := cRotina
 
-				STP->(MsUnlock())
+				STP->(MsUnlock()) 
 
+				/*oSTP:= MNTCounter():New()
+				oSTP:setOperation(3)
+
+				TIPOACOM  := IIf(ST9->T9_TEMCONT = "S",.T.,.F.)
+
+				If TIPOACOM .And. GetDToVal(aPares[i][2]) > 0
+					oSTP:setValue("TP_CODBEM" ,Alltrim(cCodBem))
+					oSTP:setValue("TP_POSCONT",GetDToVal(aPares[i][2]))
+					oSTP:setValue("TP_DTLEITU",DATE())
+					oSTP:setValue("TP_HORA"   ,cHora)
+				EndIf
+
+				STC->(DbSetOrder(1))
+				If STC->(DbSeek(xFilial("STC")+cCodBem))
+					lRet := oSTP:inform(STC->TC_COMPONE,0)
+					If !lRet .And. !Empty(oSTP:getErrorList())
+						cError := oSTP:getErrorList()[1]
+						Alert(cError)
+					EndIf	
+				EndIf	*/		
+
+				// GERAR O.S AUTOMATICA POR CONTADOR
+				If (cGERAPREV = "S" .Or. cGERAPREV = "C") .And. (!Empty(GetDToVal(aPares[i][2])) /*.Or. !Empty(nCONT2V)*/)
+					If NGCONFOSAUT(cGERAPREV)
+						NGGEROSAUT(cCodBem, If(!Empty(GetDToVal(aPares[i][2])), GetDToVal(aPares[i][2]), 0/*nCONT2V*/),xFilial("STJ"))
+					EndIf
+				EndIf
+			Else
+				ConOut("Bem ativo não encontrado.")
 			Endif
 
 			nTotal := 0 //zera a variável
@@ -138,6 +176,7 @@ User Function FSMNT001()
 
 	TMP1->(DbCloseArea())
 
+	FreeObj(oSTP)
 Return
 
 /*/{Protheus.doc} zUltNum
