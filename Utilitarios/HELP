@@ -1,0 +1,5 @@
+
+"AVISO#0001"
+
+Problema : Usuário não tem permissão para utilizar TES selecionada
+Solução : utilizar TES contida no parâmetro MV_TESLOC
