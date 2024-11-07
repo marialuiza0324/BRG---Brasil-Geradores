@@ -2,4 +2,42 @@
 "AVISO#0001"
 
 Problema : Usuário não tem permissão para utilizar TES selecionada
-Solução : utilizar TES contida no parâmetro MV_TESLOC
+Solução : utilizar TES contida no parâmetro MV_TESLOC - Para usuário locação
+
+
+"AVISO#0002"
+
+Problema : Usuário não tem permissão para utilizar TES selecionada
+Solução : utilizar TES contida no parâmetro MV_TESALM - Para usuários do almoxarifado
+
+
+"AVISO#0003"
+
+Problema : Usuário não tem permissão para utilizar TM selecionada
+Solução : utilizar TM contida no parâmetro MV_TMALM - Para usuários do almoxarifado
+
+
+"AVISO#0004"
+
+Problema : Usuário não tem permissão para utilizar TM selecionada
+Solução : não utilizar TM contida no parâmetro MV_TMALM - Exclusiva para usuários do almoxarifado
+
+"AVISO#0005"
+
+Problema : Usuário não tem permissão para utilizar TM selecionada
+Solução : não utilizar TM contida no parâmetro MV_MOVTM - Exclusiva para usuários do setor de custos
+
+"AVISO#0006"
+
+Problema : Produto possui rastreabilidade
+Solução : Preencher campo de LOTE.
+
+"AVISO#0007"
+
+Problema : TM movimenta estoque
+Solução : Preencher campo de OS.
+
+"AVISO#0008"
+
+Problema : TM não movimenta estoque
+Solução : Campo da OS não pode ser preenchido
