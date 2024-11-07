@@ -91,7 +91,7 @@ user function MT241LOK()
 	/* Validação para usuários do almoxarifado conseguirem utilizar a movimentação múltipla para transferência dos itens
 	do armazém atual para o armazém 99, uilizando apenas a TM permitida no parâmetro MV_TMALM - Maria Luiza - 05/11/2024
 	*/
-	If !(_Tm  $ cTMAlm) //valida se usuário está usando TM que não está contida no parâmetro
+	If !(_Tm  $ cTMAlm) .AND. FunName() <> "MATA185"//valida se usuário está usando TM que não está contida no parâmetro, só entra na validação na rotina MATA241
 		If cUserid $ cUserAlm //verifica se é usuário do almoxarifado
 			Help(, ,"AVISO#0003", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize a(s) TM(s) : " +cTMAlm})
 			_lok := .F.
