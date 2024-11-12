@@ -82,6 +82,7 @@ User Function BRG020()
 	Private _AlqDif := 0
 	Private cLogo := ''
 	Private nLin2
+	Private nDesconto := 0
 
 	If SC5->C5_TPDOC <> "F"
 		MSGINFO("Tipo de Documento Incorreto para a impressão. !!! "," Atenção ")
@@ -206,6 +207,8 @@ oPrint:Say(nLin, 1800, SC5->C5_XPEDCOM, oFont12N)
 nLin+=70 
 oPrint:Say(nLin, 100,  ("Proposta:"), oFont12)
 oPrint:Say(nLin, 300,  SC5->C5_XPROPOS, oFont12N)
+oPrint:Say(nLin, 1570,  ("Responsável:"), oFont12)
+oPrint:Say(nLin, 1800, SC5->C5_XUSER, oFont12N) 
 
 //nLin+=120
 //oPrint:Say(nLin, 900, ("I T E N S  D O  O R Ç A M E N T O"), oFont14NS)
@@ -241,12 +244,26 @@ While SC6->(!EOF()) .AND. xFilial("SC6") = SC6->C6_FILIAL .AND. SC6->C6_NUM = _N
 		oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)  //C6_XSEREQU serie do equipamento
 		//oPrint:Say(nLin, 1150, cTes, oFont8) 
 		oPrint:Say(nLin, 1250, Transform(SC6->C6_QTDVEN, "@e 999,999,999.999"), oFont10,,,,1)  
-		oPrint:Say(nLin, 1550, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1) 	
+		If !Empty(SC6->C6_VALDESC) 
+			oPrint:Say(nLin, 1550, Transform((SC6->C6_PRCVEN+SC6->C6_VALDESC), "@e 999,999,999.99"), oFont10,,,,1) 
+		Else
+			oPrint:Say(nLin, 1550, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1) 	
+		EndIf
 		oPrint:Say(nLin, 2070, Transform(SC6->C6_VALOR, "@e 999,999,999.99"), oFont10,,,,1)      //oFont8,,,,2) // centraliza 
 	nLin+=50
 	_Qtd  := _Qtd + SC6->C6_QTDVEN
-	_Tot  := _Tot + SC6->C6_VALOR
 
+	If !Empty(SC6->C6_VALDESC) 
+
+		_Tot  := _Tot + SC6->C6_VALOR
+
+		nDesconto += SC6->C6_VALDESC * _Qtd
+
+	Else
+
+		_Tot  := _Tot + SC6->C6_VALOR
+
+	EndIf
 
 	// Verifica se é necessário iniciar uma nova página
 ElseIf nLin >= nLinMax
@@ -261,11 +278,27 @@ ElseIf nLin >= nLinMax
 	oPrint:Say(nLin, 390, SC6->C6_DESCRI, oFont10)
 	oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)  //C6_XSEREQU serie do equipamento
 	oPrint:Say(nLin, 1250, Transform(SC6->C6_QTDVEN, "@e 999,999,999.999"), oFont10,,,,1)
-	oPrint:Say(nLin, 1550, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1)
+		If !Empty(SC6->C6_VALDESC) 
+			oPrint:Say(nLin, 1550, Transform((SC6->C6_PRCVEN+SC6->C6_VALDESC), "@e 999,999,999.99"), oFont10,,,,1) 
+		Else
+			oPrint:Say(nLin, 1550, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1) 	
+		EndIf
 	oPrint:Say(nLin, 2070, Transform(SC6->C6_VALOR, "@e 999,999,999.99"), oFont10,,,,1)      //oFont8,,,,2) // centraliza
 	nLin+=50
+
 	_Qtd  := _Qtd + SC6->C6_QTDVEN
-	_Tot  := _Tot + SC6->C6_VALOR
+
+	If !Empty(SC6->C6_VALDESC) 
+
+		_Tot  := _Tot + SC6->C6_VALOR
+
+		nDesconto += SC6->C6_VALDESC * _Qtd
+
+	Else
+
+		_Tot  := _Tot + SC6->C6_VALOR
+
+	EndIf
 EndIf
 
 SC6->(dbSkip())
@@ -291,7 +324,9 @@ If nLin >= nLinMax
 
 	nLin+= 50
 
-	oPrint:Say(nLin, 0110, "FATURA DE LOCAÇÃO N.º: : " +SC5->C5_NOTA+"/"+SC5->C5_SERIE, oFont16N)
+	oPrint:Say(nLin, 0110, "FATURA DE LOCAÇÃO N.º : " +SC5->C5_NOTA+"/"+SC5->C5_SERIE, oFont16N)
+	nLin+=50
+	oPrint:Say(nLin, 0110, "PEDIDO N.º : " +SC5->C5_NUM, oFont16N)
 	nLin+=50
 	oPrint:Say(nLin, 0110, "PERIODO: : REF: "+SUBSTR(DTOS(SC5->C5_XDTINI),7,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTINI),5,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTINI),1,4)+" A "+SUBSTR(DTOS(SC5->C5_XDTFIM),7,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTFIM),5,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTFIM),1,4), oFont14N)  //+Chr(13) + Chr(10)
 	nLin+=50
@@ -384,7 +419,9 @@ Else
 
 	nLin += 50
 
-	oPrint:Say(nLin, 0110, "FATURA DE LOCAÇÃO N.º: : " +SC5->C5_NOTA+"/"+SC5->C5_SERIE, oFont16N)
+	oPrint:Say(nLin, 0110, "FATURA DE LOCAÇÃO N.º : " +SC5->C5_NOTA+"/"+SC5->C5_SERIE, oFont16N)
+	nLin+=50
+	oPrint:Say(nLin, 0110, "PEDIDO N.º : " +SC5->C5_NUM, oFont16N)
 	nLin+=50
 	oPrint:Say(nLin, 0110, "PERIODO: : REF: "+SUBSTR(DTOS(SC5->C5_XDTINI),7,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTINI),5,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTINI),1,4)+" A "+SUBSTR(DTOS(SC5->C5_XDTFIM),7,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTFIM),5,2)+"/"+SUBSTR(DTOS(SC5->C5_XDTFIM),1,4), oFont14N)  //+Chr(13) + Chr(10)
 	nLin+=50
@@ -463,10 +500,21 @@ Else
 	dbSeek(xFilial("SCV")+_Nun)
 	cFormPg := SCV->CV_DESCFOR
 
-	oPrint:Say(nLin, 0110, "Forma de Pagamento : " +cFormPg, oFont12N)
-	oPrint:Say(nLin, 1700, "Total Da Fatura R$ : " +Transform(_Tot, "@e 999,999,999.99"), oFont12N)
-	nLin+=50
+	If !Empty(nDesconto)
 
+		oPrint:Say(nLin, 0110, "Forma de Pagamento : " +cFormPg, oFont12N)
+		oPrint:Say(nLin, 1700, "Total Da Fatura R$ : " +Transform(_Tot, "@e 999,999,999.99"), oFont12N)
+		nLin+=50
+		oPrint:Say(nLin, 0110, "Desconto R$ : " +Transform(nDesconto, "@e 999,999,999.99"), oFont12N)
+		nLin+=50
+
+	Else
+
+		oPrint:Say(nLin, 0110, "Forma de Pagamento : " +cFormPg, oFont12N)
+		oPrint:Say(nLin, 1700, "Total Da Fatura R$ : " +Transform(_Tot, "@e 999,999,999.99"), oFont12N)
+		nLin+=50
+
+	EndIf
 
 	oPrint:Say(nLin, 0110, "Vencimento : " +CVALTOCHAR(STOD(RETVENC())), oFont12N)
 EndIf
