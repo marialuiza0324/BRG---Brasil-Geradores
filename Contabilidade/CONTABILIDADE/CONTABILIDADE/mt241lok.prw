@@ -22,22 +22,25 @@ __________________________________________________________________________
 
 user function MT241LOK()
 	local _lok:=.t.
-	Local nPosOP := aScan(aHeader,{|x| AllTrim(x[2])=="D3_OP"})
+	Local cOp       := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_OP"})
 	Local nOstec    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_OSTEC"})
 	Local cLote     := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOTECTL"})
 	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
+	Local _op       := ""
 	Local cLoteCtl  := ""
 	Local cTMAlm   := SupergetMv("MV_TMALM" , ,)//560
 	Local cUserAlm  := SupergetMv("MV_USTMALM", ,)//000121
 	Local _Tm  := CTM
 	Local cUserid := RetCodUsr()
-	Local _MovTm := GetMv("MV_MOVTM") //002,502,560 
+	Local _MovTm := GetMv("MV_MOVTM") //002,502,560
 	Local cUser  := GetMv("MV_BLOQUSE")//000120,000150,000004,000000
+
 
 
 	_Os   := Acols[n,nOstec]
 	_lote := Acols[n,cLote]
 	_cod  := Acols[n,cCod]
+	_op   := Acols[n,cOp]
 
 	if empty(aCols[n,nPosOP]) .or. 'OS'$aCols[n,nPosOP]
 		if empty(cCc)
@@ -91,11 +94,17 @@ user function MT241LOK()
 	/* Validação para usuários do almoxarifado conseguirem utilizar a movimentação múltipla para transferência dos itens
 	do armazém atual para o armazém 99, uilizando apenas a TM permitida no parâmetro MV_TMALM - Maria Luiza - 05/11/2024
 	*/
+
 	If !(_Tm  $ cTMAlm) .AND. FunName() <> "MATA185"//valida se usuário está usando TM que não está contida no parâmetro, só entra na validação na rotina MATA241
 		If cUserid $ cUserAlm //verifica se é usuário do almoxarifado
 			Help(, ,"AVISO#0003", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize a(s) TM(s) : " +cTMAlm})
-			_lok := .F.
-		Endif 
+			_lok := .F.//não permite salvar
+		Endif
+	EndIf
+
+	If _Tm  $ cTMAlm .AND. Empty(_op) //Verifica se campo da OP esta vazio
+		Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
+		_lok := .F.//não permite salvar
 	EndIf
 
 
