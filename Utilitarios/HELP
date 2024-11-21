@@ -41,3 +41,9 @@ Solução : Preencher campo de OS.
 
 Problema : TM não movimenta estoque
 Solução : Campo da OS não pode ser preenchido
+
+
+"AVISO#0009"
+
+Problema : Campo da OP vazio 
+Solução : Preencha o campo da OP
