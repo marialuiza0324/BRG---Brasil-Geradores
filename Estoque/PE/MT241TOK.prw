@@ -80,10 +80,15 @@ User Function MT241TOK()
 	do armazém atual para o armazém 99, uilizando apenas a TM permitida no parâmetro MV_TMALM - Maria Luiza - 05/11/2024
 	*/
 	If !(_Tm  $ cTMAlm) .AND. FunName() <> "MATA185" //verifica se usuário está utilizando TM que está fora do parâmetro,só entra na validação na rotina MATA241
-		If cUserid $ cUserAlm 
+		If cUserid $ cUserAlm
 			Help(, ,"AVISO#0003", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize a(s) TM(s) : " +cTMAlm})
 			lRet := .F.//não permite salvar
 		EndIf
+	EndIf
+
+	If _Tm  $ cTMAlm .AND. Empty(_op ) //Verifica se campo da OP esta vazio 
+		Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
+		lRet := .F.//não permite salvar
 	EndIf
 
 
