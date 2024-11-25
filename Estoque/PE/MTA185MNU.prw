@@ -22,7 +22,7 @@ User function Termo()
 
 	Local _aBmp := {}
 	Local _user := ""
-	Local _CpNum := ""
+	//Local _CpNum := ""
 	Private oFont6		:= TFONT():New("ARIAL",7,6,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 6 Normal
 	Private oFont6N 	:= TFONT():New("ARIAL",7,6,,.T.,,,,.T.,.F.) ///Fonte 6 Negrito
 	Private oFont8		:= TFONT():New("ARIAL",9,8,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 8 Normal
@@ -88,14 +88,14 @@ User function Termo()
 		TMP->(dbCloseArea())
 	EndIf
 
-	_CpNum := StrTran(alltrim(MV_PAR01),",","','")
+	//_CpNum := StrTran(alltrim(MV_PAR01),",","','")
 	_cQry := " "
 	_cQry += "SELECT  CP_FILIAL , CP_NUM, CP_ITEM, CP_NUMOS, CP_PRODUTO, CP_DESCRI, CP_XENDERE, CP_UM, CP_QUANT, CP_OP, CP_LOCAL, CP_LOTE, CP_OBS, CP_EMISSAO, CP_SOLICIT "
 	_cQry += "FROM " + retsqlname("SCP")+" SCP "
 	_cQry += "WHERE SCP.D_E_L_E_T_ <> '*' "
 	_cQry += "AND CP_FILIAL = '" +xFilial("SCP") + "'
-	_cQry += "AND CP_NUM IN ('" + _CpNum  + "') "
-	_cQry += "ORDER BY CP_FILIAL, CP_SOLICIT,CP_NUM, CP_PRODUTO  "
+	_cQry += "AND CP_NUM BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' "
+	_cQry += "ORDER BY CP_FILIAL,CP_NUM, CP_SOLICIT, CP_PRODUTO  "
 
 	_cQry := ChangeQuery(_cQry)
 	TcQuery _cQry New Alias "TMP"
@@ -205,7 +205,7 @@ Return()
 //зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
 //Ё Criacao das perguntas dos parametros                                Ё
 //юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды
-Static Function ValidPerg1
+Static Function ValidPerg1()
 	Local aArea    := GetArea()
 	Local aRegs    := {}
 	Local i	       := 0
@@ -214,8 +214,8 @@ Static Function ValidPerg1
 	Local aHelpSpa := {}
 	Local aHelpEng := {}
 
-	aAdd(aRegs,{cPerg,"01","Nr. S. A. De     ?","","","mv_ch1","C",45,0,0,"G","","mv_par01",""	  ,"","","","",""			  ,"","","","","","","","","","","","","","","","","","",""})
-//aAdd(aRegs,{cPerg,"02","Nr. S. A. Ate    ?","","","mv_ch2","C",06,0,0,"G","","mv_par02",""	  ,"","","","",""			  ,"","","","","","","","","","","","","","","","","","","XM0"})
+	aAdd(aRegs,{cPerg,"01","Nr. S. A. De     ?","","","mv_ch1","C",45,0,0,"G","","\",""	  ,"","","","",""			  ,"","","","","","","","","","","","","","","","","","",""})
+    aAdd(aRegs,{cPerg,"02","Nr. S. A. Ate    ?","","","mv_ch2","C",06,0,0,"G","","mv_par02",""	  ,"","","","",""			  ,"","","","","","","","","","","","","","","","","","","XM0"})
 
 
 	dbSelectArea("SX1")
