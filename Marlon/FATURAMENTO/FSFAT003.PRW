@@ -5,8 +5,8 @@
 
 /*/{Protheus.doc}
 Valida bloqueio de todas as TES 
-libera apenas 530, 591 
-para os usuários do almoxarifado
+EXCETO as que estiverem no parâmetro MV_TESALM
+para os usuários contidos no parâmetro MV_USERALM
 @type  Function
 @author Maria Luiza
 @since 02/11/2024 */
