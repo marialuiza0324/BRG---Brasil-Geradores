@@ -2,6 +2,8 @@
 #Include "TOTVS.ch"
 #INCLUDE "topconn.ch"
 #include "fwmvcdef.ch"
+#INCLUDE "mntutil_os.CH"
+
 
 /*/{Protheus.doc} User Function FSMNT001
 Exemplo de consumo de REST usando Httpget
@@ -14,33 +16,31 @@ https://tdn.totvs.com/display/tec/HTTPGet
 User Function FSMNT001()
 
 	Local cHtmlPage
-	Local aHorim := {}
-	Local nX     := 0
-	Local nPos := 0
-	Local cLote := ''
-	Local cHorim := ''
-	Local cDados := ''
-	Local aPares := {}
-	Local i  := 0
-	Local nTotal := 0
-	Local cUserID :=  RetCodUsr()
-	Local cHora   := SUBSTR(Time(),1,5)
-	Local cRotina := FunName()
-	Local cQry   := ''
-	Local cCodBem := ""
+	Local aHorim 	:= {}
+	Local nX     	:= 0
+	Local nPos 		:= 0
+	Local cLote 	:= ''
+	Local cHorim 	:= ''
+	Local cDados 	:= ''
+	Local aPares 	:= {}
+	Local i  		:= 0
+	Local nTotal 	:= 0
+	//Local cUserID 	:= RetCodUsr()
+	Local cHora   	:= SubStr(Time(), 1, 5)
+	Local cRotina 	:= FunName()
+	Local cQry   	:= ''
+	Local cCodBem 	:= ""
 	Local dDtUltLan
-	Local cCCusto := ""
-	Local cCenTrab := ""
-	Local nVarDia  := 0
-	Local nContAcu := 0
+	Local cCCusto 	:= ""
+	Local cCenTrab 	:= ""
+	Local nVarDia  	:= 0
+	Local nContAcu 	:= 0
 	Local nViradas  := 0
+	Local nContador := 0
+	Local cSerie 	:= ''
 
-	Local cGERAPREV := AllTrim(GETMv("MV_NGGERPR"))
-	Local oSTP := Nil
-	//Local lRet
-	//Local TIPOACOM := .F.
-
-	Private cSerie := ''
+	Local cGERAPREV := AllTrim(GetMv("MV_NGGERPR"))
+	Private oSTP	:= Nil
 
 	// Buscar página web
 	cHtmlPage := Httpget('https://api.brggeradores.com.br/api/v2/public/integracao/horimetros')
@@ -90,7 +90,6 @@ User Function FSMNT001()
 			TcQuery cQry New Alias "TMP1"
 
 			//DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TMP1",.T.,.T.) //filtrando o bem
-
 			//Count To nTotal
 
 			//If nTotal = 1 //verifica se a query retorna algum registro
@@ -106,14 +105,14 @@ User Function FSMNT001()
 				nContAcu := TMP1->T9_CONTACU
 				nViradas  := TMP1->T9_VIRADAS
 
-				Reclock("STP",.T.) //faz a inclusão dos dados na tabela STP
+				/*Reclock("STP",.T.) //faz a inclusão dos dados na tabela STP
 
 				STP->TP_ORDEM    := u_zUltNum("STP", "TP_ORDEM", .T.)
 				STP->TP_PLANO 	 := "000000" //validar
 				STP->TP_CODBEM   := Alltrim(cCodBem)
 				STP->TP_SEQUENC  := 0 //validar
 				STP->TP_DTORIGI  := DATE() //validar
-				STP->TP_POSCONT  := GetDToVal(aPares[i][2]) //Val()
+				STP->TP_POSCONT  := Val(aPares[i][2]) //Val()
 				STP->TP_DTREAL   := DATE() //validar
 				STP->TP_DTLEITU  := DATE() //validar
 				STP->TP_SITUACA  := "L" //validar
@@ -130,34 +129,40 @@ User Function FSMNT001()
 				STP->TP_TIPOLAN  := "C" //validar
 				STP->TP_HORA     := cHora
 				STP->TP_ORIGEM   := cRotina
+				STP->(MsUnlock()) */
 
-				STP->(MsUnlock()) 
-
-				/*oSTP:= MNTCounter():New()
+				oSTP:= MNTCounter():New()
 				oSTP:setOperation(3)
 
-				TIPOACOM  := IIf(ST9->T9_TEMCONT = "S",.T.,.F.)
+				TIPOACOM := IIF(ST9->T9_TEMCONT = "S", .T., .F.)
 
 				If TIPOACOM .And. GetDToVal(aPares[i][2]) > 0
-					oSTP:setValue("TP_CODBEM" ,Alltrim(cCodBem))
-					oSTP:setValue("TP_POSCONT",GetDToVal(aPares[i][2]))
-					oSTP:setValue("TP_DTLEITU",DATE())
-					oSTP:setValue("TP_HORA"   ,cHora)
+					oSTP:setValue("TP_CODBEM",	Alltrim(cCodBem))
+					oSTP:setValue("TP_POSCONT",	GetDToVal(aPares[i][2]))
+					oSTP:setValue("TP_DTLEITU",	Date())
+					oSTP:setValue("TP_HORA",	cHora)
 				EndIf
 
 				STC->(DbSetOrder(1))
-				If STC->(DbSeek(xFilial("STC")+cCodBem))
-					lRet := oSTP:inform(STC->TC_COMPONE,0)
+				If STC->(DbSeek(xFilial("STC") + cCodBem))
+					lRet := oSTP:inform({STC->TC_COMPONE}, {})
 					If !lRet .And. !Empty(oSTP:getErrorList())
 						cError := oSTP:getErrorList()[1]
-						Alert(cError)
+						ConOut(cError)
+					Else
+						If Reclock("STP", .F.)
+							STP->TP_ORIGEM   := cRotina
+							STP->(MsUnlock())
+						EndIf
 					EndIf	
-				EndIf	*/		
+				EndIf
+
+				nContador := Val(aPares[i][2])
 
 				// GERAR O.S AUTOMATICA POR CONTADOR
-				If (cGERAPREV = "S" .Or. cGERAPREV = "C") .And. (!Empty(GetDToVal(aPares[i][2])) /*.Or. !Empty(nCONT2V)*/)
+				If (cGERAPREV = "S" .Or. cGERAPREV = "C") .And. (!Empty(nContador) /*.Or. !Empty(nCONT2V)*/)
 					If NGCONFOSAUT(cGERAPREV)
-						NGGEROSAUT(cCodBem, If(!Empty(GetDToVal(aPares[i][2])), GetDToVal(aPares[i][2]), 0/*nCONT2V*/),xFilial("STJ"))
+						NGGEROSAUT(cCodBem, If(!Empty(nContador),nContador, 0/*nCONT2V*/), xFilial("STJ"))
 					EndIf
 				EndIf
 			Else
@@ -227,7 +232,7 @@ User Function zUltNum(cTab, cCampo, lSoma1)
 	QRY_TAB->(DbCloseArea())
 
 	RestArea(aArea)
-	
+
 Return cCodFull
 
 
