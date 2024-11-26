@@ -47,3 +47,8 @@ Solução : Campo da OS não pode ser preenchido
 
 Problema : Campo da OP vazio 
 Solução : Preencha o campo da OP
+
+"AVISO#0010"
+
+Problema : Quantidade informada maior que saldo disponível
+Solução : Saldo disponível para transferência : " "
