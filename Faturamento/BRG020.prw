@@ -71,7 +71,7 @@ User Function BRG020()
 	Private cLogoD
 	Private _Nf        := SC5->C5_NOTA
 	Private _Serie     := SC5->C5_SERIE
-	Private	_Qtd    := 0
+	//Private	_Qtd    := 0
 	Private _Tot    := 0
 	Private _TotIpi := 0
 	Private _TotDif := 0
@@ -243,7 +243,7 @@ While SC6->(!EOF()) .AND. xFilial("SC6") = SC6->C6_FILIAL .AND. SC6->C6_NUM = _N
 		//oPrint:Say(nLin, 0900, cNcn, oFont8)
 		oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)  //C6_XSEREQU serie do equipamento
 		//oPrint:Say(nLin, 1150, cTes, oFont8) 
-		oPrint:Say(nLin, 1250, Transform(SC6->C6_QTDVEN, "@e 999,999,999.999"), oFont10,,,,1)  
+		oPrint:Say(nLin, 1250, cValToChar(SC6->C6_QTDVEN), oFont10,,,,1)  
 		If !Empty(SC6->C6_VALDESC) 
 			oPrint:Say(nLin, 1550, Transform((SC6->C6_PRCVEN+SC6->C6_VALDESC), "@e 999,999,999.99"), oFont10,,,,1) 
 		Else
@@ -251,13 +251,13 @@ While SC6->(!EOF()) .AND. xFilial("SC6") = SC6->C6_FILIAL .AND. SC6->C6_NUM = _N
 		EndIf
 		oPrint:Say(nLin, 2070, Transform(SC6->C6_VALOR, "@e 999,999,999.99"), oFont10,,,,1)      //oFont8,,,,2) // centraliza 
 	nLin+=50
-	_Qtd  := _Qtd + SC6->C6_QTDVEN
+	//_Qtd  := SC6->C6_QTDVEN
 
 	If !Empty(SC6->C6_VALDESC) 
 
 		_Tot  := _Tot + SC6->C6_VALOR
 
-		nDesconto += SC6->C6_VALDESC * _Qtd
+		nDesconto += SC6->C6_VALDESC 
 
 	Else
 
@@ -277,7 +277,7 @@ ElseIf nLin >= nLinMax
 	oPrint:Say(nLin, 230, SC6->C6_PRODUTO, oFont10)
 	oPrint:Say(nLin, 390, SC6->C6_DESCRI, oFont10)
 	oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)  //C6_XSEREQU serie do equipamento
-	oPrint:Say(nLin, 1250, Transform(SC6->C6_QTDVEN, "@e 999,999,999.999"), oFont10,,,,1)
+	oPrint:Say(nLin, 1250, cValToChar(SC6->C6_QTDVEN), oFont10,,,,1)
 		If !Empty(SC6->C6_VALDESC) 
 			oPrint:Say(nLin, 1550, Transform((SC6->C6_PRCVEN+SC6->C6_VALDESC), "@e 999,999,999.99"), oFont10,,,,1) 
 		Else
@@ -286,13 +286,13 @@ ElseIf nLin >= nLinMax
 	oPrint:Say(nLin, 2070, Transform(SC6->C6_VALOR, "@e 999,999,999.99"), oFont10,,,,1)      //oFont8,,,,2) // centraliza
 	nLin+=50
 
-	_Qtd  := _Qtd + SC6->C6_QTDVEN
+	//_Qtd  :=  SC6->C6_QTDVEN
 
 	If !Empty(SC6->C6_VALDESC) 
 
 		_Tot  := _Tot + SC6->C6_VALOR
 
-		nDesconto += SC6->C6_VALDESC * _Qtd
+		nDesconto += SC6->C6_VALDESC 
 
 	Else
 
