@@ -18,6 +18,7 @@ User Function FSCOM003()
 	Static _CRLF     := CHR(13)+CHR(13)
 	Static cTxtLinha := ""
 	Static cMensagem := ""
+	Static cDescCc   := ""
 	Private nLin    := 0
 	Private nTraco := "_______________________________________________________________________________________________________________________________________________________________________________________________"
 	Private aDados   := {}
@@ -38,8 +39,9 @@ User Function FSCOM003()
 	cQuery += " SC7.C7_GRUPO, "
 	cQuery += " SC7.C7_CODSOL, "
 	cQuery += " SC1.C1_SOLICIT, "
-	cQuery += " SC1.C1_COTACAO "
-	cQuery += " FROM SCR010 SCR "
+	cQuery += " SC1.C1_COTACAO, "
+	cQuery += " SC7.C7_CC "
+	cQuery += " FROM " + retsqlname("SCR") +" SCR "
 	cQuery += " INNER JOIN SC7010 SC7 ON SC7.C7_NUM = SCR.CR_NUM "
 	cQuery += " AND SC7.D_E_L_E_T_ <> '*' "
 	cQuery += " INNER JOIN SC1010 SC1 ON SC7.C7_NUM = SC1.C1_PEDIDO "
@@ -48,8 +50,8 @@ User Function FSCOM003()
 	cQuery += " AND SC7.C7_NUMSC = SC1.C1_NUM "
 	cQuery += " AND SC1.D_E_L_E_T_ <> '*' "
 	cQuery += " WHERE SCR.D_E_L_E_T_ <> '*' "
-	cQuery += " AND CR_USER = " + RetCodUsr() + " "
-	cQuery += " AND CR_NUM = " + RTRIM(SCR->CR_NUM) + " "
+	cQuery += " AND CR_USER = '" + RetCodUsr() + "' "
+	cQuery += " AND CR_NUM = '" + RTRIM(SCR->CR_NUM) + "' "
 	cQuery += " ORDER BY SC7.C7_ITEM "
 
 	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TMP1",.T.,.T.)
@@ -71,7 +73,9 @@ User Function FSCOM003()
 			EndIf
 		Next nXi
 
-		aAdd(aDados,{TMP1->CR_NUM,TMP1->CR_APROV,TMP1->C7_PRODUTO,TMP1->C7_DESCRI,TMP1->C1_NUM,TMP1->C7_ITEM,TMP1->C1_XOBMEMO,TMP1->C7_GRUPO,TMP1->C1_SOLICIT,TMP1->C1_COTACAO})
+		cDescCc := 	Posicione("CTT", 1, FWxFilial("CTT")+TMP1->C7_CC, "CTT_DESC01")
+
+		aAdd(aDados,{TMP1->CR_NUM,TMP1->CR_APROV,TMP1->C7_PRODUTO,TMP1->C7_DESCRI,TMP1->C1_NUM,TMP1->C7_ITEM,TMP1->C1_XOBMEMO,TMP1->C7_GRUPO,TMP1->C1_SOLICIT,TMP1->C1_COTACAO,TMP1->C7_CC,cDescCc})
 
 		TMP1->(DbSkip())
 
@@ -94,7 +98,6 @@ Static Function fCriaTela()
 	Local nJanAltu := 800
 	//Inicio e fim do laço de repetição
 	Local nAtual := 0
-	Local nFinal := MV_PAR01
 	Local nQtdObj := 700
 	//Objetos
 	Private oDlgTst
@@ -287,7 +290,7 @@ Static Function fCriaObj()
 		//Cria o TGet
 		//Descrição do Produto
 		&(cGetCon + cValToChar(nAtual1)) := cValToChar(aDados[nAtual][4])
-		&(cGetObj + cValToChar(nAtual1)) := TGet():New(nLin+=9,115, {|| &(cGetCon + cValToChar(nAtual1))}, oPanel, 132, 010, , , , , , , , .T., , , , , , , .T., , , , , , , , , , , , , , , , )
+		&(cGetObj + cValToChar(nAtual1)) := TGet():New(nLin+=8,115, {|| &(cGetCon + cValToChar(nAtual1))}, oPanel, 132, 010, , , , , , , , .T., , , , , , , .T., , , , , , , , , , , , , , , , )
 
 		nAtual1  += 1
 
@@ -295,6 +298,36 @@ Static Function fCriaObj()
 		//Descrição do Produto
 		&(cSayObj + cValToChar(nAtual1)) := TSay():New(nLin+=4, 012, {|| }, oPanel, , , , , , .T., CLR_BLACK, , 063, 012, , , , , , .T.)
 		&(cSayObj + cValToChar(nAtual1)):SetText("Descrição do Produto: ")
+		&(cSayObj + cValToChar(nAtual1)):lTransparent := .T.
+
+		nAtual1+=1
+
+		//Cria o TGet
+		//Centro de Custo
+		&(cGetCon + cValToChar(nAtual1)) := cValToChar(aDados[nAtual][11])
+		&(cGetObj + cValToChar(nAtual1)) := TGet():New(nLin+=7,115, {|| &(cGetCon + cValToChar(nAtual1))}, oPanel, 132, 010, , , , , , , , .T., , , , , , , .T., , , , , , , , , , , , , , , , )
+
+		nAtual1+=1
+
+		//Cria o TSay
+		//Centro de Custo
+		&(cSayObj + cValToChar(nAtual1)) := TSay():New(nLin+=4, 012, {|| }, oPanel, , , , , , .T., CLR_BLACK, , 063, 012, , , , , , .T.)
+		&(cSayObj + cValToChar(nAtual1)):SetText("Centro de Custo: ")
+		&(cSayObj + cValToChar(nAtual1)):lTransparent := .T.
+
+		nAtual1  += 1
+
+		//Cria o TGet
+		//Descrição do Centro de Custo
+		&(cGetCon + cValToChar(nAtual1)) := cValToChar(aDados[nAtual][12])
+		&(cGetObj + cValToChar(nAtual1)) := TGet():New(nLin+=8,115, {|| &(cGetCon + cValToChar(nAtual1))}, oPanel, 132, 010, , , , , , , , .T., , , , , , , .T., , , , , , , , , , , , , , , , )
+
+		nAtual1  += 1
+
+		//Cria o TSay
+		//Descrição do Centro de Custo
+		&(cSayObj + cValToChar(nAtual1)) := TSay():New(nLin+=3, 012, {|| }, oPanel, , , , , , .T., CLR_BLACK, , 063, 012, , , , , , .T.)
+		&(cSayObj + cValToChar(nAtual1)):SetText("Descrição do Centro de Custo: ")
 		&(cSayObj + cValToChar(nAtual1)):lTransparent := .T.
 
 		nAtual1+=1
