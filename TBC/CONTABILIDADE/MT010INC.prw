@@ -25,14 +25,17 @@ User Function MT010INC()
 	Local nX
 	Local aArea := GetArea()
 	Local aAreaB1 := SB1->(GetArea())
+	Local i
 	Static cTabelaAux := ''
 	Static cChaveAux  := ''
 	Static cFilAtuAux := ''
 	Static cCodAtuAux := ''
 	Static cCodNovAux := ''
 	Static cFilNovAux:= ''
-	Static cDestino := SuperGetMV("MV_RELFROM", ,"")
+	Static cDestino := "maria.luiza@brggeradores.com.br"
 	Static aFiliaisCopiadas := {}
+	Static cTitulo:='Inclusão de novo Produto'
+	Static xHTM := ""
 
 /*
 	Tabela
@@ -67,7 +70,38 @@ User Function MT010INC()
 			Next
 
 			FwAlertInfo("Cópia concluída.", "Atenção")
-			EnviarEmailProduto(cDestino, SB1->B1_COD, SB1->B1_DESC, aFiliaisCopiadas)
+
+			if !empty(cDestino)
+				//Envia email de Aviso
+				xHTM := '<HTML><BODY>'
+				xHTM += '<hr>'
+				xHTM += '<p  style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">'
+				xHTM += '<b><font face="Verdana" SIZE=3>'+cTitulo+' &nbsp; '+dtoc(date())+'&nbsp;&nbsp;&nbsp;'+time()+'</b></p>'
+				xHTM += '<hr>'
+				xHTM += '<br>'
+				xHTM += '<br>'
+				xHTM += 'Foi incluido um novo Produto <BR><BR>-Código <b>'   +SB1->B1_COD+' - '+SB1->B1_DESC+'</b> <BR>-Usuario <b>'+UsrRetName(RetCodUsr())+'</b> <br><br>'
+				xHTM += '<b>Empresas onde o produto foi replicado:</b><BR>'
+				xHTM += '<ul>'
+				For i := 1 To Len(aFiliaisCopiadas)
+					// Seleciona a tabela SM0 para buscar a descrição da filial
+					DbSelectArea("SM0")
+					SM0->(DbSetOrder(1)) // Certifique-se de que o índice está ordenando pela filial
+					If SM0->(MsSeek(aFiliaisCopiadas[i])) // Busca pela filial
+						xHTM += '<li>' + aFiliaisCopiadas[i] + " - " + Alltrim(SM0->M0_NOMECOM) + '</li>' +CHR(13)+CHR(10)
+					Else
+						xHTM += '<li>' + aFiliaisCopiadas[i] + " - Descrição não encontrada" + '</li>' + CHR(13) + CHR(10)
+					EndIf
+				Next i
+				xHTM += '</ul>'
+				xHTM += '<BR>'
+				xHTM += 'Ação: Verifique os cadastros nas empresas listadas e valide os dados.<br><br>'
+				xHTM += '</BODY></HTML>'
+			EndIf
+
+			//Chama o disparo do e-Mail
+			U_zEnvMail(cDestino, cTitulo, xHTM, {})
+
 
 		EndIf
 	EndIF
@@ -148,50 +182,13 @@ Static Function fCopia()
 	RestArea(aArea)
 Return
 
-Static Function EnviarEmailProduto(cDestino, cCodProduto, cDescProduto, aFiliaisCopiadas)
+User Function zEnvMail(cPara, cAssunto, xHTM, aAnexos)
 
-	Local cAviso:='Inclusão de novo Produto'
-	Local xHTM := ""
-	Local cFiliais := ArrTokStr(aFiliaisCopiadas, ",")
+	Local aArea    := GetArea()
+	Local lEnvioOK := .F.
 
-	if !empty(cDestino)
-		//Envia email de Aviso
-		xHTM := '<HTML><BODY>'
-		xHTM += '<hr>'
-		xHTM += '<p  style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">'
-		xHTM += '<b><font face="Verdana" SIZE=3>'+cAviso+' &nbsp; '+dtoc(date())+'&nbsp;&nbsp;&nbsp;'+time()+'</b></p>'
-		xHTM += '<hr>'
-		xHTM += '<br>'
-		xHTM += '<br>'
-		xHTM += 'Foi incluido um novo Produto <BR><BR>-Código <b>'  +cCodProduto+' - '+cDescProduto+'</b> <BR>-Usuario <b>'+UsrRetName(RetCodUsr())+'</b> <br><br>'
-		xHTM += '<b>Filiais onde o produto foi replicado:</b><BR>'
-		xHTM += '<ul>'
-		xHTM += '<li>' + cFiliais + '</li>'
-		xHTM += '</ul>'
-		xHTM += '<BR>'
-		xHTM += 'Ação: Verifique os cadastros nas filiais listadas e valide os dados.<br><br>'
-		xHTM += '</BODY></HTML>'
+	lEnvioOK := GPEMail(cAssunto, xHTM, cPara, aAnexos)
 
-		//Parametros necessarios para a rotina
-		// MV_RELACNT - Conta a ser utilizada no envio de E-Mail
-		// MV_RELFROM - E-mail utilizado no campo FROM no envio
-		// MV_RELSERV - Nome do Servidor de Envio de E-mail utilizado no envio
-		// MV_RELAUTH - Determina se o Servidor de Email necessita de Autenticação
-		// MV_RELAUSR - Usuário para Autenticação no Servidor de Email
-		// MV_RELAPSW - Senha para Autenticação no Servidor de Email
+	RestArea(aArea)
+Return lEnvioOK
 
-		oMail := SendMail():new()
-
-		oMail:SetTo(cDestino)
-		//oMail:SetCc('') // (opc)
-		oMail:SetFrom(Alltrim(GetMv("MV_RELFROM",," ")))
-		//oMail:SetAttachment('\system\siga.txt') //Anexo (opc)
-		oMail:SetSubject('Aviso - '+cAviso)
-		oMail:SetBody(xHTM)
-		oMail:SetShedule(.f.) //(opc) Default .f. - define modo Schedule
-		oMail:SetEchoMsg(.f.) //(opc) Default .t. - define se exibe mensagens automaticamente na Tela (Schedule .f.) / Console (Schedule .t.)
-		oMail:Send()
-	endif
-
-
-Return
