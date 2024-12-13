@@ -1,0 +1,77 @@
+{
+	"version": "0.2.2",
+	"includes": [
+		""
+	],
+	"permissions": {
+		"authorizationtoken": ""
+	},
+	"connectedServer": {},
+	"configurations": [
+		{
+			"id": "unbua5ahxkkm4jz6daqlbypkfqs0n",
+			"type": "totvs_server_protheus",
+			"name": "TESTE MARIA",
+			"port": 7098,
+			"address": "192.168.1.241",
+			"buildVersion": "7.00.210324P",
+			"secure": false,
+			"includes": [
+				"C:\\include"
+			],
+			"environments": [
+				"SIGATESMARIA"
+			],
+			"username": "maria.luiza",
+			"environment": "SIGATESMARIA",
+			"token": "djM6dW5idWE1YWh4a2ttNGp6NmRhcWxieXBrZnFzMG46MToxOTIuMTY4LjEuMjQxOjcwOTg6MDo3LjAwLjIxMDMyNFA6Mw==:djE6U0lHQVRFU01BUklBOm1hcmlhLmx1aXphOnBCaktSTUhUTjNlcjRZZDNWRGw4c090alA2L3pYVHMrWW02SHJOL0FZL1U9|djI6MTczNDAyMDYwMjowOjE6MQ==.bjke8I5yxiR04EH3jZVvdZyPTb/46geBdQ3yYj5jy/9WFbE7EKWazNzSkrDATBajyFgrjMIrQhzzHU08zcCfL17cEtFEVJlZK7DY/TZTsQVeRTB/iq1YXjWgIimjmwzJw19KdzCUvYLuUB7jdfRqj9j+VYAEVx96A4ReqlKZGTJgFKNWzZ0a49wHBY17URlKYof7JqqtuB1JlS9A4tg3HqxSUZfcgPzG9cAiOc7eRhQ4yQl19l7JiKpv4RB2X1Llpb1nceQfusuZeMW7GfY/ELwq5rf5x+4RPNwg585mAiC4cRGwYFpRhT9H7d//XRlZryVgJm2A1xuSHv8fq/Kg0A==",
+			"informations": {
+				"permissions": [],
+				"errorMessage": "",
+				"environmentDetectedType": "totvs_server_protheus",
+				"serverDetectedType": "totvs_server_protheus"
+			}
+		},
+		{
+			"id": "mvuuyeaqy4m4k3n7wiwztgb580tc9",
+			"type": "totvs_server_protheus",
+			"name": "C012LC_DEV",
+			"port": 6700,
+			"address": "transbraz179647.protheus.cloudtotvs.com.br",
+			"buildVersion": "7.00.210324P",
+			"secure": false,
+			"includes": [
+				"C:\\include"
+			],
+			"environments": [
+				"C012LC_DEV"
+			],
+			"username": "maria.luiza",
+			"environment": "C012LC_DEV",
+			"token": "djM6bXZ1dXllYXF5NG00azNuN3dpd3p0Z2I1ODB0Yzk6MTp0cmFuc2JyYXoxNzk2NDcucHJvdGhldXMuY2xvdWR0b3R2cy5jb20uYnI6NjcwMDowOjcuMDAuMjEwMzI0UDoz:djE6QzAxMkxDX0RFVjptYXJpYS5sdWl6YTp5WWxXNWpaa1JFb3JXNWtYSGZpc001bnhUY29JU0xRRVFmVDEwMGlwZCtnPQ==|djI6MTczNDAwNTIyMDowOjE6MQ==.t/etdCphcqPuECTHIehtEsTORpZyZtXIj2SEV2furVBLz3m0FQ40CnPtZrfcTYe9OVtV6XMj5q2gNT9Ff+MxBQCZZNOD/PhDHBvpvy80VQTCxi/gitS+Aef9tx5JZAr5yPLLo4UHshyu21PMCN3UiNKnSwcIv5HupWbSKD/iPvDQDu3N8mQHibejLqvxWVPsm0zY1gRZxRB8p649YYLw48UOBnO3wcd1mY7bLQL/QunZEsnRlwJYu0XrS02iA+qkSISUj9aevEjoTC+J7AV/DQ/+CkxuvaxpIubxA91+8hAMta/CCFpBKMUdTxxoHtY5fv5ibAl4xl8uR/G+R7pCCQ==",
+			"informations": {
+				"permissions": [],
+				"errorMessage": "",
+				"environmentDetectedType": "totvs_server_protheus",
+				"serverDetectedType": "totvs_server_protheus"
+			}
+		}
+	],
+	"savedTokens": [
+		[
+			"unbua5ahxkkm4jz6daqlbypkfqs0n:SIGATESMARIA",
+			{
+				"id": "unbua5ahxkkm4jz6daqlbypkfqs0n",
+				"token": "djM6dW5idWE1YWh4a2ttNGp6NmRhcWxieXBrZnFzMG46MToxOTIuMTY4LjEuMjQxOjcwOTg6MDo3LjAwLjIxMDMyNFA6Mw==:djE6U0lHQVRFU01BUklBOm1hcmlhLmx1aXphOnBCaktSTUhUTjNlcjRZZDNWRGw4c090alA2L3pYVHMrWW02SHJOL0FZL1U9|djI6MTczNDAyMDYwMjowOjE6MQ==.bjke8I5yxiR04EH3jZVvdZyPTb/46geBdQ3yYj5jy/9WFbE7EKWazNzSkrDATBajyFgrjMIrQhzzHU08zcCfL17cEtFEVJlZK7DY/TZTsQVeRTB/iq1YXjWgIimjmwzJw19KdzCUvYLuUB7jdfRqj9j+VYAEVx96A4ReqlKZGTJgFKNWzZ0a49wHBY17URlKYof7JqqtuB1JlS9A4tg3HqxSUZfcgPzG9cAiOc7eRhQ4yQl19l7JiKpv4RB2X1Llpb1nceQfusuZeMW7GfY/ELwq5rf5x+4RPNwg585mAiC4cRGwYFpRhT9H7d//XRlZryVgJm2A1xuSHv8fq/Kg0A=="
+			}
+		],
+		[
+			"mvuuyeaqy4m4k3n7wiwztgb580tc9:C012LC_DEV",
+			{
+				"id": "mvuuyeaqy4m4k3n7wiwztgb580tc9",
+				"token": "djM6bXZ1dXllYXF5NG00azNuN3dpd3p0Z2I1ODB0Yzk6MTp0cmFuc2JyYXoxNzk2NDcucHJvdGhldXMuY2xvdWR0b3R2cy5jb20uYnI6NjcwMDowOjcuMDAuMjEwMzI0UDoz:djE6QzAxMkxDX0RFVjptYXJpYS5sdWl6YTp5WWxXNWpaa1JFb3JXNWtYSGZpc001bnhUY29JU0xRRVFmVDEwMGlwZCtnPQ==|djI6MTczNDAwNTIyMDowOjE6MQ==.t/etdCphcqPuECTHIehtEsTORpZyZtXIj2SEV2furVBLz3m0FQ40CnPtZrfcTYe9OVtV6XMj5q2gNT9Ff+MxBQCZZNOD/PhDHBvpvy80VQTCxi/gitS+Aef9tx5JZAr5yPLLo4UHshyu21PMCN3UiNKnSwcIv5HupWbSKD/iPvDQDu3N8mQHibejLqvxWVPsm0zY1gRZxRB8p649YYLw48UOBnO3wcd1mY7bLQL/QunZEsnRlwJYu0XrS02iA+qkSISUj9aevEjoTC+J7AV/DQ/+CkxuvaxpIubxA91+8hAMta/CCFpBKMUdTxxoHtY5fv5ibAl4xl8uR/G+R7pCCQ=="
+			}
+		]
+	],
+	"lastConnectedServer": "unbua5ahxkkm4jz6daqlbypkfqs0n"
+}
