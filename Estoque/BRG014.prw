@@ -54,9 +54,9 @@ Static Function ReportDef1() //Cria o Cabeçalho em excel
 	TRCell():New(oSection, "CEL06_HORA"      , "SH6",  "Horas"         ,PesqPict("SH6","H6_TEMPO"     ),14               , /*lPixel*/, /* Formula*/)
 
 	oSection2:= TRSection():New(oReport, "Itens Antendimentos da OP", {"TEMP"}, NIL, .F., .T.)
-	TRCell():New(oSection2, "CEL01_OP"       , "SD3", "Num. OP"        ,PesqPict("SD3","D3_OP"        ),14                  , /*lPixel*/, /* Formula*/)
+	TRCell():New(oSection2, "CEL01_OP"       , "SD3", "Num. OP"        ,PesqPict("SD3","D3_OP"        ),16                 , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL02_CODPRO"   , "SD3", "Produto"        ,PesqPict("SD3","D3_COD"       ),10                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL03_DESCRI"   , "SB1", "Descrição"      ,PesqPict("SB1","B1_DESC"      ),40                 , /*lPixel*/, /* Formula*/)
+	TRCell():New(oSection2, "CEL03_DESCRI"   , "SB1", "Descrição"      ,PesqPict("SB1","B1_DESC"      ),43                 , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL04_QUANT"    , "SD3", "Quant"          ,PesqPict("SD3","D3_QUANT"     ),12                  , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL05_VALOR"    , "SD3", "Custo Unit"     ,PesqPict("SD3","D3_CUSTO1"    ),12                  , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL06_TOTAL"    , "SD3", "Total Custo"    ,PesqPict("SD3","D3_CUSTO1"    ),12                  , /*lPixel*/, /* Formula*/)
