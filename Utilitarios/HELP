@@ -52,3 +52,21 @@ Solução : Preencha o campo da OP
 
 Problema : Quantidade informada maior que saldo disponível
 Solução : Saldo disponível para transferência : " "
+
+"AVISO#0011"
+
+Problema : Usuário não tem permissão para utilizar TM selecionada
+Solução : não utilizar TM contida no parâmetro MV_BAIXALM - Exclusiva para usuários realizar baixa na GRID
+
+
+"AVISO#0012"
+
+Problema : não autorizado a baixar Pre Requisição nesse Almoxarifado
+Solução : Realize baixa no almoxarifado 01
+
+
+"AVISO#0013"
+
+Problema : Campo de OS vazio 
+Solução : Preencha o campo da OS
+
