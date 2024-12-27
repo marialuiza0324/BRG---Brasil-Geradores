@@ -7,12 +7,12 @@
 _____________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Programa  ¦ MT010INC   ¦ Autor ¦ Claudio Ferreira   ¦ Data ¦ 08/05/2012¦¦¦
+¦¦¦Programa  ¦ MT010INC   ¦ Autor ¦ Maria Luiza        ¦ Data ¦ 25/11/2024¦¦¦
 ¦¦+----------+------------------------------------------------------------¦¦¦
-¦¦¦Descriçào ¦ Ponto de Entrada apos a inclusao do produto                ¦¦¦
-¦¦¦          ¦ Utilizado para avisar a CTB                                ¦¦¦
+¦¦¦Descriçào ¦ Réplica cadastro de produtos                               ¦¦¦
+¦¦¦          ¦                             								  ¦¦¦
 ¦¦+----------+------------------------------------------------------------¦¦¦
-¦¦¦ Uso      ¦ TOTVS-GO                                                   ¦¦¦
+¦¦¦ Uso      ¦ BRG-Brasil Geradores                                       ¦¦¦
 ¦¦+-----------------------------------------------------------------------+¦¦
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
@@ -26,13 +26,14 @@ User Function MT010INC()
 	Local aArea := GetArea()
 	Local aAreaB1 := SB1->(GetArea())
 	Local i
+	Local cQuery := " "
 	Static cTabelaAux := ''
 	Static cChaveAux  := ''
 	Static cFilAtuAux := ''
 	Static cCodAtuAux := ''
 	Static cCodNovAux := ''
 	Static cFilNovAux:= ''
-	Static cDestino := "maria.luiza@brggeradores.com.br"
+	Static cDestino := SuperGetMV("MV_DESTINO")
 	Static aFiliaisCopiadas := {}
 	Static cTitulo:='Inclusão de novo Produto'
 	Static xHTM := ""
@@ -76,23 +77,31 @@ User Function MT010INC()
 				xHTM := '<HTML><BODY>'
 				xHTM += '<hr>'
 				xHTM += '<p  style="word-spacing: 0; line-height: 100%; margin-top: 0; margin-bottom: 0">'
-				xHTM += '<b><font face="Verdana" SIZE=3>'+cTitulo+' &nbsp; '+dtoc(date())+'&nbsp;&nbsp;&nbsp;'+time()+'</b></p>'
+				xHTM += '<b><font face="Verdana" SIZE=3>'+cTitulo+' &nbsp; '+dtoc(date())+'&nbsp;&nbsp;&nbsp;'+GetRmtTime()+'</b></p>'
 				xHTM += '<hr>'
 				xHTM += '<br>'
 				xHTM += '<br>'
-				xHTM += 'Foi incluido um novo Produto <BR><BR>-Código <b>'   +SB1->B1_COD+' - '+SB1->B1_DESC+'</b> <BR>-Usuario <b>'+UsrRetName(RetCodUsr())+'</b> <br><br>'
+				xHTM += 'Foi incluido um novo Produto <BR><BR>-Produto <b>'   +SB1->B1_COD+' - '+SB1->B1_DESC+'</b> <BR>-Usuario <b>'+UsrRetName(RetCodUsr())+'</b> <br><br>'
 				xHTM += '<b>Empresas onde o produto foi replicado:</b><BR>'
 				xHTM += '<ul>'
 				For i := 1 To Len(aFiliaisCopiadas)
-					// Seleciona a tabela SM0 para buscar a descrição da filial
-					DbSelectArea("SM0")
-					SM0->(DbSetOrder(1)) // Certifique-se de que o índice está ordenando pela filial
-					If SM0->(MsSeek(aFiliaisCopiadas[i])) // Busca pela filial
-						xHTM += '<li>' + aFiliaisCopiadas[i] + " - " + Alltrim(SM0->M0_NOMECOM) + '</li>' +CHR(13)+CHR(10)
-					Else
-						xHTM += '<li>' + aFiliaisCopiadas[i] + " - Descrição não encontrada" + '</li>' + CHR(13) + CHR(10)
+
+					If Select("TMP") > 0
+						TMP->(dbCloseArea())
 					EndIf
+
+					cQuery := "SELECT * FROM SYS_COMPANY "
+					cQuery += "WHERE D_E_L_E_T_ = ' ' "
+					cQuery += "AND M0_CODFIL = '"+aFiliaisCopiadas[i]+"01' "
+					cQuery += "AND M0_NOMECOM <> '' ""
+
+					cQuery := ChangeQuery(cQuery)
+					TcQuery cQuery New Alias "TMP"
+
+					xHTM += '<li>' + aFiliaisCopiadas[i] + " - " + Alltrim(TMP->M0_NOMECOM) + '</li>' +CHR(13)+CHR(10)
+
 				Next i
+
 				xHTM += '</ul>'
 				xHTM += '<BR>'
 				xHTM += 'Ação: Verifique os cadastros nas empresas listadas e valide os dados.<br><br>'
