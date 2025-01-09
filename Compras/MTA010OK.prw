@@ -52,7 +52,7 @@ User Function RETCODPRO(cGrupo,cRetorno)
 	cQuery += " FROM "+RetSqlName('SB1')
 	cQuery += " WHERE "
 	cQuery +=        "D_E_L_E_T_ <> '*' "
-	cQuery +=   " AND B1_FILIAL  =  '"+xfilial("SB1")+"'"
+	//cQuery +=   " AND B1_FILIAL  =  '"+xfilial("SB1")+"'"
 	cQuery +=   " AND B1_GRUPO   =  '"+cGrupo+"'"
 	cQuery +=   " AND B1_TIPO NOT IN ('OI','MO') "
 
@@ -67,7 +67,7 @@ User Function RETCODPRO(cGrupo,cRetorno)
 	DbSelectArea("SB1")
 	DbSetOrder(1)
 
-	While SB1->(MsSeek(FWxFilial("SB1") + cCodProd+nSeq))
+	While SB1->(!EOF()) .AND. SB1->(MsSeek(FWxFilial("SB1") + cRetorno))
 
 		nSeq := Soma1(substr(cCodProd+nSeq,_nTamGrupo+1,_nTam))
 
