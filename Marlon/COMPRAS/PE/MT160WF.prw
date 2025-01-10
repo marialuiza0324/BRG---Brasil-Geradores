@@ -13,6 +13,7 @@ User Function MT160WF()
 	Local lMsErroAuto   := .F.
 	Local cUser := ""
 	Local cGrupo := ""
+	Local cUserWeb := ""
 
 
 	DbSelectArea('SC7')
@@ -24,6 +25,7 @@ User Function MT160WF()
 
 		nItemPed := PadL(CVALTOCHAR(nItemPed), 4, '0')
 
+		cUserWeb := Posicione("SC1",1,xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC,"C1_XSOLWEB")
 		cUser := Posicione("SC1",1,xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC,"SC1->C1_USER")
 		cGrupo := Posicione("SB1",1,xFilial("SB1")+SC7->C7_PRODUTO,"SB1->B1_GRUPO")
 
@@ -32,8 +34,15 @@ User Function MT160WF()
 		SC8->(dbSeek(FWxFilial("SC8")+SC7->C7_NUMCOT))
 
 		//DO WHILE ! SC8->(Eof())
-			If SC7->C7_NUM == SC8->C8_NUMPED .AND. SC7->C7_ITEM == SC8->C8_ITEMPED .AND. SC7->C7_PRODUTO == SC8->C8_PRODUTO .AND. RTRIM(SC7->C7_GRUPO) == ""
+		If SC7->C7_NUM == SC8->C8_NUMPED .AND. SC7->C7_ITEM == SC8->C8_ITEMPED .AND. SC7->C7_PRODUTO == SC8->C8_PRODUTO .AND. RTRIM(SC7->C7_GRUPO) == ""
+			If !Empty(cUserWeb)
+				RecLock("SC7", .F.)
 
+				SC7->C7_CODSOL := cUserWeb
+				SC7->C7_GRUPO  := cGrupo
+
+				SC7->(MsUnlock())
+			Else
 				RecLock("SC7", .F.)
 
 				SC7->C7_CODSOL := cUser
@@ -41,7 +50,8 @@ User Function MT160WF()
 
 				SC7->(MsUnlock())
 			EndIf
-			//SC8->(DbSkip())
+		EndIf
+		//SC8->(DbSkip())
 		//ENDDO
 
 		if nItemPed == "0001"
