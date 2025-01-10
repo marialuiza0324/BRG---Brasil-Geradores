@@ -70,3 +70,14 @@ Solução : Realize baixa no almoxarifado 01
 Problema : Campo de OS vazio 
 Solução : Preencha o campo da OS
 
+
+"AVISO#0014"
+
+Problema : TM não pode ser utilizada neste armazém
+Solução : Utilize o Armazém 21 - TM 009 exclusiva para uso apenas no armazém 21
+
+
+"AVISO#0015"
+
+Problema : TM não pode ser utilizada para este produto 
+Solução : Utilize um item de REFUGO - TM 009 exclusiva para movimentar itens de refugo
