@@ -81,3 +81,17 @@ Solução : Utilize o Armazém 21 - TM 009 exclusiva para uso apenas no armazém
 
 Problema : TM não pode ser utilizada para este produto 
 Solução : Utilize um item de REFUGO - TM 009 exclusiva para movimentar itens de refugo
+
+
+
+"AVISO#0016"
+
+Problema : Usuário não pode movimentar neste armazém
+Solução : Utilize o armazém 13 - Usuário no parâmetro MV_USER13 só pode movimentar no armazém 13
+
+
+
+"AVISO#0017"
+
+Problema : Usuário não pode movimentar neste armazém
+Solução : Utilize o armazém 05 - Usuário no parâmetro MV_USER05 só pode movimentar no armazém 05
