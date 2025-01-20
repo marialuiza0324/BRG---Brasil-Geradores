@@ -16,6 +16,13 @@ User Function MT120OK()
  Local lRetorno := .T. // Retorno padrão .T. para seguir o fluxo normal
  Local cRateio := "" // Variável que vai armazenar o rateio
  Local cCentroCusto := "" // Variável para o centro de custo
+ Local cUser := ""
+ Local cGrupo := ""
+ Local cUserWeb := ""
+ Local cCodSol    := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CODSOL"})
+ Local cGrpProd   := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_GRUPO"})
+ Local _cod      := ""
+ Local _grupo     := ""
 
     If FunName() <> "MATA161"
         // Obtendo o centro de custo e o rateio
@@ -32,5 +39,31 @@ User Function MT120OK()
                 lRetorno := .F. // Bloqueia a confirmação
             EndIf
     EndIf
+
+        _cod  := Acols[n,cCodSol]
+	    _grupo := Acols[n,cGrpProd]
+
+
+          cUserWeb := Posicione("SC1",1,xFilial("SC1")+ACOLS[1][18]+ACOLS[1][15],"C1_XSOLWEB")
+		cUser := Posicione("SC1",1,xFilial("SC1")+ACOLS[1][18]+ACOLS[1][15],"SC1->C1_USER")
+		cGrupo := Posicione("SB1",1,xFilial("SB1")+ACOLS[1][2],"SB1->B1_GRUPO")
+
+            If !Empty(cUserWeb)
+
+                _cod := cUserWeb
+                _grupo  := cGrupo
+
+            ElseIf !Empty(cUser)
+    
+                _cod := cUser
+                _grupo  := cGrupo
+
+            Else 
+                
+                _cod := RetCodUsr()
+                _grupo  := cGrupo
+
+            EndIf
+    
 
 Return lRetorno
