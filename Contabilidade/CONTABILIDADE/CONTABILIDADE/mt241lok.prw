@@ -26,14 +26,21 @@ user function MT241LOK()
 	Local nOstec    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_OSTEC"})
 	Local cLote     := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOTECTL"})
 	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
+	Local cLocal    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOCAL"})
 	Local _op       := ""
 	Local cLoteCtl  := ""
-	Local cTMAlm   := SupergetMv("MV_TMALM" , ,)//560
-	Local cUserAlm  := SupergetMv("MV_USTMALM", ,)//000121
+	Local cTMAlm   := SupergetMv("MV_TMALM" , ,)
+	Local cUserAlm  := SupergetMv("MV_USTMALM", ,)
 	Local _Tm  := CTM
 	Local cUserid := RetCodUsr()
-	Local _MovTm := GetMv("MV_MOVTM") //002,502,560
+	Local _MovTm := GetMv("MV_MOVTM") //002,502
 	Local cUser  := GetMv("MV_BLOQUSE")//000120,000150,000004,000000
+	Local cTMBaixa  := SupergetMv("MV_BAIXALM" , ,)
+	Local cUsrAlm  :=  SupergetMv("MV_USRBAIX", ,)
+	Local cBlq01  := SupergetMv("MV_USER01", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 01
+	Local cRefugo := SupergetMv("MV_REFUGO", ,)
+	Local cBlq13 := SuperGetMV("MV_USER13", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 13
+	Local cBlq05  := SupergetMv("MV_USER05", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 05
 
 
 
@@ -41,6 +48,7 @@ user function MT241LOK()
 	_lote := Acols[n,cLote]
 	_cod  := Acols[n,cCod]
 	_op   := Acols[n,cOp]
+	_local:= Acols[n,cLocal]
 
 	if empty(aCols[n,nPosOP]) .or. 'OS'$aCols[n,nPosOP]
 		if empty(cCc)
@@ -55,9 +63,9 @@ user function MT241LOK()
 	/*Valida a movimentação de determinadas TMs para usuários autorizados, 
 	  validar a movimentação de OS - Maria Luiza - 07/08/2024
 	*/
-	If _Tm $ _MovTm //verifica se TM está contida no parâmetro
+	If _Tm $ _MovTm .AND. FunName() <> "MATA185"//verifica se TM está contida no parâmetro
 		If !(cUserid $ cUser) //verifica se usuário está contido no parâmetro
-			Help(, ,"AVISO#0005", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize uma TM permitida para este usuário, exceto : " +_MovTm})
+			Help(, ,"AVISO#0005", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize uma TM permitida para este usuário"})
 			_lok := .F.//não permite salvar
 		EndIf
 	EndIf
@@ -102,10 +110,91 @@ user function MT241LOK()
 		Endif
 	EndIf
 
+
+
+
+	/* Validação para usuários contidos no parâmetro MV_USRBAIX conseguirem realizar baixa 
+	utilizando as TM's contidas no parâmetro MV_BAIXALM na empresa GRID - Maria Luiza - 19/12/2024
+	*/
+
+	If cFilAnt == "0501"
+		If cUserid $ cUsrAlm
+			If !(_Tm  $ cTMBaixa) .AND. FunName() <> "MATA241"//valida se usuário está usando TM que não está contida no parâmetro, só entra na validação na rotina de baixa
+				Help(, ,"AVISO#0011", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize uma TM permitida para este usuário"})
+				_lok := .F.//não permite salvar
+			EndIf
+		EndIf
+	EndIF
+
+
 	If _Tm  $ cTMAlm .AND. Empty(_op) //Verifica se campo da OP esta vazio
 		Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
 		_lok := .F.//não permite salvar
 	EndIf
 
+
+
+
+	/*Validações para que o usuário Levy consiga realizar baixa de OS somente no armazém 01 na GRID
+	  Solicitado pela Giu - Maria Luiza - 18/12/2024*/
+
+
+	If cFilAnt == "0501"
+		If cUserid $ cBlq01 .AND. FunName() <> "MATA241"//valida se usuário está usando TM que não está contida no parâmetro, só entra na validação na rotina MATA185
+			If SCP->CP_LOCAL <> "01"
+				Help(, ,"AVISO#0012", ,"Usuário " +cUserName+ " não autorizado a baixar Pre Requisição nesse Almoxarifado",1, 0, , , , , , {"Realize baixa no almoxarifado 01"})
+				_lok:=.F.
+			Else
+				If Empty(_Os)
+					Help(, ,"AVISO#0013", ,"Campo de OS vazio",1, 0, , , , , , {"Preencha o campo da OS"})
+					_lok:=.F.
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+
+
+
+
+	/*Validações para que o usuário Levy consiga realizar baixa somente no armazém 13 na BRG
+	  Solicitado pela Giu - Maria Luiza - 16/01/2025*/
+	
+	
+	If cFilAnt == "0101"
+		If cUserid $ cBlq13 .and. _local <> "13"
+			Help(, ,"AVISO#0016", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 13"})
+			_lok:=.F.
+		EndIf
+	EndIf
+
+
+
+
+
+
+	/*Validações para que os usuários só utilizem a TM 009 para o armazém 21 e para itens de refugo
+		Maria Luiza - 09/01/2024*/
+
+	If _Tm = "009"
+		If _local <> "21"
+			Help(, ,"AVISO#0014", ,"TM não pode ser utilizada neste armazém",1, 0, , , , , , {"Utilize o armazém 21"})
+			_lok:=.F.
+		EndIf
+		If !(Alltrim(_cod) $ cRefugo)
+			Help(, ,"AVISO#0015", ,"TM não pode ser utilizada para este produto",1, 0, , , , , , {"Utilize um item de REFUGO"})
+			_lok:=.F.
+		EndIf
+	EndIf
+
+
+
+
+		/*Validação para que usuário do José Carlos só consiga movimentar no armazém 05
+	Solicitado pela Giu - Maria Luiza - 16/01/2024*/
+
+	If cUserid $ cBlq05 .and. _local <> "05"
+		Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 05"})
+		_lok:=.F.
+	EndIf
 
 return(_lok)
