@@ -21,6 +21,7 @@ local nPosCod        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_COD"})
 local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
 local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
+Local nLinha
 
        DbSelectArea("SB1")
        DbSetOrder(1)   
@@ -33,6 +34,18 @@ local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
             Return
         EndIf
     EndIf
+
+        // Verifica se o lote já foi usado em outra linha
+        For nLinha := 1 To Len(Acols)
+            If nLinha != n // Ignora a linha atual
+                If Upper(AllTrim(Acols[nLinha, nPosLoteCtl])) == Upper(AllTrim(Acols[n, nPosLoteCtl])) .And. !Empty(Acols[n, nPosLoteCtl])
+                    FWAlertInfo("O lote '" + Alltrim(Acols[n, nPosLoteCtl]) + "' já foi utilizado em outro item. Corrija para prosseguir.", "Lote Duplicado!")
+                    lRet := .F.
+                    Return
+                EndIf
+            EndIf
+        Next
+
 
     SB1->(DbCloseArea())
 
