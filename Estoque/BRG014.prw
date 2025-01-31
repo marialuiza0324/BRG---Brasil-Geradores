@@ -55,8 +55,8 @@ Static Function ReportDef1() //Cria o Cabeçalho em excel
 
 	oSection2:= TRSection():New(oReport, "Itens Antendimentos da OP", {"TEMP"}, NIL, .F., .T.)
 	TRCell():New(oSection2, "CEL01_OP"       , "SD3", "Num. OP"        ,PesqPict("SD3","D3_OP"        ),16                 , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL02_CODPRO"   , "SD3", "Produto"        ,PesqPict("SD3","D3_COD"       ),10                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL03_DESCRI"   , "SB1", "Descrição"      ,PesqPict("SB1","B1_DESC"      ),43                 , /*lPixel*/, /* Formula*/)
+	TRCell():New(oSection2, "CEL02_CODPRO"   , "SD3", "Produto"        ,PesqPict("SD3","D3_COD"       ),13                 , /*lPixel*/, /* Formula*/)
+	TRCell():New(oSection2, "CEL03_DESCRI"   , "SB1", "Descrição"      ,PesqPict("SB1","B1_DESC"      ),42                , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL04_QUANT"    , "SD3", "Quant"          ,PesqPict("SD3","D3_QUANT"     ),12                  , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL05_VALOR"    , "SD3", "Custo Unit"     ,PesqPict("SD3","D3_CUSTO1"    ),12                  , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL06_TOTAL"    , "SD3", "Total Custo"    ,PesqPict("SD3","D3_CUSTO1"    ),12                  , /*lPixel*/, /* Formula*/)
@@ -66,7 +66,7 @@ Static Function ReportDef1() //Cria o Cabeçalho em excel
 	TRCell():New(oSection2, "CEL10_LOTE"     , "SD3", "Lote"           ,PesqPict("SD3","D3_LOTECTL"   ),25                  , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL11_PORCPI"   , "SD3", "Porc PI(%)"     , 							   ,08                  , /*lPixel*/, /* Formula*/)
 	TRCell():New(oSection2, "CEL12_PORCPA"   , "SD3", "Porc PA(%)"     , 							   ,08                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL13_CODPAI"   , "SG1", "Produto Pai"    ,                               ,16                 , /*lPixel*/, /* Formula*/)
+	TRCell():New(oSection2, "CEL13_CODPAI"   , "SG1", "Produto Pai"    ,                               ,18                 , /*lPixel*/, /* Formula*/)
 
 
 Return oReport
