@@ -20,7 +20,7 @@ User Function MT160WF()
 	SC7->(DbSetOrder(1)) // Filial + Código
 	SC7->(dbSeek(FWxFilial("SC7")+SC8->C8_NUMPED))
 
-	DO WHILE ! SC7->(Eof())
+	//DO WHILE ! SC7->(Eof())
 		// Verificar se o item do pedido na SC7 é o mesmo da SC8
 
 		nItemPed := PadL(CVALTOCHAR(nItemPed), 4, '0')
@@ -57,6 +57,8 @@ User Function MT160WF()
 		if nItemPed == "0001"
 			//Teste de alteração
 			nOpc := 4
+			aLinha  := {}
+			
 			cDoc := SC7->C7_NUM //Informar PC ou AE (Alteração / Exclusão)
 
 			aadd(aCabec,{"C7_NUM" ,SC7->C7_NUM})
@@ -67,8 +69,6 @@ User Function MT160WF()
 			aadd(aCabec,{"C7_CONTATO" ,SC7->C7_CONTATO})
 			aadd(aCabec,{"C7_FILENT" ,SC7->C7_FILENT})
 
-			aLinha := {}
-
 			// Alterar item existente
 			aadd(aLinha,{"C7_ITEM" ,SC7->C7_ITEM ,Nil})
 			aadd(aLinha,{"C7_PRODUTO" ,SC7->C7_PRODUTO,Nil})
@@ -76,12 +76,15 @@ User Function MT160WF()
 			aAdd(aLinha,{"AUTDELETA","N" ,Nil})
 			aadd(aLinha,{"C7_CODSOL" ,SC7->C7_CODSOL ,Nil})
 			aadd(aLinha,{"C7_GRUPO" ,SC7->C7_GRUPO ,Nil})
+
+			aadd(aItens,aLinha)
+
 		endif
 
-		SC7->(DbSkip())
-	ENDDO
+		//SC7->(DbSkip())
+	//ENDDO
 
-	MSExecAuto({|a,b,c,d,e,f,g,h| MATA120(a,b,c,d,e,f,g,h)},1,aCabec,aItens,nOpc,.F.,,)
+		MSExecAuto({|a,b,c,d,e,f,g,h| MATA120(a,b,c,d,e,f,g,h)}, 1, aCabec, aItens, nOpc, .F., ,)
 
 	If !lMsErroAuto
 		lRet := .T.
