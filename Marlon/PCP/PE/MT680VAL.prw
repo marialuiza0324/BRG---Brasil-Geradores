@@ -37,8 +37,8 @@ User Function MT680VAL()
 	Local lRet      := .T.
 	Local cOper     := M->H6_OPERAC
 	Local cGrupo    := Alltrim(M->H6_XGRUPO)
-	Local cAlter    := Alltrim(M->H6_XALTERN)
-	Local cMotor    := Alltrim(M->H6_XMOTOR)
+	//Local cAlter    := Alltrim(M->H6_XALTERN)
+	//Local cMotor    := Alltrim(M->H6_XMOTOR)
 	Local cLoteCtl  := Posicione('SB1', 1, FWxFilial('SB1') + M->H6_PRODUTO, 'B1_RASTRO')
 	Local cLote     := M->H6_LOTECTL
 	Local cOp       := Alltrim(M->H6_OP)
@@ -48,27 +48,35 @@ User Function MT680VAL()
 	Local nTotal1   := 0
 	Local nTotal2   := 0
 	Local nValid    := 0
-	Local lValida   := .F.
+	Local lCampo := .T.
+	Local lLote  := .T.
 
-
-	While  cOper == 'M1'
-
-		IF empty(cGrupo) .OR. empty(cAlter) .OR. empty(cMotor)
-			FWAlertInfo("Os campos Nº de série do GRUPO, ALTERNADOR e MOTOR são obrigatórios quando selecionada a operação M1.", "Atenção!")
+		
+		if Empty(cLote) .AND. cLoteCtl ==  "L"
+			FWAlertInfo("'Preencher o campo LOTE, pois produto possui restreabilidade", "Atenção !!!")
+			lLote := .F.
 			lRet := .F.
-			Exit
 		Else
-			lRet := .T.
-			Exit
-		EndIf
+			lLote := .T.
+			Return
+		Endif
 
-	EndDo
+
+		While  cOper == 'M1'
+
+			IF empty(cGrupo) //.OR. empty(cAlter) .OR. empty(cMotor)
+				FWAlertInfo("Os campos Nº de série do GRUPO é obrigatório quando selecionada a operação M1.", "Atenção!")
+				lCampo := .F.
+				lRet := .F.
+				Exit
+			Else
+				lCampo := .T.
+				Exit
+			EndIf
+
+		EndDo
 
 	If cOper == "Z1"  .AND. M->H6_PT = "T"
-
-			if Empty(cLote) .AND. cLoteCtl ==  "L"
-			    lValida := .T.
-			Endif
 
 		If Select("TSCP") > 0
 			TSCP->(dbCloseArea())
@@ -116,40 +124,18 @@ User Function MT680VAL()
 
 		TSD4->(DbCloseArea())
 
-
-		If nValid > 0 
-			lRet := .F.
-		EndIf
-
-		if lValida = .T. 
-		cMensagem += 'Preencher o campo LOTE, pois produto possui restreabilidade.'
-		lRet := .F.
-		EndIf
-
 		If cMensagem <> ""
 			FWAlertInfo(cMensagem,"Atenção!!!")
 		EndIf
 	EndIf
 
-Return lRet
-
-User Function ValidaLote()
-
-	Local cProduto  := M->H6_PRODUTO
-	Local cLote    := M->H6_LOTECTL
-
-	//Abrindo a e posicionando no topo
-	DbSelectArea("SB8")
-	SB8->(DbSetOrder(5))
-	SB8->(DbGoTop())
-
-	If SB8->(MsSeek(FWxFilial("SB8")+ cProduto + clote)) .AND. SB8->B8_SALDO > 0 //Valida se lote cadastrado na SB8 possui saldo 
-		FWAlertInfo("Lote já cadastrado na tabela de saldos","Atenção!")
-		Return .F.
+	If nValid > 0 .OR. !lCampo .OR. !lLote 
+			lRet := .F.
 	Else
-		Return .T.
+			lRet := .T.
 	EndIf
-Return
+
+Return lRet
 
 /*
 Validar apontamento de OP (Testando envio de informações simultaneas com a Maria) Teste
