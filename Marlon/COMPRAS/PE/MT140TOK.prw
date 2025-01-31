@@ -39,6 +39,8 @@ Local cRateio := "" // Variável que vai armazenar o rateio
 Local cCentroCusto := "" // Variável para o centro de custo
 Local lMsg :=.F.
 Local lRastro := .T.
+local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
+Local nLinha
 
 For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 
@@ -53,6 +55,19 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 			Return
         EndIf
     EndIf
+
+
+	  // Verifica se o lote já foi usado em outra linha
+        For nLinha := 1 To Len(Acols)
+            If nLinha != n // Ignora a linha atual
+                If Upper(AllTrim(Acols[nLinha, nPosLoteCtl])) == Upper(AllTrim(Acols[n, nPosLoteCtl])) .And. !Empty(Acols[n, nPosLoteCtl])
+                    FWAlertInfo("O lote '" + Alltrim(Acols[n, nPosLoteCtl]) + "' já foi utilizado em outro item. Corrija para prosseguir.", "Lote Duplicado!")
+                    lRet := .F.
+                    Return
+                EndIf
+            EndIf
+        Next
+
 
 		// Obtendo o centro de custo e o rateio
 		cCentroCusto := ACOLS[nX][13] 
