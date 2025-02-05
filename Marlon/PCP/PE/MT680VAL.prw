@@ -51,21 +51,11 @@ User Function MT680VAL()
 	Local lCampo := .T.
 	Local lLote  := .T.
 
-		
-		if Empty(cLote) .AND. cLoteCtl ==  "L"
-			FWAlertInfo("'Preencher o campo LOTE, pois produto possui restreabilidade", "Atenção !!!")
-			lLote := .F.
-			lRet := .F.
-		Else
-			lLote := .T.
-			Return
-		Endif
-
 
 		While  cOper == 'M1'
 
 			IF empty(cGrupo) //.OR. empty(cAlter) .OR. empty(cMotor)
-				FWAlertInfo("Os campos Nº de série do GRUPO é obrigatório quando selecionada a operação M1.", "Atenção!")
+				FWAlertInfo("O campo Nº de série do GRUPO é obrigatório quando selecionada a operação M1.", "Atenção!")
 				lCampo := .F.
 				lRet := .F.
 				Exit
@@ -124,12 +114,20 @@ User Function MT680VAL()
 
 		TSD4->(DbCloseArea())
 
+		If Empty(cLote) .AND. cLoteCtl ==  "L"
+			FWAlertInfo("Preencher o campo LOTE, pois produto possui restreabilidade", "Atenção !!!")
+			lLote := .F.
+			lRet := .F.
+		Else
+			lLote := .T.
+		Endif
+
 		If cMensagem <> ""
 			FWAlertInfo(cMensagem,"Atenção!!!")
 		EndIf
 	EndIf
 
-	If nValid > 0 .OR. !lCampo .OR. !lLote 
+	If nTotal1 > 0 .OR. nTotal2 > 0 .OR. !lCampo .OR. !lLote 
 			lRet := .F.
 	Else
 			lRet := .T.
