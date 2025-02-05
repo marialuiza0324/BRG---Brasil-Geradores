@@ -19,10 +19,8 @@ User Function MT120LOK()
  Local cUser := ""
  Local cGrupo := ""
  Local cUserWeb := ""
-  Local cCodSol    := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CODSOL"})
- Local cGrpProd   := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_GRUPO"})
- Local _cod      := ""
- Local _grupo     := ""
+ Local nCodSol    := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CODSOL"})
+ Local nGrpProd   := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_GRUPO"})
 
     // Obtendo o centro de custo e o rateio
     cCentroCusto := ACOLS[1][23] 
@@ -42,23 +40,21 @@ User Function MT120LOK()
 		cUser := Posicione("SC1",1,xFilial("SC1")+ACOLS[1][18]+ACOLS[1][15],"SC1->C1_USER")
 		cGrupo := Posicione("SB1",1,xFilial("SB1")+ACOLS[1][2],"SB1->B1_GRUPO")
         
-        _cod  := Acols[n,cCodSol]
-	    _grupo := Acols[n,cGrpProd]
 
            If !Empty(cUserWeb)
 
-                _cod := cUserWeb
-                _grupo  := cGrupo
+                Acols[n,nCodSol] := cUserWeb
+                Acols[n,nGrpProd]  := cGrupo
 
             ElseIf !Empty(cUser)
     
-                _cod := cUser
-                _grupo  := cGrupo
+                Acols[n,nCodSol] := cUser
+                Acols[n,nGrpProd]  := cGrupo
 
             Else 
                 
-                _cod := RetCodUsr()
-                _grupo  := cGrupo
+                Acols[n,nCodSol] := RetCodUsr()
+                Acols[n,nGrpProd]  := cGrupo
 
             EndIf
     
