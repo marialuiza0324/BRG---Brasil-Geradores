@@ -42,8 +42,8 @@ User Function TITICMST()
     //EXEMPLO 3 (lDifal)
     If lDifal // DIFAL
         SE2->E2_NUM := SE2->(Soma1(E2_NUM,Len(E2_NUM)))
-        SE2->E2_VENCTO := DataValida(dDataBase+30,.T.)
-        SE2->E2_VENCREA := DataValida(dDataBase+30,.T.)
+        SE2->E2_VENCTO := DataValida(dDataBase,.T.)
+        SE2->E2_VENCREA := DataValida(dDataBase,.T.)
         SE2->E2_NATUREZ := cNatureza
     EndIf
   
