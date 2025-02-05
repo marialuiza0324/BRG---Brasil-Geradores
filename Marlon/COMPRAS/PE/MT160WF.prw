@@ -35,21 +35,31 @@ User Function MT160WF()
 
 		//DO WHILE ! SC8->(Eof())
 		If SC7->C7_NUM == SC8->C8_NUMPED .AND. SC7->C7_ITEM == SC8->C8_ITEMPED .AND. SC7->C7_PRODUTO == SC8->C8_PRODUTO .AND. RTRIM(SC7->C7_GRUPO) == ""
-			If !Empty(cUserWeb)
-				RecLock("SC7", .F.)
+			
+            If !Empty(cUserWeb)
+                    RecLock("SC7", .F.)
 
-				SC7->C7_CODSOL := cUserWeb
-				SC7->C7_GRUPO  := cGrupo
+                    SC7->C7_CODSOL := cUserWeb
+                    SC7->C7_GRUPO  := cGrupo
 
-				SC7->(MsUnlock())
-			Else
-				RecLock("SC7", .F.)
+                    SC7->(MsUnlock())
 
-				SC7->C7_CODSOL := cUser
-				SC7->C7_GRUPO  := cGrupo
+                ElseIf !Empty(cUser)
+                    RecLock("SC7", .F.)
 
-				SC7->(MsUnlock())
-			EndIf
+                    SC7->C7_CODSOL := cUser
+                    SC7->C7_GRUPO  := cGrupo
+
+                    SC7->(MsUnlock())
+                Else 
+                    RecLock("SC7", .F.)
+
+                    SC7->C7_CODSOL := RetCodUsr()
+                    SC7->C7_GRUPO  := cGrupo
+
+                    SC7->(MsUnlock())
+
+                EndIf
 		EndIf
 		//SC8->(DbSkip())
 		//ENDDO
