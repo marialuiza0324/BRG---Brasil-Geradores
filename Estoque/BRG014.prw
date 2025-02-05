@@ -43,31 +43,30 @@ Static Function ReportDef1() //Cria o Cabeçalho em excel
 	cTitulo := "Relatorio De OP - " + CVALTOCHAR(MV_PAR01) + " a " +CVALTOCHAR(MV_PAR02)
 
 	oReport  := TReport():New("BRG014",cTitulo,"BRG014",{|oReport| PrintReport1(oReport)},cTitulo)
-//oReport:SetLandscape() // Paisagem
-	oReport:SetPortrait()    // Retrato
+	oReport:SetLandscape() // Alterado para modo Paisagem
+
 	oSection := TRSection():New(oReport,"Relatorio De OP"," ", NIL, .F., .T.)
-	TRCell():New(oSection, "CEL01_OP"        , "SD3", "Num. OP"        ,PesqPict("SD3","D3_OP"        ),15                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection, "CEL02_PRODUTO"   , "SB1", "Produto"        ,PesqPict("SB1","B1_DESC"      ),40                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection, "CEL03_QUANT"     , "SC2", "Quantidade"     ,PesqPict("SC2","C2_QUANT"     ),10                 , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection, "CEL04_EMISSAO"   , "SC2", "Emissão"        ,PesqPict("SC2","C2_DATPRI"    ),14                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection, "CEL05_VALOR"     , "SD3", "Custo"          ,PesqPict("SD3","D3_CUSTO1"    ),10            , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection, "CEL06_HORA"      , "SH6",  "Horas"         ,PesqPict("SH6","H6_TEMPO"     ),14               , /*lPixel*/, /* Formula*/)
+	TRCell():New(oSection, "CEL01_OP"        , "SD3", "Num. OP"        ,PesqPict("SD3","D3_OP"        ),20 )
+	TRCell():New(oSection, "CEL02_PRODUTO"   , "SB1", "Produto"        ,PesqPict("SB1","B1_DESC"      ),50 )
+	TRCell():New(oSection, "CEL03_QUANT"     , "SC2", "Quantidade"     ,PesqPict("SC2","C2_QUANT"     ),15 )
+	TRCell():New(oSection, "CEL04_EMISSAO"   , "SC2", "Emissão"        ,PesqPict("SC2","C2_DATPRI"    ),18 )
+	TRCell():New(oSection, "CEL05_VALOR"     , "SD3", "Custo"          ,PesqPict("SD3","D3_CUSTO1"    ),15 )
+	TRCell():New(oSection, "CEL06_HORA"      , "SH6", "Horas"          ,PesqPict("SH6","H6_TEMPO"     ),18 )
 
-	oSection2:= TRSection():New(oReport, "Itens Antendimentos da OP", {"TEMP"}, NIL, .F., .T.)
-	TRCell():New(oSection2, "CEL01_OP"       , "SD3", "Num. OP"        ,PesqPict("SD3","D3_OP"        ),16                 , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL02_CODPRO"   , "SD3", "Produto"        ,PesqPict("SD3","D3_COD"       ),13                 , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL03_DESCRI"   , "SB1", "Descrição"      ,PesqPict("SB1","B1_DESC"      ),42                , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL04_QUANT"    , "SD3", "Quant"          ,PesqPict("SD3","D3_QUANT"     ),12                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL05_VALOR"    , "SD3", "Custo Unit"     ,PesqPict("SD3","D3_CUSTO1"    ),12                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL06_TOTAL"    , "SD3", "Total Custo"    ,PesqPict("SD3","D3_CUSTO1"    ),12                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL07_DOCUM"    , "SD3", "Documento"      ,PesqPict("SD3","D3_DOC"       ),10                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL08_EMISSAO"  , "SD3", "Emissão"        ,PesqPict("SD3","D3_EMISSAO"   ),12                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL09_SOLIC"    , "SD3", "Solicitação"    ,PesqPict("SD3","D3_NUMSA"     ),10                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL10_LOTE"     , "SD3", "Lote"           ,PesqPict("SD3","D3_LOTECTL"   ),25                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL11_PORCPI"   , "SD3", "Porc PI(%)"     , 							   ,08                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL12_PORCPA"   , "SD3", "Porc PA(%)"     , 							   ,08                  , /*lPixel*/, /* Formula*/)
-	TRCell():New(oSection2, "CEL13_CODPAI"   , "SG1", "Produto Pai"    ,                               ,18                 , /*lPixel*/, /* Formula*/)
-
+	oSection2 := TRSection():New(oReport, "Itens Atendimentos da OP", {"TEMP"}, NIL, .F., .T.)
+	TRCell():New(oSection2, "CEL01_OP"       , "SD3", "Num. OP"        ,PesqPict("SD3","D3_OP"        ),22 )
+	TRCell():New(oSection2, "CEL02_CODPRO"   , "SD3", "Produto"        ,PesqPict("SD3","D3_COD"       ),18 )
+	TRCell():New(oSection2, "CEL03_DESCRI"   , "SB1", "Descrição"      ,PesqPict("SB1","B1_DESC"      ),55 )
+	TRCell():New(oSection2, "CEL04_QUANT"    , "SD3", "Quant"          ,PesqPict("SD3","D3_QUANT"     ),12 )
+	TRCell():New(oSection2, "CEL05_VALOR"    , "SD3", "Custo Unit"     ,PesqPict("SD3","D3_CUSTO1"    ),20 )
+	TRCell():New(oSection2, "CEL06_TOTAL"    , "SD3", "Total Custo"    ,PesqPict("SD3","D3_CUSTO1"    ),20 )
+	TRCell():New(oSection2, "CEL07_DOCUM"    , "SD3", "Documento"      ,PesqPict("SD3","D3_DOC"       ),20 )
+	TRCell():New(oSection2, "CEL08_EMISSAO"  , "SD3", "Emissão"        ,PesqPict("SD3","D3_EMISSAO"   ),18 )
+	TRCell():New(oSection2, "CEL09_SOLIC"    , "SD3", "Solicitação"    ,PesqPict("SD3","D3_NUMSA"     ),20 )
+	TRCell():New(oSection2, "CEL10_LOTE"     , "SD3", "Lote"           ,PesqPict("SD3","D3_LOTECTL"   ),30 )
+	TRCell():New(oSection2, "CEL11_PORCPI"   , "SD3", "Porc PI(%)"     ,                               ,14 )
+	TRCell():New(oSection2, "CEL12_PORCPA"   , "SD3", "Porc PA(%)"     ,                               ,14 )
+	TRCell():New(oSection2, "CEL13_CODPAI"   , "SG1", "Produto Pai"    ,                               ,25 )
 
 Return oReport
 
@@ -379,8 +378,8 @@ Static Function PrintReport1(oReport)
 	dbselectarea("TMP")
 	TMP->(DBGOTOP())
 	DO WHILE !TMP->(EOF()) //percorre a tabela temporária até encontrar registros sem estrutura
-		If Alltrim(TMP->D3_COD) $ _cObs //se encontrar, printa a informações contidas nos array's alimentados na query anterior 
-			For nX := 1 To Len(aObs) //códigos que não pertencem a estrutura 
+		If Alltrim(TMP->D3_COD) $ _cObs //se encontrar, printa a informações contidas nos array's alimentados na query anterior
+			For nX := 1 To Len(aObs) //códigos que não pertencem a estrutura
 				_DESC := POSICIONE("SB1",1,XFILIAL("SB1")+aObs[nX],"B1_DESC")
 				aDados3[01] := TMP->D3_OP
 				aDados3[02] := aObs[nX] +" / "+ _DESC
@@ -442,7 +441,7 @@ Static Function PrintReport1(oReport)
 	_cQry += "ORDER BY  D3_OP, D3_TM,D3_COD "
 
 	_cQry := ChangeQuery(_cQry)
-	TcQuery _cQry New Alias "TMP1" //busca todos os complementos da OP de acordo com a estrutura dos produtos 
+	TcQuery _cQry New Alias "TMP1" //busca todos os complementos da OP de acordo com a estrutura dos produtos
 
 	dbselectarea("TMP1")
 	TMP1->(DBGOTOP())
