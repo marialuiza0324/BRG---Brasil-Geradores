@@ -46,7 +46,9 @@ User Function SPDPIS07()
 		If SD2->(DbSeek(xFilial("SD2")+cDoc+cSerie+cClieFor+cLoja+cProd+cItem))
 			SF4->(DbSetOrder(1))
 			If SF4->(dbSeek(xFilial("SF4")+SD2->D2_TES))
-				cConta	:=	iif(!EMPTY(SF4->F4_XCTAC),SF4->F4_XCTAC,U_RetCtaGRP(IF(SD2->D2_EST<>'EX','122','123'),""))
+				cConta	:=	SF4->(if(!empty(F4_XCTAC),F4_XCTAC,IF(F4_TRANFIL='1',IF(!EMPTY(SB1->B1_CONTA),SB1->B1_CONTA,'CTA CTB PROD VAZIA'),U_RetCta(IF(SD2->D2_EST<>'EX','122','123'),U_RetGrpCtb()))))                                                                                
+					      //SF4->(if(!empty(F4_XCTAC),F4_XCTAC,IF(F4_TRANFIL='1',IF(!EMPTY(SB1->B1_CONTA),SB1->B1_CONTA,'CTA CTB PROD VAZIA'),U_RetCta(IF(SD2->D2_EST<>'EX','122','123'),U_RetGrpCtb()))))                                                                                
+				//SF4->(if(!empty(F4_XCTAC),F4_XCTAC,IF(F4_TRANFIL='1',IF(!EMPTY(SB1->B1_CONTA),SB1->B1_CONTA,'CTA CTB PROD VAZIA'),U_RetCta(IF(SD2->D2_EST<>'EX','122','123'),U_RetGrpCtb()))))   //AJUSTADO BRG                                                                             
 				
 				
 				If 'VZA'$Upper(cConta)
