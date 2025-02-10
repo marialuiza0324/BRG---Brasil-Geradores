@@ -59,6 +59,7 @@ User function Termo()
 	Private nSaldoComprometido := 0
 	Private nSaldoDisponivel := 0
 	Private cLogo
+	Private cRequis 
 
 	ValidPerg1()
 	pergunte(cPerg,.T.)    // sem tela de pergunta
@@ -132,8 +133,9 @@ User function Termo()
 		oPrint:Say(nLin, 3050, ("Saldo Disponível"), oFont8)
 		nLin+=100
 		_user := TMP->CP_SOLICIT
+		cRequis := TMP->CP_NUM
 
-		While TMP->(!EOF()) .AND. _user = TMP->CP_SOLICIT
+		While TMP->(!EOF()) .AND. cRequis = TMP->CP_NUM //_user = TMP->CP_SOLICIT
 
 			oPrint:Say(nLin, 0050, TMP->CP_NUM , oFont8N)
 			oPrint:Say(nLin, 0250, TMP->CP_SOLICIT , oFont8N)
