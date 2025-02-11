@@ -36,7 +36,7 @@ User Function MT241TOK()
 	Local cRefugo := SupergetMv("MV_REFUGO", ,)
 	Local cBlq13 := SuperGetMV("MV_USER13", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 13
 	Local cBlq05  := SupergetMv("MV_USER05", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 05
-	Local cOpTm := SupergetMv("MV_OPTM", ,) //TMs utilizadas para não permitir movimentações com campo de OP vazio
+	Local cOpTm := SupergetMv("MV_OPTM", ,) //TMs utilizadas para não permitir movimentações de produtos fora da OP selecionada
 
 
 	_cod  := Acols[n,cCod]
