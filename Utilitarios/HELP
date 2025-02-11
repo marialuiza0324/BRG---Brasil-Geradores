@@ -95,3 +95,11 @@ Solução : Utilize o armazém 13 - Usuário no parâmetro MV_USER13 só pode mo
 
 Problema : Usuário não pode movimentar neste armazém
 Solução : Utilize o armazém 05 - Usuário no parâmetro MV_USER05 só pode movimentar no armazém 05
+
+
+
+"AVISO#0018"
+
+Problema : Produto e/ou Lote não encontrado na Ordem De Produção
+Solução : A TM 001 exige que as devoluções sejam realizadas apenas para itens que foram baixados
+através da OP selecionada - TM contida no parâmetro MV_OPTM  
