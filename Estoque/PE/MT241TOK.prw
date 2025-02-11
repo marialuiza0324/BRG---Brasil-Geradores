@@ -36,6 +36,7 @@ User Function MT241TOK()
 	Local cRefugo := SupergetMv("MV_REFUGO", ,)
 	Local cBlq13 := SuperGetMV("MV_USER13", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 13
 	Local cBlq05  := SupergetMv("MV_USER05", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 05
+	Local cOpTm := SupergetMv("MV_OPTM", ,) //TMs utilizadas para não permitir movimentações com campo de OP vazio
 
 
 	_cod  := Acols[n,cCod]
@@ -44,6 +45,19 @@ User Function MT241TOK()
 	_Os   := Acols[n,nOstec]
 	_local:= Acols[n,cLocal]
 
+
+	//Tratamento para não fazer devolução 24/02/2021
+	If cFilAnt == "0101"
+		If _Tm $ cOpTm .AND. !EMPTY(_op)
+			DbSelectArea("SD3")
+			DbSetOrder(18)
+			If !dbSeek(xFilial("SD3")+_op+_cod+_lote)  //Criar o Indice 18
+				Help(, ,"AVISO#0018", ,"Produto e/ou Lote não encontrado na Ordem De Produção:" + cvaltochar(_op)+"",1, 0, , , , , , ;
+					{"A TM: " +cOpTm+ " exige que as devoluções sejam realizadas apenas para itens que foram baixados através da OP:" + cvaltochar(_op)+ ""})
+				_lok := .F.
+			EndIf
+		EndiF
+	EndiF
 
 	/*Valida a movimentação de determinadas TMs para usuários autorizados, 
 	  validar a movimentação de OS - Maria Luiza - 07/08/2024
