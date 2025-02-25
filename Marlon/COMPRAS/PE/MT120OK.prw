@@ -19,15 +19,21 @@ User Function MT120OK()
  Local cUser := ""
  Local cGrupo := ""
  Local cUserWeb := ""
- Local nCodSol    := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CODSOL"})
- Local nGrpProd   := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_GRUPO"})
+ Local nPosCC     := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CC"})
+ Local nPosRateio := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_RATEIO"})
+
+
+    If FunName() == "MATA161"
+           cCentroCusto := Posicione("SC1",1,xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC,"C1_CC")
+           cRateio := Posicione("SC1",1,xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC,"C1_RATEIO")
+    Else
+        // Obtendo o centro de custo e o rateio
+        cCentroCusto := ACOLS[n,nPosCC] 
+        cRateio := ACOLS[n, nPosRateio]
+    EndIf
 
 
     If FunName() <> "MATA161"
-        // Obtendo o centro de custo e o rateio
-        cCentroCusto := ACOLS[1][23] 
-        cRateio := ACOLS[1][62] 
-
             // Verificando se o centro de custo está vazio e se o rateio está informado
             If Empty(cCentroCusto) .and. cRateio == "1"
                 // Se o centro de custo está vazio e há rateio, permite a confirmação
@@ -39,27 +45,34 @@ User Function MT120OK()
             EndIf
     EndIf
 
-        cUserWeb := Posicione("SC1",1,xFilial("SC1")+ACOLS[1][18]+ACOLS[1][15],"C1_XSOLWEB")
-		cUser := Posicione("SC1",1,xFilial("SC1")+ACOLS[1][18]+ACOLS[1][15],"SC1->C1_USER")
-		cGrupo := Posicione("SB1",1,xFilial("SB1")+ACOLS[1][2],"SB1->B1_GRUPO")
+        If SC7 ->(MsSeek(xFilial("SC7")+SC7->C7_NUM+SC7->C7_ITEM))
 
-                    If !Empty(cUserWeb)
+            cUserWeb := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_XSOLWEB")
+            cUser := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_USER")
+            cGrupo := Posicione("SB1",1,xFilial("SB1")+ACOLS[n][2],"B1_GRUPO")
+            
 
-                Acols[n,nCodSol] := cUserWeb 
-                Acols[n,nGrpProd]  := cGrupo
+                If !Empty(cUserWeb)
 
-            ElseIf !Empty(cUser)
-    
-                Acols[n,nCodSol] := cUser
-                Acols[n,nGrpProd]  := cGrupo
+                    RecLock("SC7", .F.)
+                    SC7->C7_CODSOL := cUserWeb 
+                    SC7->C7_GRUPO  := cGrupo
+                    SC7->(MsUnlock())
 
-            Else 
-                
-                Acols[n,nCodSol] := RetCodUsr()
-                Acols[n,nGrpProd]  := cGrupo
+                ElseIf !Empty(cUser)
+
+                    RecLock("SC7", .F.)
+                    SC7->C7_CODSOL := cUser
+                    SC7->C7_GRUPO  := cGrupo
+                    SC7->(MsUnlock())
+
+                Else 
+                    RecLock("SC7", .F.)
+                    SC7->C7_CODSOL := RetCodUsr()
+                    SC7->C7_GRUPO  := cGrupo
+                    SC7->(MsUnlock())
+                EndIf
 
             EndIf
-    
-    
 
 Return lRetorno
