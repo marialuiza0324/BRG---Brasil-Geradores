@@ -173,7 +173,7 @@ User function Termo()
 			oPrint:Say(nLin,3070,cValToChar(nSaldoDisponivel), oFont8N)
 
 			nLin+=50
-			If nLin >= 2500 // veja o tamanho adequado da página que este numero pode variar
+			If nLin >= 2300 // veja o tamanho adequado da página que este numero pode variar
 				oPrint:EndPage() // Finaliza a página
 				oPrint:StartPage()
 				nLin := 200
