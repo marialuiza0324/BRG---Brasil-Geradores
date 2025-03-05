@@ -13,21 +13,31 @@ se for .F. o processo será interrompido e se .T. será validado.
 
 User Function MT110TOK() 
 
- Local lRetorno := .T. // Retorno padrão .T. para seguir o fluxo normal
- Local cRateio := "" // Variável que vai armazenar o rateio
- Local cCentroCusto := "" // Variável para o centro de custo
+    Local lRetorno := .T. // Retorno padrão .T. para seguir o fluxo normal
+    Local cRateio := "" // Variável que vai armazenar o rateio
+    Local nPosCC     := AScan(aHeader, {|x| Alltrim(x[2]) == "C1_CC"})
+    Local nPosRateio := AScan(aHeader, {|x| Alltrim(x[2]) == "C1_RATEIO"})
 
-    // Obtendo o centro de custo e o rateio
-    cCentroCusto := ACOLS[1][6] 
-    cRateio := ACOLS[1][46] 
+    If FunName() == "MATA161"
+        cCentroCusto := Posicione("SC1",1,xFilial("SC1")+SC8->C8_NUM+SC8->C8_ITEM,"C1_CC")
+        cRateio := Posicione("SC1",1,xFilial("SC1")+SC8->C8_NUM+SC8->C8_ITEM,"C1_RATEIO")
+    Else
+        // Obtendo o centro de custo e o rateio
+        cCentroCusto := ACOLS[n,nPosCC] 
+        cRateio := ACOLS[n, nPosRateio]
+    Endif
 
-    // Verificando se o centro de custo está vazio e se o rateio está informado
+
+   // Verificando se o centro de custo está vazio e se o rateio está informado
     If Empty(cCentroCusto) .and. cRateio == "1"
         // Se o centro de custo está vazio e há rateio, permite a confirmação
         lRetorno := .T. // Permite continuar sem erro
     ElseIf Empty(cCentroCusto) .and. cRateio == "2"
         // Se ambos estão vazios, bloqueia a gravação e exibe uma mensagem
         FWAlertInfo("Informe um centro de custo ou rateio", "Atenção!!!")
+        lRetorno := .F. // Bloqueia a confirmação
+    ElseIf !Empty(cCentroCusto) .and. cRateio == "1"
+        FWAlertInfo("O campo de Centro de Custo e rateio estão preenchidos, preencha somente um", "Atenção!!!")
         lRetorno := .F. // Bloqueia a confirmação
     EndIf
 
