@@ -43,7 +43,6 @@ User Function MT120OK()
                 FWAlertInfo("Informe um centro de custo ou rateio", "Atenção!!!")
                 lRetorno := .F. // Bloqueia a confirmação
             EndIf
-    EndIf
 
         If SC7 ->(MsSeek(xFilial("SC7")+SC7->C7_NUM+SC7->C7_ITEM))
 
@@ -74,5 +73,6 @@ User Function MT120OK()
                 EndIf
 
             EndIf
+        EndIf
 
 Return lRetorno
