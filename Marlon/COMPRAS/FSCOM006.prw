@@ -3,14 +3,16 @@
 #Include "TopConn.ch"
 
 //Posições do Array
+
 Static nPosTipo            := 1 //Coluna A no Excel
-Static nPosCodProd         := 2 //Coluna B no Excel
-Static nPosGrupo           := 3 //Coluna C no Excel
-Static nPosDescri          := 4 //Coluna D no Excel
-Static nPosUnidade         := 5 //Coluna E no Excel
-Static nPosArmazem         := 6 //Coluna F no Excel
-Static nPosipi             := 7 //Coluna G no Excel
-Static nPosOrigem          := 8 //Coluna H no Excel
+Static nPosGrupo           := 2 //Coluna B no Excel
+Static nPosDescri          := 3 //Coluna C no Excel
+Static nPosUnidade         := 4//Coluna D no Excel
+Static nPosArmazem         := 5 //Coluna E no Excel
+Static nPosipi             := 6 //Coluna F no Excel
+Static nPosOrigem          := 7 //Coluna G no Excel
+Static nPosRastro          := 8 //Coluna H no Excel
+
 
 /*/{Protheus.doc} FSCOM006
 Função para importar informações via csv
@@ -69,6 +71,8 @@ Static Function fImporta()
     Local cArmazem := " " 
     Local cPosipi := " "
     Local cOrigem := " " 
+    Local cRastro := ""
+   // Local cEmp := " "
     Local nOpcAuto
     Local nTotLinhas := 0
     Local cLinAtu    := ""
@@ -86,6 +90,9 @@ Static Function fImporta()
     Private lLog := .F.
     Private lLogError := .F.
     Private lAchou := .F.
+    Private cQuery := " "
+    Private QAux, nSeq, cRetorno, _cTMS
+	Private _nTam, _nTamGrupo  := 0
       
     //Se a pasta de log não existir, cria ela
     If ! ExistDir(cDirLog)
@@ -126,19 +133,21 @@ Static Function fImporta()
                 If nLinhaAtu <> 1//! "CODIGO" $ Lower(cLinAtu)
   
                         //Zera as variaveis
+
+                        //cEmp        := aLinha[nPosEmp]
                         cTipo       := aLinha[nPosTipo] 
-                        cCodProd    := aLinha[nPosCodProd]
                         cGrupo      := aLinha[nPosGrupo]
                         cDescProd   := aLinha[nPosDescri]
                         cUnidade    := aLinha[nPosUnidade]
                         cArmazem    := aLinha[nPosArmazem]
-                        cPosipi      := aLinha[nPosipi]
+                        cPosipi     := aLinha[nPosipi]
                         cOrigem     := aLinha[nPosorigem]
+                        cRastro     := aLinha[nPosRastro]
                 
                         aLinha := {}
 
                         //aAdd(aAuto, {cDocumen, dDataBase})
-                        aadd(aLinha,{"B1_COD",    PadR(AllTrim(cCodProd),TamSx3("B1_COD")[1]),    Nil}) //Cod Produto
+                       // aadd(aLinha,{"B1_FILIAL", PadR(AllTrim(cEmp),TamSx3("B1_FILIAL")[1]),    Nil}) //Filial
                         aadd(aLinha,{"B1_DESC",   PadR(AllTrim(cDescProd),TamSx3("B1_DESC")[1]),    Nil}) //Descrição do produto
                         aadd(aLinha,{"B1_TIPO",   PadR(AllTrim(cTipo),TamSx3("B1_TIPO")[1]),   Nil}) //Tipo do produto
                         aadd(aLinha,{"B1_UM",     PadR(Alltrim(cUnidade),TamSx3("B1_UM")[1]),           Nil}) //Unidade do produto
@@ -146,40 +155,53 @@ Static Function fImporta()
                         aadd(aLinha,{"B1_LOCPAD", PadR(AllTrim(cArmazem),TamSx3("B1_LOCPAD")[1]),      Nil}) //Armazém do produto
                         aadd(aLinha,{"B1_POSIPI", PadR(AllTrim(cPosipi),TamSx3("B1_POSIPI")[1]),     Nil}) //Pos.IPI/NCM
                         aadd(aLinha,{"B1_ORIGEM", PadR(AllTrim(cOrigem),TamSx3("B1_ORIGEM")[1]),     Nil}) //unidade medida destino
+                        aadd(aLinha,{"B1_RASTRO", PadR(AllTrim(cRastro),TamSx3("B1_RASTRO")[1]),     Nil}) //Rastro
                 
                         //Aciona a inclusão 
                         nOpcAuto := 3
 
-                        DbSelectArea("SB1")
-                        DbSetOrder(1)
+                        _nTam      := 4
+	                    _nTamGrupo := Len(AllTrim(cGrupo))  //TamSX3("B1_GRUPO")[1]//Len(AllTrim(cGrupo))+1
 
-                        If SB1->(MsSeek(FWxFilial("SB1") + cCodProd ))
-                            lAchou := .T.
-                            cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cCodProd)+ "        JÁ CADASTRADO " + CRLF
-                        EndIf
+                        	If Select("QAux") > 0
+                                QAux->(dbCloseArea())
+                            EndIf 
 
-                        SB1->(DbCloseArea())
+
+                        cQuery := "SELECT MAX(b1_cod) as NSEQUEN "
+                        cQuery += " FROM "+RetSqlName('SB1')
+                        cQuery += " WHERE "
+                        cQuery +=        "D_E_L_E_T_ <> '*' "
+                        cQuery +=   " AND B1_GRUPO   =  '"+cGrupo+"'"
+                        //cQuery +=   " AND B1_TIPO NOT IN ('OI','MO') "
+
+                        cQuery := Changequery(cQuery)
+
+                        TCQUERY cQuery NEW ALIAS "QAux"
+
+                        nSeq := Soma1(substr(QAux->NSEQUEN,_nTamGrupo+1,_nTam))
+                        cCodProd := Alltrim(substr(QAux->NSEQUEN,1,4))  
+                        cRetorno := AllTrim(cGrupo)+PADL(nSeq,_nTam,"0")
+
+                        QAux->(dbCloseArea())
+
+
 
                         Begin Transaction 
-
-                            If !lAchou
 
                                 MSExecAuto({|x, y| MATA010(x, y)}, aLinha, nOpcAuto)
                         
                                 //Se houve erro, mostra a mensagem
                                     If lMsErroAuto 
                                         MostraErro()
-                                        cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cCodProd)+ "        NÃO PROCESSADO " + CRLF
+                                        cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cRetorno)+ "        NÃO PROCESSADO " + CRLF
                                         DisarmTransaction()
                                         lLogError := .T.
                                     //Se deu tudo certo, efetiva a numeração
                                     Else
-                                    cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cCodProd)+ "         PROCESSADO COM SUCESSO " + CRLF
+                                    cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cRetorno)+ "         PROCESSADO COM SUCESSO " + CRLF
                                         ConfirmSX8()
                                     EndIf
-                            EndIf
-
-                                lAchou := .F.
 
                         End Transaction
                     EndIf
