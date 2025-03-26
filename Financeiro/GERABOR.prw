@@ -103,14 +103,14 @@ If MsgYesNo("Deseja Gerar o Bordero Banco Itau ?","ATENÇÃO")
          SE1->E1_DATABOR := dDataMov
          SE1->E1_MOVIMEN := dDataMov
          SE1->E1_SITUACA := cSituaca
-         MsUnlock()
+         SE1->(MsUnlock())
 
          Reclock("SEA",.T.)
          SEA->EA_FILIAL  := xFilial("SEA")
          SEA->EA_PREFIXO := TMP->E1_PREFIXO
          SEA->EA_NUM     := TMP->E1_NUM
          SEA->EA_PARCELA := TMP->E1_PARCELA
-         SEA->EA_PORTADO := TMP->E1_PORTADO
+         SEA->EA_PORTADO := TMP->E1_PORTADO 
          SEA->EA_AGEDEP  := TMP->E1_AGEDEP
          SEA->EA_NUMBOR  := cBordero
          SEA->EA_DATABOR := dDataMov
@@ -122,7 +122,7 @@ If MsgYesNo("Deseja Gerar o Bordero Banco Itau ?","ATENÇÃO")
          SEA->EA_SITUANT := "0"
          SEA->EA_SALDO   := 0
          SEA->EA_FILORIG := xFilial("SEA")
-         MsUnlock()   
+         SEA->(MsUnlock())   
       EndIf   
       TMP->(dbskip())
       ENDDO
