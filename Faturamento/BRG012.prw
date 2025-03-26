@@ -25,13 +25,12 @@ User Function BRG012()
 
 //Local _Nf        := SC5->C5_NOTA 
 //Local _Serie     := SC5->C5_SERIE
-	Local _Desc,_End,_Bair,_Cid,_Uf,cTes, cNcn :=  " "
-	Local _aBmp := {}
-	Local _nPagin := 1
+	Local _Desc,_End,_Bair,_Cid,cTes, cNcn :=  " "
 	Local _cMvCon := "MV_CONVEND" //Contato do vendedor por parametro
 	Local cString := ""
 	Local aString := ""
 	Local nString := ""
+
 
 	Private oFont6		:= TFONT():New("ARIAL",7,6,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 6 Normal
 	Private oFont6N 	:= TFONT():New("ARIAL",7,6,,.T.,,,,.T.,.F.) ///Fonte 6 Negrito
@@ -54,7 +53,6 @@ User Function BRG012()
 	Private oFont22N	:= TFONT():New("ARIAL",22,22,,.T.,,,,.T.,.F.) ///Fonte 22 Negrito
 
 //³Variveis para impressão                                              ³
-
 	Private cStartPath
 	Private nLin 		:= 50
 	Private oPrint		:= NIL
@@ -78,17 +76,16 @@ User Function BRG012()
 	Private _NumSeq := " "
 	Private _AlqDif := 0
 	Private cLogo
-
-//Private _SomSbf := 0
-//Private  cStartPath := GETPVPROFSTRING(GETENVSERVER(),"StartPath","ERROR",GETADV97())
-//cStartPath += IF(RIGHT(cStartPath,1) <> "\","\","")
-//         cLogoD     := cStartPath + "LGRL" + cFilAnt + ".BMP"
-//cLogoD     :=  "LGRL" + cEmpAnt+ ".BMP"
+	Private aAliquotas := {}
+	Private nAliquota := 0
+	Static _Uf
+	Static cLogoPath := ""
+	Static nItemCount := 0
+	Static _nPagin := 1
 
 //³Define Tamanho do Papel                                                  ³
 
 	#define DMPAPER_A4 9 //Papel A4
-//oPrint:setPaperSize( DMPAPER_A4 )
 
 	If oPrint == Nil
 
@@ -100,422 +97,267 @@ User Function BRG012()
 
 	EndIf
 
-
-
-	oPrint:SetPortrait()///Define a orientacao da impressao como retrato
-//oPrint:SetLandscape() ///Define a orientacao da impressao como paisagem
-//³Monta Query com os dados que serão impressos no relatório            ³
-
-	oPrint:StartPage()
-
 	cStartPath := GetPvProfString(GetEnvServer(),"StartPath","ERROR",GetAdv97())
 	cStartPath += If(Right(cStartPath, 1) <> "\", "\", "")
 
-	cLogo := cStartPath+ "orc/" + cfilant + ".png"
-//aAdd(_aBmp,"\system\DANFE01" + cFilAnt+ ".bmp")  
-	/*aAdd(_aBmp,"C:\temp\logoorc.png")
-	aAdd(_aBmp,"C:\temp\timborc.png") //RAIO BRG
-	aAdd(_aBmp,"C:\temp\zaporc.png") //ICONE DO ZAP
-	aAdd(_aBmp,"C:\temp\botgr.png") //cabeçalho Grid
-	aAdd(_aBmp,"C:\temp\topgr.png") //Rodapé GRID
-	aAdd(_aBmp,"C:\temp\gridmg.png")  //lOGO GRID Minas
-	aAdd(_aBmp,"C:\temp\volvo.png")  //lOGO VOLVO*/
+	cLogoPath := "\system\timbr"+Cfilant+".png"
+	nItemCount := 0
+	_nPagin := 1
 
-	oPrint:SayBitmap(nLin+010, 100, cLogo, 350, 350)
+	oPrint:SetPortrait()///Define a orientacao da impressao como retrato          ³
 
-	//R. 261-B, Nº 449 - Setor Leste Universitário, Goiânia - GO, 74610-270
-    /*If cFilAnt <> "0501$"  //Quando for a Grid não tem o Raio
-       oPrint:SayBitmap(010, 0650, cLogo, 1700, 3190) //FAzendo teste
-    EndIF
+	oPrint:StartPage()
 
-	If cFilAnt = "0501"	
-       oPrint:SayBitmap(nLin+010, 0100, _aBmp[4], 2200, 300) //350     220
-	   oPrint:SayBitmap(nLin+010, 2000, _aBmp[7], 250, 250)	 //350     220
-	   
-	elseif cFilAnt = "0502"  //GRID Mg
-	   oPrint:SayBitmap(nLin+010, 0100, _aBmp[6], 350, 350)	 //350     220
-	   oPrint:SayBitmap(nLin+010, 2000, _aBmp[7], 250, 250)	 //350     220		   
-	else	 
-     oPrint:SayBitmap(nLin+010, 0160, _aBmp[1], 350, 350)	 //350     220	 
-	EndIF*/		
-    
-    nLin+=170
+	// Imprime o papel timbrado
+	oPrint:SayBitmap(0, 0, cLogoPath, 2100, 2970) // Largura e altura em pontos
+
+	nLin+=170
 
 	oPrint:Say(nLin,800,ALLTRIM(SM0->M0_NOMECOM),oFont10)
-
-	/*If Cfilant = "0501"      
-       oPrint:Say(nLin,800,SM0->M0_NOMECOM,oFont10) //550 grid go
-	elseIF Cfilant = "0502" 
-	   oPrint:Say(nLin,600,SM0->M0_NOMECOM,oFont10) //550 grid mg
-	elseIf Cfilant = "0101" 
-	   oPrint:Say(nLin,600,SM0->M0_NOMECOM,oFont10) //550 brg
-	endif*/
 
 	nLin+=30
 
 	oPrint:Say(nLin,800,ALLTRIM(SM0->M0_ENDENT)+", "+ALLTRIM(SM0->M0_COMPENT),oFont10)  //ALTEROU DE 550 PARA 650 PARA GRID
 
-	/*If Cfilant = "0501"
-	   oPrint:Say(nLin,800,"RUA 261-B, Nº 449 - LESTE UNIVERSITÁRIO",oFont10)  //ALTEROU DE 550 PARA 650 PARA GRID
-	elseIF  Cfilant = "0502"
-       oPrint:Say(nLin,600,"RUA AV FERNAO DIAS PAIS LEME, QUADRA12 LOTE 06 Nº 261 - ESTANCIA PARAOPEBA",oFont10)  //ALTEROU DE 550 PARA 650 PARA GRID
-	elseIF  Cfilant = "0101"
-	oPrint:Say(nLin,600,SM0->M0_ENDCOB,oFont10) 
-	Endif*/
-
-    //oPrint:Say(nLin,550,SM0->M0_ENDCOB,oFont10) 
-    nLin+=30
-
-    oPrint:Say(nLin,800,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
-
-	/*If Cfilant = "0501"
-	   oPrint:Say(nLin,800,"GOIÂNIA - GO, CEP - 74610-270 ",oFont10)
-	ElseIf Cfilant = "0502"
- 	   oPrint:Say(nLin,600,"SAO JOAQUIM DE BICAS - MG, CEP - 32920-000 ",oFont10)
-	ElseIf Cfilant = "0101"
- 	   oPrint:Say(nLin,600,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
-	EndIf*/
-
-	//oPrint:Say(nLin,550,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
 	nLin+=30
+
+	oPrint:Say(nLin,800,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
+
+	nLin+=30
+
 	oPrint:Say(nLin+70, 1500,  ("O R Ç A M E N T O  N.º: ")+SCJ->CJ_NUM, oFont16N)   //1400 ALTERADO PARA GRID
 
-	 oPrint:Say(nLin,800,"FONE: " + SM0->M0_TEL ,oFont10)
-	   nLin+=30
-	   oPrint:Say(nLin,800,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10) 
-	
-	/*IF Cfilant = "0501"
-	   oPrint:Say(nLin,800,"FONE: " + SM0->M0_TEL ,oFont10)
-	   nLin+=30
-	   oPrint:Say(nLin,800,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10) 
-	ELSEIF Cfilant = "0502"
-       oPrint:Say(nLin,600,"FONE: " + SM0->M0_TEL ,oFont10)
-	   nLin+=30
-	   oPrint:Say(nLin,600,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10) 
-	ELSEIF Cfilant = "0101"
-       oPrint:Say(nLin,600,"FONE: " + SM0->M0_TEL ,oFont10)
-	   nLin+=30
-	   oPrint:Say(nLin,600,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10) 
-	endif*/
+	oPrint:Say(nLin,800,"FONE: " + SM0->M0_TEL ,oFont10)
+	nLin+=30
+	oPrint:Say(nLin,800,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10)
 
-	//nLin+=50  
-	//oPrint:Say(nLin,550,"E-mail: comercial@brggeradores.com.br",oFont10)   
 	nLin+=100
 	//	oPrint:Say(nLin, 2100, "Pagina: " + strzero(nPag,3), oFont10N)
-_Desc     := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_NOME")  
-_End      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_END")
-_Bair     := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_BAIRRO") 
-_Cid      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_MUN") 
-_Uf       := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_EST")
-_Cnpj     := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_CGC")  
-_CEP      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_CEP")
-_TEL      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_TEL")  
-_TpCli    := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_TIPO")
- 
-oPrint:Say(nLin, 080,  ("Emissão:"), oFont12)
-oPrint:Say(nLin, 1600,  ("Telefone:"), oFont12)
-oPrint:Say(nLin, 300,  CVALTOCHAR(SCJ->CJ_EMISSAO), oFont12N)
-oPrint:Say(nLin, 1800, TRANSFORM(_TEL,"@R (99)9999-9999"), oFont12N)
-nLin+=50	
-oPrint:Say(nLin, 080, ("Cliente:"), oFont12)
-oPrint:Say(nLin, 300,  SCJ->CJ_CLIENTE+"/"+SCJ->CJ_LOJA +"-"+_Desc, oFont12N)    
-oPrint:Say(nLin, 1600, ("CNPJ:"), oFont12)
-oPrint:Say(nLin, 1800, TRANSFORM(_Cnpj,"@R 99.999.999/9999-99"),oFont12N) // CGC
+	_Desc     := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_NOME")
+	_End      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_END")
+	_Bair     := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_BAIRRO")
+	_Cid      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_MUN")
+	_Uf       := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_EST")
+	_Cnpj     := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_CGC")
+	_CEP      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_CEP")
+	_TEL      := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_TEL")
+	_TpCli    := Posicione("SA1",1,xFilial("SA1")+SCJ->CJ_CLIENTE+SCJ->CJ_LOJA,"A1_TIPO")
 
-nLin+=50 
-oPrint:Say(nLin, 080,  ("Endereço:"), oFont12)
-oPrint:Say(nLin, 300,  _End, oFont12N)
-oPrint:Say(nLin, 1600,  ("Cidade:"), oFont12)
-oPrint:Say(nLin, 1800,  alltrim(_Cid)+"/"+_Uf, oFont12N) 
- 
-nLin+=50 
-oPrint:Say(nLin, 080,  ("Cond. Pgto:"), oFont12)
-_Cond := Posicione("SE4",1,xFilial("SE4")+SCJ->CJ_CONDPAG,"E4_DESCRI")
-oPrint:Say(nLin, 300,  SCJ->CJ_CONDPAG+" - "+_Cond, oFont12N)
-oPrint:Say(nLin, 1600,  ("Cep:"), oFont12)
-oPrint:Say(nLin, 1800,  TRANSFORM(_CEP,"@R 99999-999"), oFont12N)    
+	oPrint:Say(nLin, 080,  ("Emissão:"), oFont12)
+	oPrint:Say(nLin, 1600,  ("Telefone:"), oFont12)
+	oPrint:Say(nLin, 300,  CVALTOCHAR(SCJ->CJ_EMISSAO), oFont12N)
+	oPrint:Say(nLin, 1800, TRANSFORM(_TEL,"@R (99)9999-9999"), oFont12N)
+	nLin+=50
+	oPrint:Say(nLin, 080, ("Cliente:"), oFont12)
+	oPrint:Say(nLin, 300,  SCJ->CJ_CLIENTE+"/"+SCJ->CJ_LOJA +"-"+_Desc, oFont12N)
+	oPrint:Say(nLin, 1600, ("CNPJ:"), oFont12)
+	oPrint:Say(nLin, 1800, TRANSFORM(_Cnpj,"@R 99.999.999/9999-99"),oFont12N) // CGC
 
-nLin+=50
-oPrint:Say(nLin, 080,  ("Tipo Frete:"), oFont12)
-oPrint:Say(nLin, 300, IIF(SCJ->CJ_TIPOFRT = "F","FOB","CIF"), oFont12N) 
-oPrint:Say(nLin, 1600,  ("Validade:"), oFont12)
-oPrint:Say(nLin, 1800,  CVALTOCHAR(SCJ->CJ_VALIDA), oFont12N)
+	nLin+=50
+	oPrint:Say(nLin, 080,  ("Endereço:"), oFont12)
+	oPrint:Say(nLin, 300,  _End, oFont12N)
+	oPrint:Say(nLin, 1600,  ("Cidade:"), oFont12)
+	oPrint:Say(nLin, 1800,  alltrim(_Cid)+"/"+_Uf, oFont12N)
 
-nLin+=50  
-_Vend := Posicione("SA3",1,xFilial("SA3")+SCJ->CJ_VEND,"A3_NOME")
-oPrint:Say(nLin, 080,  ("Vendedor:"), oFont12)
-oPrint:Say(nLin, 300,  SCJ->CJ_VEND +"-"+_Vend, oFont12N) 
-oPrint:Say(nLin, 1600,  ("Moeda:"), oFont12)
+	nLin+=50
+	oPrint:Say(nLin, 080,  ("Cond. Pgto:"), oFont12)
+	_Cond := Posicione("SE4",1,xFilial("SE4")+SCJ->CJ_CONDPAG,"E4_DESCRI")
+	oPrint:Say(nLin, 300,  SCJ->CJ_CONDPAG+" - "+_Cond, oFont12N)
+	oPrint:Say(nLin, 1600,  ("Cep:"), oFont12)
+	oPrint:Say(nLin, 1800,  TRANSFORM(_CEP,"@R 99999-999"), oFont12N)
 
-oPrint:Say(nLin, 1800,  IF(SCJ->CJ_MOEDA = 1 ,"R$ (Real)", "US$ (Dólar)"), oFont12N)
+	nLin+=50
+	oPrint:Say(nLin, 080,  ("Tipo Frete:"), oFont12)
+	oPrint:Say(nLin, 300, IIF(SCJ->CJ_TIPOFRT = "F","FOB","CIF"), oFont12N)
+	oPrint:Say(nLin, 1600,  ("Validade:"), oFont12)
+	oPrint:Say(nLin, 1800,  CVALTOCHAR(SCJ->CJ_VALIDA), oFont12N)
 
-nLin+=50  
-oPrint:Say(nLin, 080,  ("Observação:"), oFont12)
-oPrint:Say(nLin, 300,  SCJ->CJ_OBS, oFont12N)
+	nLin+=50
+	_Vend := Posicione("SA3",1,xFilial("SA3")+SCJ->CJ_VEND,"A3_NOME")
+	oPrint:Say(nLin, 080,  ("Vendedor:"), oFont12)
+	oPrint:Say(nLin, 300,  SCJ->CJ_VEND +"-"+_Vend, oFont12N)
+	oPrint:Say(nLin, 1600,  ("Moeda:"), oFont12)
 
-nLin+=120
-//oPrint:Say(nLin, 900, ("I T E N S  D O  O R Ç A M E N T O"), oFont14NS)
+	oPrint:Say(nLin, 1800,  IF(SCJ->CJ_MOEDA = 1 ,"R$ (Real)", "US$ (Dólar)"), oFont12N)
 
-nLin+=50
-oPrint:Say(nLin, 080,  ("Item"), oFont9N)
-oPrint:Say(nLin, 140,  ("Produto"), oFont9N)
-oPrint:Say(nLin, 350,  ("Descrição"), oFont9N)
-oPrint:Say(nLin, 900,  ("NCM"), oFont9N)
-oPrint:Say(nLin, 1050, ("UN"), oFont9N)
-oPrint:Say(nLin, 1150, ("CF"), oFont9N)
-oPrint:Say(nLin, 1250, ("Qtde"), oFont9N)
-oPrint:Say(nLin, 1460, ("Valor Unit."), oFont9N) 
-oPrint:Say(nLin, 1700, ("Ipi (%)"), oFont9N)
-oPrint:Say(nLin, 1820, ("Icms (%)"), oFont9N)
-oPrint:Say(nLin, 1940, ("Iss (%)"), oFont9N)
-oPrint:Say(nLin, 2075, ("Total"), oFont9N) 
+	nLin+=50
+	oPrint:Say(nLin, 080,  ("Observação:"), oFont12)
+	oPrint:Say(nLin, 300,  SCJ->CJ_OBS, oFont12N)
 
-nLin+=20
-oPrint:Line(nLin,080,nLin,2320)	
-nLin+=30
+	nLin+=50
 
-//nLin+=50
-dbSelectArea("SCK")
-dbsetorder(1)    
-dbSeek(xFilial("SCK")+_Nun)
-                                                                                                                                                               
+	oPrint:Say(nLin, 1800, ("Nº Paginas: ")+cvaltochar(_nPagin)+"/"+ALLTRIM(RetPag()), oFont10)
 
-While SCK->(!EOF()) .AND. xFilial("SCK") = SCK->CK_FILIAL .AND. SCK->CK_NUM = _Nun 		
-	
-	cTes := Posicione("SF4",1,xFilial("SF4")+SCK->CK_TES,"F4_CF")
-	cNcn := Posicione("SB1",1,xFilial("SB1")+SCK->CK_PRODUTO,"B1_POSIPI")		
-	
-	oPrint:Say(nLin, 080, SCK->CK_ITEM, oFont10)
+	nLin+=120
 
-	If len(ALLTRIM(SCK->CK_PRODUTO))	> 12		
-	   oPrint:Say(nLin, 140, SCK->CK_PRODUTO, oFont10) 
-	Else
-	   oPrint:Say(nLin, 140, SCK->CK_PRODUTO, oFont10) 
-	EndIF     //Lin+025
+	nLin+=50
+	oPrint:Say(nLin, 080,  ("Item"), oFont9N)
+	oPrint:Say(nLin, 140,  ("Produto"), oFont9N)
+	oPrint:Say(nLin, 350,  ("Descrição"), oFont9N)
+	oPrint:Say(nLin, 900,  ("NCM"), oFont9N)
+	oPrint:Say(nLin, 1050, ("UN"), oFont9N)
+	oPrint:Say(nLin, 1150, ("CF"), oFont9N)
+	oPrint:Say(nLin, 1250, ("Qtde"), oFont9N)
+	oPrint:Say(nLin, 1460, ("Valor Unit."), oFont9N)
+	oPrint:Say(nLin, 1700, ("Ipi (%)"), oFont9N)
+	oPrint:Say(nLin, 1820, ("Icms (%)"), oFont9N)
+	oPrint:Say(nLin, 1940, ("Iss (%)"), oFont9N)
+	oPrint:Say(nLin, 2075, ("Total"), oFont9N)
 
-	oPrint:Say(nLin, 350, SCK->CK_DESCRI, oFont10)
-	oPrint:Say(nLin, 0900, cNcn, oFont10)
-	oPrint:Say(nLin, 1050, SCK->CK_UM, oFont10)
-	oPrint:Say(nLin, 1150, cTes, oFont10) 
-	oPrint:Say(nLin, 1200, Transform(SCK->CK_QTDVEN, "@e 999,999,999.999"), oFont10,,,,1)  
-	oPrint:Say(nLin, 1420, Transform(SCK->CK_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1) 
-	oPrint:Say(nLin, 1700, Transform(SCK->CK_IPI, "@e 99.99"), oFont10) 
-	oPrint:Say(nLin, 1820, Transform(SCK->CK_ICMS, "@e 99.99"), oFont10) 
-	oPrint:Say(nLin, 1940, Transform(SCK->CK_ISS, "@e 99.99"), oFont10) 	
-	oPrint:Say(nLin, 2030, Transform(SCK->CK_VALOR, "@e 999,999,999.99"), oFont10,,,,1)      //oFont10,,,,2) // centraliza 
-    //oPrint:Say(nLin, 2200, Transform(SCK->CK_VALOR+(SCK->CK_VALOR*((SCK->CK_IPI/100)))+(SCK->CK_VALOR*((SCK->CK_ICMS/100)))+(SCK->CK_VALOR*((SCK->CK_ISS/100))), "@e 999,999,999.999"), oFont10) 	
 	nLin+=20
-  	oPrint:Line(nLin-50,130,nLin,130) 		// Vertical
-  	oPrint:Line(nLin-50,340,nLin,340) 		// Vertical
-  	oPrint:Line(nLin-50,890,nLin,890) 		// Vertical
-  	oPrint:Line(nLin-50,1040,nLin,1040) 	// Vertical
-  	oPrint:Line(nLin-50,1140,nLin,1140) 	// Vertical
-  	oPrint:Line(nLin-50,1240,nLin,1240) 	// Vertical
-  	oPrint:Line(nLin-50,1440,nLin,1440) 	// Vertical
-  	oPrint:Line(nLin-50,1690,nLin,1690) 	// Vertical
-  	oPrint:Line(nLin-50,1810,nLin,1810) 	// Vertical
-  	oPrint:Line(nLin-50,1920,nLin,1920) 	// Vertical 
-  	oPrint:Line(nLin-50,2050,nLin,2050) 	// Vertical
+	oPrint:Line(nLin,080,nLin,2320)
+	nLin+=30
 
-  	oPrint:Line(nLin,080,nLin,2320) // Horizontal
-  	nLin+=30
-    //oPrint:Line(nLinV,020,nLinV,2350) // Vertical
-	
-	  
-	If Cfilant = "0502"  
-  	
-  	   If _TpCli = "F"  	
-  	      Do case
-	         case _Uf $ "AL/AM/AP/BA/CE/DF/MA/PB/PR/PE/PI/RN/RS/SP/SE/TO" // 18 % Filial MG - não fica na Lista
-			    _AlqDif := 18 - 12
-		     case _Uf  = "AC/ES/GO/MT/MS/PA/RR/SC" // 17 %
-				_AlqDif := 17 - 12	  
-		     case _Uf  = "RJ" // 20 %
-			    _AlqDif := 20 - 12
-		     case _Uf  = "RO" //17,5 %
-				_AlqDif := 17.5 - 12		   		
-   		   EndCase   		      
-     	  //_VlDif  := (SCK->CK_VALOR*((_AlqDif/100)))
-     	  _TotDif := _TotDif + (SCK->CK_VALOR*((_AlqDif/100)))
-  	   EndIF
-	Else
-
-	   If _TpCli = "F"  	
-  	      Do case
-	         case _Uf $ "AL/AM/AP/BA/CE/DF/MA/MG/PB/PR/PE/PI/RN/RS/SP/SE/TO" // 18 %  
-			    _AlqDif := 18 - 12
-		     case _Uf  = "AC/ES/MT/MS/PA/RR/SC" // 17 % Filial GO - Não fica na Lista
-				_AlqDif := 17 - 12	  
-		     case _Uf  = "RJ" // 20 %
-			    _AlqDif := 20 - 12
-		     case _Uf  = "RO" //17,5 %
-				_AlqDif := 17.5 - 12		   		
-   		   EndCase   		      
-     	  //_VlDif  := (SCK->CK_VALOR*((_AlqDif/100)))
-     	  _TotDif := _TotDif + (SCK->CK_VALOR*((_AlqDif/100)))
-  	   EndIF
+	dbSelectArea("SCK")
+	dbsetorder(1)
+	dbSeek(xFilial("SCK")+_Nun)
 
 
-	Endif
+	While SCK->(!EOF()) .AND. xFilial("SCK") = SCK->CK_FILIAL .AND. SCK->CK_NUM = _Nun
+
+		cTes := Posicione("SF4",1,xFilial("SF4")+SCK->CK_TES,"F4_CF")
+		cNcn := Posicione("SB1",1,xFilial("SB1")+SCK->CK_PRODUTO,"B1_POSIPI")
+
+		oPrint:Say(nLin, 080, SCK->CK_ITEM, oFont10)
+
+		If len(ALLTRIM(SCK->CK_PRODUTO))	> 12
+			oPrint:Say(nLin, 140, SCK->CK_PRODUTO, oFont10)
+		Else
+			oPrint:Say(nLin, 140, SCK->CK_PRODUTO, oFont10)
+		EndIF
+
+		oPrint:Say(nLin, 350, SCK->CK_DESCRI, oFont10)
+		oPrint:Say(nLin, 0900, cNcn, oFont10)
+		oPrint:Say(nLin, 1050, SCK->CK_UM, oFont10)
+		oPrint:Say(nLin, 1150, cTes, oFont10)
+		oPrint:Say(nLin, 1200, Transform(SCK->CK_QTDVEN, "@e 999,999,999.999"), oFont10,,,,1)
+		oPrint:Say(nLin, 1420, Transform(SCK->CK_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1)
+		oPrint:Say(nLin, 1700, Transform(SCK->CK_IPI, "@e 99.99"), oFont10)
+		oPrint:Say(nLin, 1820, Transform(SCK->CK_ICMS, "@e 99.99"), oFont10)
+		oPrint:Say(nLin, 1940, Transform(SCK->CK_ISS, "@e 99.99"), oFont10)
+		oPrint:Say(nLin, 2030, Transform(SCK->CK_VALOR, "@e 999,999,999.99"), oFont10,,,,1)      //oFont10,,,,2) // centraliza
+		nLin+=20
+		oPrint:Line(nLin-50,130,nLin,130) 		// Vertical
+		oPrint:Line(nLin-50,340,nLin,340) 		// Vertical
+		oPrint:Line(nLin-50,890,nLin,890) 		// Vertical
+		oPrint:Line(nLin-50,1040,nLin,1040) 	// Vertical
+		oPrint:Line(nLin-50,1140,nLin,1140) 	// Vertical
+		oPrint:Line(nLin-50,1240,nLin,1240) 	// Vertical
+		oPrint:Line(nLin-50,1440,nLin,1440) 	// Vertical
+		oPrint:Line(nLin-50,1690,nLin,1690) 	// Vertical
+		oPrint:Line(nLin-50,1810,nLin,1810) 	// Vertical
+		oPrint:Line(nLin-50,1920,nLin,1920) 	// Vertical
+		oPrint:Line(nLin-50,2050,nLin,2050) 	// Vertical
+
+		oPrint:Line(nLin,080,nLin,2320) // Horizontal
+		nLin+=30
+
+		U_GetAliquota()
+
+		If _TpCli = "F"
+
+			_AlqDif := nAliquota- 12
+
+			_TotDif := _TotDif + (SCK->CK_VALOR*((_AlqDif/100)))
+		EndIF
+
+		_Icms := (SCK->CK_VALOR*((nAliquota/100)))
+		_Iss  := (SCK->CK_VALOR*((SCK->CK_ISS/100)))
+		_Ipi  := (SCK->CK_VALOR*((SCK->CK_IPI/100)))
+		_Qtd  := _Qtd + SCK->CK_QTDVEN
+		_Tot  := _Tot + SCK->CK_VALOR
+		_TotIpi  := _TotIpi + (SCK->CK_VALOR*((SCK->CK_IPI/100)))
+
+		// Atualiza o contador
+		nItemCount++
+
+		// Se atingiu 30 itens, realiza a quebra de página
+		If nItemCount >= 30
+			oPrint:EndPage() // Finaliza a página
+			oPrint:StartPage()
+			nItemCount := 0    // Reseta contador
+			nLin := 50       // Reinicia a posição da linha
+			oPrint:SayBitmap(0, 0, cLogoPath, 2100, 2970) // Largura e altura em pontos
+
+			nLin+=170
+
+			oPrint:Say(nLin,800,ALLTRIM(SM0->M0_NOMECOM),oFont10)
+
+			nLin+=30
+
+			oPrint:Say(nLin,800,ALLTRIM(SM0->M0_ENDENT)+", "+ALLTRIM(SM0->M0_COMPENT),oFont10)  //ALTEROU DE 550 PARA 650 PARA GRID
+
+			nLin+=30
+
+			oPrint:Say(nLin,800,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
+
+			nLin+=30
+
+			oPrint:Say(nLin+70, 1500,  ("O R Ç A M E N T O  N.º: ")+SCJ->CJ_NUM, oFont16N)   //1400 ALTERADO PARA GRID
+
+			oPrint:Say(nLin,800,"FONE: " + SM0->M0_TEL ,oFont10)
+			nLin+=30
+			oPrint:Say(nLin,800,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10)
+
+			nLin+= 80
+
+			oPrint:Say(nLin, 1800, ("Nº Paginas: ")+cvaltochar(_nPagin)+"/"+ALLTRIM(RetPag()), oFont10)
+
+			nLin+= 170
+
+			oPrint:Say(nLin, 080,  ("Item"), oFont9N)
+			oPrint:Say(nLin, 140,  ("Produto"), oFont9N)
+			oPrint:Say(nLin, 350,  ("Descrição"), oFont9N)
+			oPrint:Say(nLin, 900,  ("NCM"), oFont9N)
+			oPrint:Say(nLin, 1050, ("UN"), oFont9N)
+			oPrint:Say(nLin, 1150, ("CF"), oFont9N)
+			oPrint:Say(nLin, 1250, ("Qtde"), oFont9N)
+			oPrint:Say(nLin, 1460, ("Valor Unit."), oFont9N)
+			oPrint:Say(nLin, 1700, ("Ipi (%)"), oFont9N)
+			oPrint:Say(nLin, 1820, ("Icms (%)"), oFont9N)
+			oPrint:Say(nLin, 1940, ("Iss (%)"), oFont9N)
+			oPrint:Say(nLin, 2075, ("Total"), oFont9N)
+			nLin+=20
+			oPrint:Line(nLin,080,nLin,2320)
+			nLin+=30
+
+		EndIf
 
 
-  	
-  	_Icms := (SCK->CK_VALOR*((SCK->CK_ICMS/100)))
-  	_Iss  := (SCK->CK_VALOR*((SCK->CK_ISS/100)))
-  	_Ipi  := (SCK->CK_VALOR*((SCK->CK_IPI/100)))  	   	
-   	_Qtd  := _Qtd + SCK->CK_QTDVEN   
-   	_Tot  := _Tot + SCK->CK_VALOR //(SCK->CK_VALOR+(SCK->CK_VALOR*((SCK->CK_IPI/100)))+(SCK->CK_VALOR*((SCK->CK_ICMS/100)))+(SCK->CK_VALOR*((SCK->CK_ISS/100))))  
-   	_TotIpi  := _TotIpi + (SCK->CK_VALOR*((SCK->CK_IPI/100)))
-   		
- SCK->( dbSkip() )    
-     
- 	If nLin >= 3000 // veja o tamanho adequado da página que este numero pode variar  //3000
-       //	oPrint:Say(nLin+80, 2100, ("Nº Paginas: ")+cvaltochar(_nPagin)+"/"+ALLTRIM(RetPag()), oFont10)
-        //oPrint:SayBitmap(010, 0650, _aBmp[2], 1700, 3190)      //teste ricardo 
+		SCK->( dbSkip() )
 
-       oPrint:SayBitmap(3200, 0100, cLogo, 2200, 300)	 //350     220
+	Enddo
+	nLin+=50
 
-		/*If cFilAnt = "0501"
-	       oPrint:SayBitmap(3200, 0100, _aBmp[5], 2200, 300)	 //350     220
-           //oPrint:SayBitmap(010, 0650, _aBmp[5], 350, 1000)   //rodape Grid
-        EndIF*/
-    	oPrint:Say(3200, 2100, ("Nº Paginas: ")+cvaltochar(_nPagin)+"/"+ALLTRIM(RetPag()), oFont10)  
- 	    _nPagin := _nPagin + 1
-		oPrint:EndPage() // Finaliza a página
-		oPrint:StartPage()
-
-		oPrint:SayBitmap(nLin+010, 100, cLogo, 350, 350)
-
-		/*If cFilAnt <> "0501"
-	       oPrint:SayBitmap(010, 0650,_aBmp[1], 1700, 3190)      //teste ricardo
-		EndIF*/
-		nLin := 50 //nLin := 200
-		
-		//CABEÇALHO
-
-		oPrint:SayBitmap(nLin+010, 0100, cLogo, 350, 350)	 //350     220
-
-		/*If cFilAnt = "0501"	
-	       oPrint:SayBitmap(nLin+010, 0100, _aBmp[4], 2200, 300)	 //350     220
-	    elseif cFilAnt = "0502"  //GRID Mg
-	      oPrint:SayBitmap(nLin+010, 0100, cLogo, 350, 350)	 //350     220
-	      oPrint:SayBitmap(nLin+010, 1600, _aBmp[7], 250, 250)	 //350     220	   
-	    else
-           oPrint:SayBitmap(nLin+010, 0160, _aBmp[1], 350, 350)	 //350     220
-	    EndIF*/
-
-        nLin+=100      
-        oPrint:Say(nLin,650,SM0->M0_NOMECOM,oFont10)
-	    nLin+=50       
-        oPrint:Say(nLin,650,SM0->M0_ENDCOB,oFont10) 
-        nLin+=50
-		oPrint:Say(nLin,1400,  ("O R Ç A M E N T O  N.º: ")+SCJ->CJ_NUM, oFont16N)
-      	oPrint:Say(nLin,650,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB,oFont10)
-     	nLin+=50
-     	oPrint:Say(nLin,650,"FONE: " + SM0->M0_TEL +" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999") ,oFont10)
-    	nLin+=50
-     	oPrint:Say(nLin,650,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10)
-		nLin+=100
-		//CABEÇALHO
-	
-		oPrint:Say(nLin, 080,  ("Item"), oFont9N)
-		oPrint:Say(nLin, 140,  ("Produto"), oFont9N)
-		oPrint:Say(nLin, 350,  ("Descrição"), oFont9N)
-		oPrint:Say(nLin, 900,  ("NCM"), oFont9N)
-		oPrint:Say(nLin, 1050, ("UN"), oFont9N)
-		oPrint:Say(nLin, 1150, ("CF"), oFont9N)
-		oPrint:Say(nLin, 1250, ("Qtde"), oFont9N)
-		oPrint:Say(nLin, 1460, ("Valor Unit."), oFont9N) 
-		oPrint:Say(nLin, 1700, ("Ipi (%)"), oFont9N)
-		oPrint:Say(nLin, 1820, ("Icms (%)"), oFont9N)
-		oPrint:Say(nLin, 1940, ("Iss (%)"), oFont9N)
-		oPrint:Say(nLin, 2075, ("Total"), oFont9N) 	
-		nLin+=50	
-		oPrint:Line(nLin,100,nLin,2320)	
-	Endif 
-	
-Enddo
-nLin+=50 
-
-If nLin >= 2850
-
-    oPrint:SayBitmap(3200, 0100, cLogo, 2200, 300)	 //350     220
-
-    /*If cFilAnt = "0501"
-	oPrint:SayBitmap(3200, 0100, _aBmp[5], 2200, 300)	 //350     220
-      //oPrint:SayBitmap(010, 0650, _aBmp[5], 350, 1000)   //rodape Grid
-    EndIF*/
-
-   	oPrint:Say(3200, 2100, ("Nº Paginas: ")+cvaltochar(_nPagin)+"/"+ALLTRIM(RetPag()), oFont10)
-	oPrint:EndPage() // Finaliza a página
-	oPrint:StartPage()
-	nLin := 50 //nLin := 200
-	//oPrint:SayBitmap(010, 0650, _aBmp[2], 1700, 3190)	
-		//CABEÇALHO
-
-		
-	   oPrint:SayBitmap(nLin+010, 1600, cLogo, 250, 250)	 //350     220	
-
-
-	/*If cFilAnt = "0501"	
-	   oPrint:SayBitmap(nLin+010, 0100, _aBmp[4], 2200, 300)	 //350     220
-	elseif cFilAnt = "0502"  //GRID Mg
-	   oPrint:SayBitmap(nLin+010, 0100, _aBmp[6], 350, 350)	 //350     220
-	   oPrint:SayBitmap(nLin+010, 1600, _aBmp[7], 250, 250)	 //350     220		   
-	else
-       oPrint:SayBitmap(nLin+010, 0160, _aBmp[1], 350, 350)	 //350     220
-	EndIF*/
-
-    nLin+=100      
-    oPrint:Say(nLin,550,SM0->M0_NOMECOM,oFont10)
-    nLin+=50 
-  	oPrint:Say(nLin, 1400,  ("O R Ç A M E N T O  N.º: ")+SCJ->CJ_NUM, oFont16N)
-    oPrint:Say(nLin,550,SM0->M0_ENDCOB,oFont10) 
-    nLin+=50
-  	oPrint:Say(nLin,550,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
-   	nLin+=50
-   	oPrint:Say(nLin,550,"FONE: " + SM0->M0_TEL ,oFont10)
-   	nLin+=50
-  	oPrint:Say(nLin,550,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10)
+	oPrint:Say(nLin, 080,   ("T O T A I S"), oFont10N)
+	nLin+=50
+	oPrint:Line(nLin,080,nLin,2320)
+	nLin+=50
+	oPrint:Say(nLin, 1200, Transform(_Qtd, "@e 999,999,999.999"), oFont10)
+	oPrint:Say(nLin, 1700, "Total S/ Impostos" +Transform(_Tot, "@e 999,999,999.99"), oFont10)
+	nLin+=50
+	oPrint:Say(nLin, 1700, "Total C/ Impostos" +Transform(_Tot+_TotIpi+_TotDif, "@e 999,999,999.99"), oFont10)
+	nLin+=50
+	oPrint:Say(nLin, 080,   ("I M P O S T O S"), oFont10N)
+	nLin+=50
+	oPrint:Line(nLin,080,nLin,2320)
 	nLin+=100
-	//CABEÇALHO
+	oPrint:Say(nLin, 0080, ("Valor IPI"), oFont10)
+	oPrint:Say(nLin, 0400, ("Valor ICMS"), oFont10)
+	oPrint:Say(nLin, 0700, ("Valor ISS"), oFont10)
+	oPrint:Say(nLin, 1000, ("Valor Total"), oFont10)
+	oPrint:Say(nLin, 1300, ("Valor Difal"), oFont10)
 
-EndIf
-//oPrint:SayBitmap(010, 0650, _aBmp[2], 1700, 3190)         //ricardo moreira de lima
-oPrint:Say(nLin, 080,   ("T O T A I S"), oFont10N) 
-nLin+=50
-oPrint:Line(nLin,080,nLin,2320)                      
-nLin+=50
-oPrint:Say(nLin, 1200, Transform(_Qtd, "@e 999,999,999.999"), oFont10) 
-oPrint:Say(nLin, 1700, "Total S/ Impostos" +Transform(_Tot, "@e 999,999,999.99"), oFont10)
-nLin+=50
-oPrint:Say(nLin, 1700, "Total C/ Impostos" +Transform(_Tot+_TotIpi+_TotDif, "@e 999,999,999.99"), oFont10)
-nLin+=50
-oPrint:Say(nLin, 080,   ("I M P O S T O S"), oFont10N) 
-nLin+=50
-oPrint:Line(nLin,080,nLin,2320)                      
-nLin+=100    
-oPrint:Say(nLin, 0080, ("Valor IPI"), oFont10) 
-oPrint:Say(nLin, 0400, ("Valor ICMS"), oFont10)
-oPrint:Say(nLin, 0700, ("Valor ISS"), oFont10)
-oPrint:Say(nLin, 1000, ("Valor Total"), oFont10)
-oPrint:Say(nLin, 1300, ("Valor Difal"), oFont10)
+	nLin+=50
+	oPrint:Say(nLin, 0150, Transform(_TotIpi, "@e 999,999,999.99"), oFont10)
+	oPrint:Say(nLin, 0450, Transform(_Icms, "@e 999,999,999.99"), oFont10)
+	oPrint:Say(nLin, 0750, Transform(_Iss, "@e 999,999,999.99"), oFont10)
+	oPrint:Say(nLin, 1050, Transform((_Tot+_TotIpi), "@e 999,999,999.99"), oFont10)
+	oPrint:Say(nLin, 1350, Transform(_TotDif, "@e 999,999,999.99"), oFont10)   //Difal
+	nLin+=100
+	oPrint:Say(nLin, 0150, ("Sujeito a Disponibilidade"), oFont10)
+	nLin+=15
 
-nLin+=50  
-oPrint:Say(nLin, 0150, Transform(_TotIpi, "@e 999,999,999.99"), oFont10) 
-oPrint:Say(nLin, 0450, Transform(_Icms, "@e 999,999,999.99"), oFont10) 
-oPrint:Say(nLin, 0750, Transform(_Iss, "@e 999,999,999.99"), oFont10) 
-oPrint:Say(nLin, 1050, Transform((_Tot+_TotIpi), "@e 999,999,999.99"), oFont10)
-oPrint:Say(nLin, 1350, Transform(_TotDif, "@e 999,999,999.99"), oFont10)   //Difal
-nLin+=100
-oPrint:Say(nLin, 0150, ("Sujeito a Disponibilidade"), oFont10)
-nLin+=15
-/*If cFilAnt <> "0502" //Alterado 08/06/2021 Solicitado por Marlon
-   oPrint:SayBitmap(nLin, 0400, _aBmp[3], 050, 050)
-   oPrint:Say(nLin, 0150, ("(062) 99698-9715 "), oFont8) 
-   oPrint:SayBitmap(nLin, 0400, _aBmp[3], 050, 050)
-   oPrint:Say(nLin, 0150, ("(062) 3771-2553 "), oFont8) 
-EndIf*/
 //INICIO alteração Marlon 08/06/2022 #2155
 /* 
 	O tratamento dos contatos do orçamento é feito atraves de parametro.
@@ -524,67 +366,93 @@ EndIf*/
 	De um contato para o outro separar com ;
 
  */
-//If cFilAnt <> "0502" 
-	cString := GetMV(_cMvCon)
-	aString := strtokarr (cString, ";")
-	for nString := 1 to len(aString)
-		cStr1 := strtokarr (cValtoChar(aString[nString]), "-")
-		nLin+=50
-		oPrint:SayBitmap(nLin-22, 0530, cLogo, 030, 030)
-		oPrint:Say(nLin, 0150, (cStr1[1]), oFont10)
-		oPrint:Say(nLin, 0350, (cStr1[2]+"-"+cStr1[3]), oFont10)
-	next
-//EndIf
+		cString := GetMV(_cMvCon)
+		aString := strtokarr (cString, ";")
+		for nString := 1 to len(aString)
+			cStr1 := strtokarr (cValtoChar(aString[nString]), "-")
+			nLin+=50
+			oPrint:Say(nLin, 0150, (cStr1[1]), oFont10)
+			oPrint:Say(nLin, 0350, (cStr1[2]+"-"+cStr1[3]), oFont10)
+		next
+
+		_nPagin := 0
+
 //FIM
-	oPrint:Say(nLin, 2100, ("Nº Paginas: ")+cvaltochar(_nPagin)+"/"+ALLTRIM(RetPag()), oFont10)
-	nLin+=50
-
-	oPrint:SayBitmap(3200, 0100, cLogo, 2200, 300)	 //350     220
-
-/*If cFilAnt = "0501"
-   oPrint:SayBitmap(3200, 0100, _aBmp[5], 2200, 300)	 //350     220
-      //oPrint:SayBitmap(010, 0650, _aBmp[5], 350, 1000)   //rodape Grid
-EndIF*/
-oPrint:endPage()
-	MS_FLUSH()
-oPrint:Preview() 
-Return()
+		oPrint:endPage()
+		MS_FLUSH()
+		oPrint:Preview()
+		Return()
 
 //Retorna a Quantidade de Pagina do Orçamento
- 
-Static Function RetPag()   
-Local _nPag := " "
-Local _nCalc := 0
 
-If Select("TMP2") > 0
-	TMP2->(dbCloseArea())
-EndIf
+Static Function RetPag()
+	Local _nPag := "1" // Padrão: pelo menos 1 página
+	Local _nCalc := 0
+	Local _nItens := 0
+	Local _cQry := ""
 
-_cQry := "SELECT TOP 1 CK_ITEM Quant  "
-_cQry := "SELECT CK_ITEM Quant  "
-_cQry += "FROM " + retsqlname("SCK")+" SCK "  
-_cQry += "WHERE SCK.D_E_L_E_T_ <> '*' " 
-_cQry += "AND   SCK.CK_NUM = '" + _Nun + "' "
-_cQry += "AND   SCK.CK_FILIAL = '"+xFilial("SCK")+"'"
-_cQry += "ORDER BY CK_FILIAL,CK_ITEM DESC "
+	// Fecha a tabela TMP2 se estiver aberta
+	If Select("TMP2") > 0
+		TMP2->(dbCloseArea())
+	EndIf
 
-_cQry := ChangeQuery(_cQry)
-TcQuery _cQry New Alias "TMP2"
+	// Consulta SQL para obter a quantidade total de itens
+	_cQry := "SELECT COUNT(*) Quant "
+	_cQry += "FROM " + retsqlname("SCK") + " SCK "
+	_cQry += "WHERE SCK.D_E_L_E_T_ <> '*' "
+	_cQry += "AND SCK.CK_NUM = '" + _Nun + "' "
+	_cQry += "AND SCK.CK_FILIAL = '" + xFilial("SCK") + "'"
 
-If val(TMP2->Quant) <= 41
-    _nCalc := 1
-ElseIf val(TMP2->Quant) > 41 .and. val(TMP2->Quant) <= 86
-    _nCalc := 2
-ElseIf val(TMP2->Quant) > 86 .and. val(TMP2->Quant) <= 131
-	_nCalc := 3 
-ElseIf val(TMP2->Quant) > 131 .and. val(TMP2->Quant) <= 176   
-    _nCalc := 4 
-ElseIf val(TMP2->Quant) > 176 .and. val(TMP2->Quant) <= 221   
-    _nCalc := 5 
-ElseIf val(TMP2->Quant) > 221 .and. val(TMP2->Quant) <= 266   
-    _nCalc := 6
-EndIf   
+	_cQry := ChangeQuery(_cQry)
+	TcQuery _cQry New Alias "TMP2"
 
- _nPag   := cvaltochar(_nCalc) //cvaltochar(round((val(TMP2->Quant)/41),0)+1) //val(TMP2->Quant)/41
-       
+	// Obtém o número de itens
+	_nItens := TMP2->Quant
+
+	// Calcula a quantidade de páginas (arredondando para cima)
+	If _nItens > 0
+		_nCalc := Ceiling(_nItens / 30.0) // Divide por 35 e arredonda para cima
+	Else
+		_nCalc := 1 // Se não houver itens, assume pelo menos 1 página
+	EndIf
+
+	_nPag := CValToChar(_nCalc)
+	_nPagin := _nPagin + 1
+
 Return _nPag
+
+
+User Function GetAliquota()
+
+	Local nEstado := 0
+	Local nAliq01 := SuperGetMV("MV_ALIQ01", , " ") //19%
+	Local nAliq02 := SuperGetMV("MV_ALIQ02", , " ") //18%
+	Local nAliq03 := SuperGetMV("MV_ALIQ03", , " ") //20%
+	Local nAliq04 := SuperGetMV("MV_ALIQ04", , " ") //20.5%
+	Local nAliq05 := SuperGetMV("MV_ALIQ05", , " ") //17%
+	Local nAliq06 := SuperGetMV("MV_ALIQ06", , " ") //22%
+	Local nAliq07 := SuperGetMV("MV_ALIQ07", , " ") //19.5%
+	Local nAliq08 := SuperGetMV("MV_ALIQ08", , " ") //21%
+
+	If Empty(_Uf )
+		_Uf := Posicione("SA1",1,xFilial("SA1")+M->CJ_CLIENTE+M->CJ_LOJA,"A1_EST")
+	EndIf
+
+	aAliquotas := {{"AC", nAliq01}, {"AL", nAliq01}, {"AP", nAliq02}, {"AM", nAliq03},;
+		{"BA", nAliq04}, {"CE", nAliq03}, {"DF", nAliq03}, {"ES", nAliq05},;
+		{"GO", nAliq01}, {"MA", nAliq06}, {"MT", nAliq05}, {"MS", nAliq05},;
+		{"MG", nAliq02}, {"PA", nAliq01}, {"PB", nAliq03}, {"PR", nAliq07},;
+		{"PE", nAliq04}, {"PI", nAliq08}, {"RJ", nAliq03}, {"RN", nAliq02},;
+		{"RS", nAliq05}, {"RO", nAliq07}, {"RR", nAliq03}, {"SC", nAliq05},;
+		{"SP", nAliq02}, {"SE", nAliq01}, {"TO", nAliq03} }
+
+
+	For nEstado := 1 To Len(aAliquotas)
+		If aAliquotas[nEstado][1] == _Uf
+			nAliquota := aAliquotas[nEstado][2]
+			Exit
+		EndIf
+	Next
+
+
+Return nAliquota
