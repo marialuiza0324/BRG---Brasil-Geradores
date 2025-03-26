@@ -734,7 +734,7 @@ LOCAL NN           := '' //nosso numero
 LOCAL RN           := '' //
 LOCAL CB           := '' //codigo de barra
 LOCAL s            := ''
-LOCAL _cfator      := strzero(dVencto - ctod("07/10/97"),4)
+LOCAL _cfator      := strzero(1000 + (dVencto - ctod("22/02/25")),4)
 LOCAL _cCart		:= "109"
 
 //-------- Definicao do NOSSO NUMERO
