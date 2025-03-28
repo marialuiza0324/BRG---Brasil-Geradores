@@ -22,7 +22,22 @@ RETURN
 /*/
 USER FUNCTION FSPCPA()
 
-	Local lRet := MsgYesNo("Tem Certeza que deseja excluir o registro?","Confirmação")
+	Local lRet := .F.
+
+	If MsgYesNo("Tem Certeza que deseja excluir o registro?","Confirmação")
+
+		// Desfazendo a amarração na SC6
+		dbSelectArea("SC6")
+		If SC6->(DbSeek(xFilial("SC6") + Z10->Z10_PEDIDO + Z10->Z10_ITEM + Z10->Z10_PRODUT))
+			Reclock("SC6", .F.)
+			SC6->C6_NUMOP := ""  // Remove a OP
+			SC6->(MsUnlock())
+		EndIf
+		
+		lRet := .T.
+	EndIf
+
+
 
 Return lRet
 
@@ -43,9 +58,12 @@ USER FUNCTION FSPCPB()
 	Local cMsg := ""
 	Local nCont := 0
 	Local lAmarra := .T.
+	Local lAmarraOP := .T.
+	Local cOp := ""
 	Local cPedido := ""
 	Local cItem   := ""
 	Local _cQry  := ""
+	Local cQuery := ""
 	Local nTotal := 0
 
 	IF INCLUI
@@ -86,6 +104,7 @@ USER FUNCTION FSPCPB()
 				TZ10->(dbCloseArea())
 			EndIf
 
+			//Valida se pedido já esta amarrado a outra OP
 			_cQry := "SELECT * FROM " + retsqlname("Z10")+" Z10 "
 			_cQry += "WHERE D_E_L_E_T_ = '' "
 			_cQry += "AND Z10_PEDIDO = '"+M->Z10_PEDIDO+"' "
@@ -97,17 +116,40 @@ USER FUNCTION FSPCPB()
 
 			DbSelectArea("TZ10")
 
+			cOp := TZ10->Z10_ORDEM
+
+			Count to nTotal
+
+			IF nTotal > 0
+				nCont := nCont +1
+				lAmarraOP := .F.
+			EndIf
+
+			If Select("TZ10") > 0
+				TZ10->(dbCloseArea())
+			EndIf
+
+			// Valida se a OP já está amarrada a outro pedido
+			cQuery := "SELECT  * FROM " + retsqlname("Z10") + " Z10 "
+			cQuery += "WHERE D_E_L_E_T_ = '' "
+			cQuery += "AND Z10_ORDEM = '"+M->Z10_ORDEM+"' "
+			cQuery += "AND Z10_ITEM = '"+M->Z10_ITEM+"' "
+			cQuery += "AND Z10_PRODUT = '"+M->Z10_PRODUT+"' "
+
+			DbUseArea(.T., "TOPCONN", TcGenQry(,,ChangeQuery(cQuery)), "TZ10", .T., .T.)
+
+			DbSelectArea("TZ10")
+
+			cPedido := TZ10->Z10_PEDIDO
+			cItem  := TZ10->Z10_ITEM
+
 			Count to nTotal
 
 			IF nTotal > 0
 				lAmarra := .F.
-				nCont := nCont +1
-				cPedido := M->Z10_PEDIDO
-				cItem  := M->Z10_ITEM
 			EndIf
 
 			TZ10->(DbCloseArea())
-
 
 			IF  lOp = .F. .OR. lPed = .F.
 				lRet := .F.
@@ -124,6 +166,12 @@ USER FUNCTION FSPCPB()
 			ELSEIF lAmarra = .F.
 				FWAlertWarning("<br><br><font color='#FF0000'>Total de Ocorrências: "+cValtoChar(nCont)+CHR(13);
 					+"1-Ordem de produção amarrada ao pedido Nº: "+cPedido+CHR(13);
+					+"Item do pedido: "+cItem+ "</font>", "Avisos de Inconsistências!!!")
+				lRet = .F.
+
+			Elseif lAmarraOP = .F.
+				FWAlertWarning("<br><br><font color='#FF0000'>Total de Ocorrências: "+cValtoChar(nCont)+CHR(13);
+					+"1-Pedido amarrado a OP Nº: "+cOP+CHR(13);
 					+"Item do pedido: "+cItem+ "</font>", "Avisos de Inconsistências!!!")
 				lRet = .F.
 
@@ -177,7 +225,7 @@ Return lRet
 
 User Function xDesc()
 
-Local cDescri := POSICIONE("SC6",1,FWxFilial('SC6')+M->Z10_PEDIDO+M->Z10_ITEM+M->Z10_PRODUT,'C6_DESCRI')
+	Local cDescri := POSICIONE("SC6",1,FWxFilial('SC6')+M->Z10_PEDIDO+M->Z10_ITEM+M->Z10_PRODUT,'C6_DESCRI')
 
 
 Return cDescri
@@ -185,11 +233,11 @@ Return cDescri
 
 User Function xNomCli()
 
-Local cCodCli := Posicione("SC5",1,FWxFilial('SC5')+M->Z10_PEDIDO,'C5_CLIENTE')
-Local cNomCli := Posicione("SC5",1,FWxFilial('SC5')+M->Z10_PEDIDO,'C5_XNOMCLI')
-Local cNome := ''
+	Local cCodCli := Posicione("SC5",1,FWxFilial('SC5')+M->Z10_PEDIDO,'C5_CLIENTE')
+	Local cNomCli := Posicione("SC5",1,FWxFilial('SC5')+M->Z10_PEDIDO,'C5_XNOMCLI')
+	Local cNome := ''
 
-cNome := Alltrim(cCodCli)+ ' - ' +Alltrim(cNomCli)
+	cNome := Alltrim(cCodCli)+ ' - ' +Alltrim(cNomCli)
 
 
 Return cNome
