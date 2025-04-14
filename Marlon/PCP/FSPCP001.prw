@@ -53,7 +53,7 @@ USER FUNCTION FSPCPB()
 
 	Local lRet  := .F.
 	Local lOp   := .T.
-	Local lPed  := .T.
+	//Local lPed  := .T.
 	Local lIte  := .T.
 	Local cMsg := ""
 	Local nCont := 0
@@ -76,10 +76,10 @@ USER FUNCTION FSPCPB()
 
 			//Validar
 			//Validar se o pedido esta aberto Abrir area do Cabeçalho do pedido para validar a emissão da nota
-			IF !Empty(SC2->C2_OK) .AND. SC2->C2_QUANT = SC2->C2_QUJE .AND. !Empty(SC2->C2_DATRF)
-				FWAlertWarning( "Ordem de produção apontada. Selecione outra", "Validação de Ordem de Produção!" )
-				lPed := .F.
-			ENDIF
+			/*IF !Empty(SC2->C2_OK) .AND. SC2->C2_QUANT = SC2->C2_QUJE .AND. !Empty(SC2->C2_DATRF)
+				//FWAlertWarning( "Ordem de produção apontada. Selecione outra", "Validação de Ordem de Produção!" )
+				lPed := .T.
+			ENDIF*/
 
 			//Validar se a Op esta aberta.
 			//Permitir OP Firme; Prevista e Apontada
@@ -151,7 +151,7 @@ USER FUNCTION FSPCPB()
 
 			TZ10->(DbCloseArea())
 
-			IF  lOp = .F. .OR. lPed = .F.
+			IF  lOp = .F. //.OR. lPed = .F.
 				lRet := .F.
 
 
