@@ -42,6 +42,7 @@ User Function MT100TOK()
     Local lMsg :=.F.
     Local nLinha := 0
     Local lRastro := .T.
+    local nPosLoteCtl := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
     
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
@@ -60,6 +61,9 @@ User Function MT100TOK()
   
 
         For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
+
+         DbSelectArea("SB1")
+         DbSetOrder(1)   
 
         IF dbSeek(xFilial("SB1")+ACOLS[nX][2])//busca produto na SB1
             If SB1->B1_RASTRO == "L" .AND. Empty(ACOLS[nX][7])//se produto possuir ratreabilidade e lote estiver vazio
@@ -81,8 +85,6 @@ User Function MT100TOK()
                 EndIf
             EndIf
         Next
-
-
 
         cNumPC := ACOLS[nX][35] //Num Pc
         cItemPc := ACOLS[nX][36] //Item Pc 
