@@ -178,7 +178,7 @@ Private lMsErroAuto := .F.
 
         EndIf
 
-    TSC7->(dbCloseArea())
+    SC7->(dbCloseArea())
 
     // Restaura as áreas
     RestArea(aArea)
