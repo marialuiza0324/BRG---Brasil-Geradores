@@ -21,6 +21,13 @@ User Function MT120OK()
  Local cUserWeb := ""
  Local nPosCC     := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CC"})
  Local nPosRateio := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_RATEIO"})
+ Local cFormPag := ""
+ Local cPagamento := SupergetMv("MV_FORMPAG", , )
+ Local cBanco := ""
+ Local cAgencia := ""
+ Local cDigitVerAgen := ""
+ Local cDigitVerCon  := ""
+ Local cConta := ""
 
 
     If FunName() == "MATA161"
@@ -44,35 +51,58 @@ User Function MT120OK()
                 lRetorno := .F. // Bloqueia a confirmação
             EndIf
 
-        If SC7 ->(MsSeek(xFilial("SC7")+SC7->C7_NUM+SC7->C7_ITEM))
+            If SC7 ->(MsSeek(xFilial("SC7")+SC7->C7_NUM+SC7->C7_ITEM))
 
-            cUserWeb := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_XSOLWEB")
-            cUser := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_USER")
-            cGrupo := Posicione("SB1",1,xFilial("SB1")+ACOLS[n][2],"B1_GRUPO")
-            
+                cUserWeb := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_XSOLWEB")
+                cUser := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_USER")
+                cGrupo := Posicione("SB1",1,xFilial("SB1")+ACOLS[n][2],"B1_GRUPO")
+                
 
-                If !Empty(cUserWeb)
+                    If !Empty(cUserWeb)
 
-                    RecLock("SC7", .F.)
-                    SC7->C7_CODSOL := cUserWeb 
-                    SC7->C7_GRUPO  := cGrupo
-                    SC7->(MsUnlock())
+                        RecLock("SC7", .F.)
+                        SC7->C7_CODSOL := cUserWeb 
+                        SC7->C7_GRUPO  := cGrupo
+                        SC7->(MsUnlock())
 
-                ElseIf !Empty(cUser)
+                    ElseIf !Empty(cUser)
 
-                    RecLock("SC7", .F.)
-                    SC7->C7_CODSOL := cUser
-                    SC7->C7_GRUPO  := cGrupo
-                    SC7->(MsUnlock())
+                        RecLock("SC7", .F.)
+                        SC7->C7_CODSOL := cUser
+                        SC7->C7_GRUPO  := cGrupo
+                        SC7->(MsUnlock())
 
-                Else 
-                    RecLock("SC7", .F.)
-                    SC7->C7_CODSOL := RetCodUsr()
-                    SC7->C7_GRUPO  := cGrupo
-                    SC7->(MsUnlock())
-                EndIf
+                    Else 
+                        RecLock("SC7", .F.)
+                        SC7->C7_CODSOL := RetCodUsr()
+                        SC7->C7_GRUPO  := cGrupo
+                        SC7->(MsUnlock())
+                    EndIf
 
             EndIf
+
+         cFormPag := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_FORMPAG')
+         cBanco := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_BANCO')
+         cAgencia := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_AGENCIA')
+         cDigitVerAgen := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_DVAGE')
+         cDigitVerCon  := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_DVCTA')
+         cConta := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_NUMCON')
+
+        If Empty(cFormPag)
+            Help(, ,"AVISO#0019", ,"Fornecedor não possui forma de pagamento cadastrada.",1, 0, , , , , , {"Preencher o campo Forma de Pagamento no cadastro desse fornecedor."})
+            lRetorno := .F.
+        Else
+            If cFormPag $ cPagamento
+                If Empty(cBanco) .OR. Empty(cAgencia) .OR. Empty(cDigitVerAgen) .OR. Empty(cDigitVerCon) .OR. Empty(cConta)
+
+                 Help(, ,"AVISO#0020", ,"Divergência de informações.",1, 0, , , , , , {"Preencher os seguintes campos no cadastro deste fornecedor : " + CHR(13) + " 1-Banco" + CHR(13) + "2-Agência" + CHR(13) + "3-Dígito verificador da agência" + CHR(13) + "4-Número da conta" + CHR(13) + "5-Dígito verificador da conta"})
+                    lRetorno := .F.
+                Else 
+                    lRetorno := .T.
+                EndIf
+            EndIF
         EndIf
+
+    EndIf
 
 Return lRetorno
