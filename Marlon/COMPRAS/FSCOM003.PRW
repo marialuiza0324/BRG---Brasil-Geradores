@@ -14,11 +14,23 @@ User Function FSCOM003()
 	Local cQuery    := ""
 	Local nTotal    := 0
 	Local nXi       := 0
+	Local nY         := 0
 	Static nLinhas   := 0
 	Static _CRLF     := CHR(13)+CHR(13)
 	Static cTxtLinha := ""
 	Static cMensagem := ""
 	Static cDescCc   := ""
+	Static cQry      := ""
+	Static dData     := Date()
+	Static nValor    := 0
+	Static cUser     := RetCodUsr()
+	Static nLimite   := 0
+	Static nLimDisp  := 0
+	Static cTipo     := ""
+	Static dData     := Date()
+	Static dPriDia
+	Static dUltDia
+	Static aSaldo   := {}
 	Private nLin    := 0
 	Private nTraco := "_______________________________________________________________________________________________________________________________________________________________________________________________"
 	Private aDados   := {}
@@ -83,6 +95,68 @@ User Function FSCOM003()
 
 	//se a query retornar registro cria a dialog
 	MV_PAR01 := nTotal
+
+	nLimite := Posicione("SAK",2,FWxFilial("SAK")+cUser,'AK_LIMITE')
+	cTipo := Posicione("SAK",2,FWxFilial("SAK")+cUser,'AK_TIPO')
+
+	If cTipo == 'D'
+
+		If Posicione("SCS",1,FWxFilial("SCS")+cUser+DTOS(dData),'CS_SALDO') = 0
+			nLimDisp := nLimite
+		Else
+			nLimDisp := Posicione("SCS",1,FWxFilial("SCS")+cUser+DTOS(dData),'CS_SALDO')
+		Endif
+
+	ElseIf cTipo == 'M'
+
+		//Busca o primeiro dia
+		dPriDia := FirstDate(dData)
+		//Busca o último dia
+		dUltDia := LastDate(dData)
+
+		if Select("TMP2") > 0
+			TMP2->(dbCloseArea())
+		Endif
+
+		//"SELECT MAX(b1_cod) as NSEQUEN
+
+		cQry := "SELECT MAX(CS_SALDO) ULTSALDO FROM " + retsqlname("SCS") +" SCS "
+		cQry += "WHERE D_E_L_E_T_ = '' "
+		cQry += "AND CS_DATA BETWEEN '"+dTos(dPriDia)+"' AND '"+dTos(dUltDia)+"' "
+		cQry += "AND CS_COD = '"+cUser+"' "
+
+		DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TMP2",.T.,.T.)
+
+		DBSELECTAREA("TMP2")
+		TMP2->( dbGoTop() )
+
+		If TMP2->ULTSALDO > 0
+			nLimDisp := TMP2->ULTSALDO
+		Else
+			nLimDisp := nLimite
+		EndIf
+
+
+		/*While TMP2->(!EOF())
+
+			Aadd(aSaldo,TMP2->ULTSALDO)
+
+			TMP2->(DbSkip())
+
+		EndDo
+
+		Count To nTotal
+		If nTotal >= 1
+			For nY := 1 To Len(aSaldo)
+
+				nLimDisp += nLimDisp + aSaldo[nY]
+
+			Next
+		Else
+			nLimDisp := nLimite
+		EndIf*/
+
+	EndIf
 
 	If MV_PAR01 > 0
 		fCriaTela()
@@ -166,6 +240,22 @@ Static Function fCriaObj()
 	nAtual1+=1
 
 	//Cria o TSay
+	//Limite diário
+	&(cSayObj + cValToChar(nAtual1)) := TSay():New(nLin, 310, {|| }, oPanel1, , , , , , .T., CLR_BLACK, , 075, 012, , , , , , .T.)
+	&(cSayObj + cValToChar(nAtual1)):SetText("Limite Total de Aprovação: ")
+	&(cSayObj + cValToChar(nAtual1)):lTransparent := .T.
+
+	nAtual1+=1
+
+	//Cria o TGet
+	//Limite Diário
+	&(cGetCon + cValToChar(nAtual1)) := cValToChar(Transform(nLimite, "@E 999,999,999.99"))
+	&(cGetObj + cValToChar(nAtual1)) := TGet():New(nLin,378, {|| &(cGetCon + cValToChar(nAtual1))}, oPanel1, 060, 010, , , , , , , , .T., , , , , , ,.T. , , , , , , , , , , , , , , , , )
+
+
+	nAtual1+=1
+
+	//Cria o TSay
 	//Num Cotação
 	&(cSayObj + cValToChar(nAtual1)) := TSay():New(nLin+=10, 012, {|| }, oPanel1, , , , , , .T., CLR_BLACK, , 052, 007, , , , , , .T.)
 	&(cSayObj + cValToChar(nAtual1)):SetText("Nº da Cotação: ")
@@ -177,6 +267,24 @@ Static Function fCriaObj()
 	//Num Cotação
 	&(cGetCon + cValToChar(nAtual1)) := cValToChar(Alltrim(aDados[1][10]))
 	&(cGetObj + cValToChar(nAtual1)) := TGet():New(nLin+=2,95, {|| &(cGetCon + cValToChar(nAtual1))}, oPanel1, 060, 010, , , , , , , , .T., , , , , , , .T., , , , , , , , , , , , , , , , )
+
+	nAtual1+=1
+
+	//Cria o TSay
+	//Limite disponível
+	&(cSayObj + cValToChar(nAtual1)) := TSay():New(nLin, 310, {|| }, oPanel1, , , , , , .T., CLR_BLACK, , 075, 012, , , , , , .T.)
+	&(cSayObj + cValToChar(nAtual1)):SetText("Limite disponível para Aprovação: ")
+	&(cSayObj + cValToChar(nAtual1)):lTransparent := .T.
+
+	nAtual1+=1
+
+	//Cria o TGet
+	//Limite Disponível
+	&(cGetCon + cValToChar(nAtual1)) := cValToChar(Transform(nLimDisp, "@E 999,999,999.99"))
+	&(cGetObj + cValToChar(nAtual1)) := TGet():New(nLin,378, {|| &(cGetCon + cValToChar(nAtual1))}, oPanel1, 060, 010, , , , , , , , .T., , , , , , ,.T. , , , , , , , , , , , , , , , , )
+
+
+
 
 	nAtual1+=1
 	nLin += 5
@@ -345,4 +453,5 @@ Static Function fCriaObj()
 	Next
 
 	TMP1->(DbCloseArea())
+
 Return
