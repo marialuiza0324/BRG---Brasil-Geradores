@@ -334,9 +334,9 @@ User Function BRG012()
 	oPrint:Line(nLin,080,nLin,2320)
 	nLin+=50
 	oPrint:Say(nLin, 1200, Transform(_Qtd, "@e 999,999,999.999"), oFont10)
-	oPrint:Say(nLin, 1700, "Total S/ Impostos" +Transform(_Tot, "@e 999,999,999.99"), oFont10)
+	//oPrint:Say(nLin, 1700, "Total S/ Impostos" +Transform(_Tot, "@e 999,999,999.99"), oFont10)
 	nLin+=50
-	oPrint:Say(nLin, 1700, "Total C/ Impostos" +Transform(_Tot+_TotIpi+_TotDif, "@e 999,999,999.99"), oFont10)
+	oPrint:Say(nLin, 1700, "Total" +Transform(_Tot+_TotIpi+_TotDif, "@e 999,999,999.99"), oFont10)
 	nLin+=50
 	oPrint:Say(nLin, 080,   ("I M P O S T O S"), oFont10N)
 	nLin+=50
@@ -366,22 +366,22 @@ User Function BRG012()
 	De um contato para o outro separar com ;
 
  */
-		cString := GetMV(_cMvCon)
-		aString := strtokarr (cString, ";")
-		for nString := 1 to len(aString)
-			cStr1 := strtokarr (cValtoChar(aString[nString]), "-")
-			nLin+=50
-			oPrint:Say(nLin, 0150, (cStr1[1]), oFont10)
-			oPrint:Say(nLin, 0350, (cStr1[2]+"-"+cStr1[3]), oFont10)
-		next
+	cString := GetMV(_cMvCon)
+	aString := strtokarr (cString, ";")
+	for nString := 1 to len(aString)
+		cStr1 := strtokarr (cValtoChar(aString[nString]), "-")
+		nLin+=50
+		oPrint:Say(nLin, 0150, (cStr1[1]), oFont10)
+		oPrint:Say(nLin, 0350, (cStr1[2]+"-"+cStr1[3]), oFont10)
+	next
 
-		_nPagin := 0
+	_nPagin := 0
 
 //FIM
-		oPrint:endPage()
-		MS_FLUSH()
-		oPrint:Preview()
-		Return()
+	oPrint:endPage()
+	MS_FLUSH()
+	oPrint:Preview()
+Return()
 
 //Retorna a Quantidade de Pagina do Orçamento
 

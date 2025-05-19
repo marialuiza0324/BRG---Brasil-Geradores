@@ -21,7 +21,7 @@ Private cStatus
 Private cNumSC7		:= ""
 Private cSystem		:= GetSrvProfString("StartPath","")
 Private cDiretorio	:= ""
-Private cTitulo		:= "AUTORIZAÇÃO DE FORNECIMENTO"
+Private cTitulo		:= "PEDIDO DE COMPRA"
 Private cPerg		:= "PEDCOMGRAF"
 Private cNomeProg	:= "PEDCOMGRAF"	// Coloque aqui o nome do programa para impressao no cabecalho
 Private cEmail		:= Posicione("SA2",1,xFilial("SA2")+ SC7->(C7_FORNECE+C7_LOJA),"A2_EMAIL")
@@ -146,11 +146,11 @@ Private nColIt13 	:= nMaxCol 			//DT ENTREGA
 			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 			oPrn:Preview()		// Visualiza antes de imprimir
 
-			If cStatus == "03" .OR. cStatus == "05" // Verifica se o pedido está liberado ou não
+			/*If cStatus == "03" .OR. cStatus == "05" // Verifica se o pedido está liberado ou não
 				If MSGYESNO("Deseja enviar esse pedido ao Fornecedor?","Confirmação de Envio")
 					tela()
 				EndIf
-			EndIf
+			EndIf*/
 		Else
 			MsgStop("Consulta não obteve dados", Funname())
 		EndIf
@@ -554,7 +554,7 @@ Private cNumPedido
 			endif
 
 			//Verifica tamanho do campo CC
-			cCentrC := Alltrim(QRY->C7_CC) + " - "+ AllTrim(Posicione("CTT",1,xFilial("CTT")+ QRY->C7_CC,"CTT_DESC01")) //CTT_DESC01)
+			/*cCentrC := Alltrim(QRY->C7_CC) + " - "+ AllTrim(Posicione("CTT",1,xFilial("CTT")+ QRY->C7_CC,"CTT_DESC01")) //CTT_DESC01)
 			nDiv2:= Len(cCentrC)/17
 			nInteiro2 := Int(nDiv2)
 			nDecimais2 := nDiv2 - nInteiro2
@@ -562,10 +562,10 @@ Private cNumPedido
 				nQtdLin2 := nInteiro2 + 1
 			else
 				nQtdLin2 := nInteiro2
-			endif
+			endif*/
 
 			//Verifica a quantidade de linhas
-			If nQtdLin1 > nQtdLin2
+			/*If nQtdLin1 > nQtdLin2
 				nQtdLinhas := nQtdLin1
 			ElseIf nQtdLin1 == nQtdLin2
 				nQtdLinhas	:= nQtdLin1
@@ -573,7 +573,7 @@ Private cNumPedido
 				nQtdLinhas := nQtdLin2
 			EndIf
 			nAltLiBox:= nAltLinha * nQtdLinhas
-			nLinInf:= nLinSup + nAltLiBox
+			nLinInf:= nLinSup + nAltLiBox*/
 
 			oPrn:Box(nLinSup, nMinCol,nLinInf , nColIt1+1)
 			oPrn:Say(nLinSup+42, nMinCol+5, QRY->C7_ITEM	, oFont10	, 100)
@@ -633,9 +633,9 @@ Private cNumPedido
 
 			nTotFrt += QRY->C7_VALFRE
 
-			oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
+			//oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
 			// LEANDROM 11/12/2017 (AJUSTE PARA QUEBRA DE LINHA NA DESCRIÇÃO DO CENTRO DE CUSTO)
-			aDescric := {}
+			/*aDescric := {}
 			nTamCol := 17	//Tamanho da coluna do centro de custo
 			nQtdLinCC := 0
   			While ! Empty(cCentrC)
@@ -653,7 +653,7 @@ Private cNumPedido
 
 			For nI := 1 To Len(aDescric)
 				oPrn:Say(nLinSup+(nI*42), nColIt10+5, aDescric[nI], oFont10	, 100)
-			Next nI
+			Next nI*/
 
 			/*
 			If Len(cCentrC) > 17
@@ -676,7 +676,7 @@ Private cNumPedido
 			*/
 			//oPrn:SayAlign(nLinSup+42, nColIt10+5, cCentrC , oFont10	,nColIt11-nColIt10,nLinInf-nLinSup,0,0,0)//cCentroC
 
-			cSolicit := ""
+			/*cSolicit := ""
 			If !Empty(QRY->C7_NUMSC)
 				cSolicit := Posicione("SC1",1,xFilial("SC1") + QRY->C7_NUMSC, "C1_SOLICIT")
 			EndIf
@@ -688,7 +688,7 @@ Private cNumPedido
 			oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
 			For nI := 1 To Len(aDescric)
 				oPrn:Say(nLinSup+(nI*42), nColIt11+5, aDescric[nI], oFont10	, 100)
-			Next nI
+			Next nI*/
 
 			oPrn:Box(nLinSup, nColIt12, nLinInf, nColIt13)
  			oPrn:Say(nLinSup+42, nColIt12+5, DTOC(STOD(QRY->C7_DATPRF))	, oFont10	, 100)
@@ -858,10 +858,10 @@ Static Function ImpCabecIt(nLinSup, nLinInf)
 
 	oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
 	oPrn:FillRect({nLinSup+4,nColIt10+2,nLinInf,nColIt11-2},oBrush)
-	oPrn:Say(nLinSup+40, nColIt10+5, "C. CUSTO"	, oFont10N	, 100)
+	oPrn:Say(nLinSup+40, nColIt10+5, "DT ENTR."	, oFont10N	, 100)
 	//oPrn:SayAlign(nLinSup,nColIt10,"DT ENTR." ,oFont13N,nLinInf-nLinSup, nColIt9-nColIt10,, 2, 2 )
 
-	oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
+	/*oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
 	oPrn:FillRect({nLinSup+4,nColIt11+2,nLinInf,nColIt12-5},oBrush)
 	oPrn:Say(nLinSup+40, nColIt11+5, "SOLIC"	, oFont10N	, 100)
 	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVAÇÃO" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )
@@ -869,7 +869,7 @@ Static Function ImpCabecIt(nLinSup, nLinInf)
 	oPrn:Box(nLinSup, nColIt12-1, nLinInf, nColIt13)
 	oPrn:FillRect({nLinSup+4,nColIt12+2,nLinInf,nColIt13-5},oBrush)
 	oPrn:Say(nLinSup+40, nColIt12+5, "DT ENTR."	, oFont10N	, 100)
-	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVAÇÃO" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )
+	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVAÇÃO" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )*/
 
 Return
 
@@ -956,16 +956,13 @@ Local nI
 		nLinSup := nLinInf
 		nLinInf += 60
 
-		aTexto := {{'1) Constar o número desta AF na Nota Fiscal.  '},;
+		aTexto := {{'1) Constar o número deste PC na Nota Fiscal.  '},;
 			{'2) O material será inspecionado no recebimento estando, portanto, sujeito a rejeição com risco de devolução por conta do fornecedor'},;
 			{'quando não preencher os requisitos e especificações exigidos.'},;
-			{'3) Não serão efetuados pagamentos de Autorização de Fornecimento atendida parcialmente.  '},;
-			{'4) Reservamo-nos o direito de cancelar esta Autorização de Fornecimento, na inobservação de quaisquer das condições estipuladas '},;
-			{'5) É vedado ao fornecedor emitir sob quaisquer hipótese, faturas, duplicatas ou qualquer outro título representativo do valor'},;
-			{'total ou parcial desta AF, sendo a liquidação feita através de Boleto Bancário ou Duplicata.'},;
-			{'6) Não nos responsabilizamos pelo extravio ou não recebimento do boleto, desta forma se isenta de multas, juros e custas de cartório.  '},;
-			{'7) É considerado o prazo de entrega, com a mercadoria dentro do nosso estabelecimento.  '},;
-			{'8) Para pagamento parcelados, os valores das parcelas deverão ser iguais, salvo acordado e documentado com o departamento de compras. '},;
+			{'3) Reservamo-nos o direito de cancelar este Pedido de Compra no caso do não cumprimento de algum termo negociado '},;
+			{'4) Não nos responsabilizamos pelo extravio ou não recebimento do boleto, desta forma se isenta de multas, juros e custas de cartório.  '},;
+			{'5) É considerado o prazo de entrega, com a mercadoria dentro do nosso estabelecimento.  '},;
+			{'6) Para pagamento parcelados, os valores das parcelas deverão ser iguais, salvo acordado e documentado com o departamento de compras. '},;
 			{"Aprovador(es) : " +If( Len(cAprov) > 0 , Substr(cAprov,001,140) , " " )},;
 			{If( Len(cAprov) > 0 , Substr(cAprov,141,140) , " " )}}
 
@@ -1013,7 +1010,7 @@ Local nI
 	   	oPrn:Box(nLinInf-48, nMinCol, nLinInf-48, nMaxCol+2)
 
     	//Box assinatura do Fornecedor e do Comprador
-	    	nLinSup += 30
+	    	/*nLinSup += 30
 	    	nLinInf += 100
 	    	oPrn:Box(nLinSup, nMinCol ,nLinInf ,nMaxCol/2)
 	    	oPrn:Say(nLinSup+38, nMinCol + 40, "Diretor:", ofont14N, 100)
@@ -1022,7 +1019,7 @@ Local nI
 	    	oPrn:Box(nLinSup, nMaxCol/2 ,nLinInf ,nMaxCol)
 	    	oPrn:Say(nLinSup+38, nMaxCol/2 + 40, "Comprador:", ofont14N, 100)
 	    	//oPrn:Box(nLinInf-30, nMinCol/2+20 ,nLinInf-30 ,nMaxCol-20)
-	    	oPrn:Line(nLinInf-30, nMaxCol/2+100 ,nLinInf-30 ,nMaxCol-100)
+	    	oPrn:Line(nLinInf-30, nMaxCol/2+100 ,nLinInf-30 ,nMaxCol-100)*/
 Return
 
 //===============================================================
@@ -1083,7 +1080,7 @@ Return lRet
 // Cria a tela para validação do pedido de compras - Cassiano
 //============================================================
 
-Static Function Tela()
+/*Static Function Tela()
 
 Local cNomFornec	:= Posicione("SA2",1,xFilial("SA2")+ SC7->(C7_FORNECE+C7_LOJA),"A2_NOME")
 Local cNumPed		:= SC7->C7_NUM
@@ -1134,7 +1131,7 @@ ACTIVATE DIALOG oDlg ON INIT EnchoiceBar(oDlg,{||nOpca:=1,oDlg:End() },{||nOpca:
 		EnvMail()
 	EndIf
 
-Return
+Return*/
 
 //============================================================
 // Envia o pedido de compras  -  Cassiano

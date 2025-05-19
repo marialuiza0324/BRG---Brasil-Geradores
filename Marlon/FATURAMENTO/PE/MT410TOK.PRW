@@ -18,6 +18,9 @@ USER FUNCTION MT410TOK()
 	Local nOpc  := PARAMIXB[1]	//Número referente a opção de manutenção que está sendo utilizada. Ex: 2-Visualização, 3-Inclusão, 4-Alteração
 	Local cQry := ""
 	Local lRet := .T.
+	Local cUser := SupergetMv("MV_USERLOC", , ) //Parâmetro que controla acesso à TES
+	Local cUser_Id := RetCodUsr()
+	Local cTesLoc  := SupergetMv("MV_TESLOC", , ) //Parâmetro que controla as TES que serão LIBERADAS para usuário de locação
 
 	If nOpc == 1
 
@@ -47,8 +50,26 @@ USER FUNCTION MT410TOK()
 
 		TMP1->(DbCloseArea())
 
+
+	/*Validação criada para quando for feita cópia do pedido de venda, validar a TES
+		24/04/2025 Solicitante - Brenda #GLPI 9694
+	*/
+	ElseIf nOpc == 3
+
+		If cFilAnt == "0501" .OR. cFilAnt == "1001" //valida filial
+			If !(SC6->C6_TES $ cTesLoc ).AND. cUser_Id $ cUser //valida TES e usuário
+				Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
+				lRet := .F.
+			EndIf
+		ElseIf  cFilAnt == "0101" //valida filial
+			If !(SC6->C6_TES $ cTesLoc) .AND. cUser_Id $ cUser //valida TES e usuário
+				Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
+				lRet := .F.
+			EndIf
+		EndIf
+
 	EndIf
-	
+
 
 Return lRet
 
