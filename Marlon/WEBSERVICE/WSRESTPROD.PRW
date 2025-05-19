@@ -7,11 +7,7 @@ WSRESTFUL WSRESTPROD DESCRIPTION "Serviço rest para manipulação de produtos"
 
 	WSDATA CODPRODUTO AS String
 
-	WSMETHOD GET buscarproduto;
-		DESCRIPTION "Retorna dados do Produto";
-		WSSYNTAX "/buscarproduto";
-		PATH "buscarproduto";
-		PRODUCES APPLICATION_JSON
+	WSMETHOD GET buscarproduto DESCRIPTION "Retorna dados do Produto" WSSYNTAX "/buscarproduto" PATH "buscarproduto" PRODUCES APPLICATION_JSON
 
 ENDWSRESTFUL
 
