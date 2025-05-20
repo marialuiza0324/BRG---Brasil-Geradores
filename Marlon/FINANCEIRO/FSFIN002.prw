@@ -1,7 +1,8 @@
 #Include "RwMake.CH"
 #include 'protheus.ch'
 #include 'TOPCONN.CH'
-#INCLUDE "TBICONN.CH"
+#include 'TBICONN.CH'
+#include 'PRTOPDEF.CH' // Removed or commented out as the file is not found
 
 
 /*/{Protheus.doc} FSFIN002
@@ -70,12 +71,11 @@ User Function FSFIN002()
 
 	EndIf
 
-
 	_Lj     := TSC7->C7_LOJA
 	_Forn   := AllTrim(TSC7->C7_FORNECE)
 	cCond   := TSC7->C7_COND //Condição de pagamento
 	nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
-	aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)
+	aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
 
 	TSC7->(DbCloseArea())
 
