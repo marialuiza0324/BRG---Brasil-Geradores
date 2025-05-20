@@ -8,6 +8,7 @@ Possibilita ao desenvolvedor realizar operações
 após o encerramento da medição.
 Executado uma vez ao fim do encerramento ainda dentro 
 da transação e mais uma vez após o fim da transação..
+Utilizado para incluir título financeiro na tabela SE2
 @type  Function
 @author Maria Luiza
 @since 25/07/2024*/
@@ -37,9 +38,11 @@ User Function CN121ENC()
     Local nTotal := 0
     Local nTot   := 0 
     Local lMsg   := .F.
+    Local cItemPc := ""
     Private lMsErroAuto := .F. 
  
       cNumPC := SC7->C7_NUM
+      cItemPc := SC7->C7_ITEM //Item Pc
 	 _Forn   := AllTrim(SC7->C7_FORNECE)
 	 _Lj     := SC7->C7_LOJA
 
@@ -47,15 +50,15 @@ User Function CN121ENC()
             TSC7->(dbCloseArea())
         EndIf
 
-       _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE, C7_DATPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
+       _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE, C7_DATPRF,C7_XDTPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
 	_cQry += "FROM " + retsqlname("SC7")+" SC7 "
 	_cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
 	_cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
 	_cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
 	_cQry += "AND   SC7.C7_ENCER = '' "
 	_cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
-	_cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE "
-	_cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF "
+	_cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_XDTPRF "
+	_cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF,C7_XDTPRF "
         DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //Filtra pedido na SC7
 
        DbSelectArea("TSC7")
@@ -66,7 +69,15 @@ User Function CN121ENC()
 
 		nTot += TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL//valor total
 		cCond   := TSC7->C7_COND //Condição de pagamento
-		dData :=  STOD(TSC7->C7_DATPRF) //data de entrega do pedido
+		 If Empty(TSC7->C7_XDTPRF)
+
+	    	dData :=  stod(TSC7->C7_DATPRF)
+
+		Else
+
+			dData :=  stod(TSC7->C7_XDTPRF)
+
+		EndIf
 
 		TSC7->(DbSkip())
 
@@ -83,7 +94,7 @@ User Function CN121ENC()
             _Parc  := cvaltochar(i) //Nº da parcela
 
         aArray := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de inclusão do título
-            { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+_Parc),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
+            { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
             { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
                 { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
                 { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL },;
@@ -95,7 +106,7 @@ User Function CN121ENC()
                 { "E2_VALOR" ,_Total, NIL }}
 
             aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
-            { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+_Parc),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
+            { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
             { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
             { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
             { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
@@ -106,7 +117,7 @@ User Function CN121ENC()
 
             cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
             cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
-            cQuery += " AND E2_NUM = '"+cNumPC+"/"+_Parc+"' AND E2_PARCELA = '"+_Parc+"'
+            cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'
             cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
 
             DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSE2",.T.,.T.)
