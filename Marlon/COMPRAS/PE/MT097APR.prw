@@ -7,6 +7,7 @@
     Este P.E. é executado após a Liberação 
     do Pedido de Compras, cria título no 
 	contas a pagar caso o PC seja aprovado
+	Cria PRV caso o PC seja aprovado
     @type  Function
     @author Maria Luiza
     @since 16/07/2024 /*/  
@@ -35,7 +36,7 @@ User Function MT097APR()
 	Private cNumPC  := ""
 	Private cItemPc := ""
 
-	If SCR->CR_TIPO = 'PC' .AND. aArea[1] = "SC7"
+	If SCR->CR_TIPO = 'PC' .AND. aArea[1] = "SC7" //verifica se documento é PC e se a área é SC7
 		cNumPC := Alltrim(SCR->CR_NUM) //Num Pc
 		cItemPc := SC7->C7_ITEM
 
@@ -48,7 +49,7 @@ User Function MT097APR()
 		_cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
 		_cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
 		_cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
-		_cQry += "AND   SC7.C7_ITEM = '" + cItemPc + "' "
+		_cQry += "AND   SC7.C7_ITEM	= '" + cItemPc  + "' "
 		_cQry += "AND   SC7.C7_ENCER = '' "
 		_cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
 		_cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE "
