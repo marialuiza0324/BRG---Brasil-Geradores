@@ -40,7 +40,7 @@ Private lMsErroAuto := .F.
     // Posiciona corretamente na SD1 para buscar o número do pedido
     cNumPC := Posicione('SD1', 1, xFilial('SD1') + SF1->F1_DOC + SF1->F1_SERIE + SF1->F1_FORNECE + SF1->F1_LOJA, 'D1_PEDIDO')
 
-    If Empty(cNumPC)
+    If Empty(cNumPC)// se não tiver numeração de PC, não prossegue com o processo
         lMsg := .F.
     Else
         lMsg := .T.
@@ -54,25 +54,24 @@ Private lMsErroAuto := .F.
     DbSelectArea("SC7")
     SC7->(DbSetOrder(1))
 
-            If  SC7->(MsSeek(FWxFilial("SC7") + cNumPC ))
+            If  SC7->(MsSeek(FWxFilial("SC7") + cNumPC )) //Posiciona no pedido correto
 
-            While !SC7->(Eof()) .AND. cNumPc == SC7->C7_NUM 
+            While !SC7->(Eof()) .AND. cNumPc == SC7->C7_NUM // Verifica se o número do pedido é igual ao que foi passado
 
                 // Query na SC7
-                cQuery := "SELECT DISTINCT C7_FILIAL, C7_NUM, C7_COND, C7_EMISSAO, C7_FORNECE, C7_LOJA, C7_DATPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
+                cQuery := "SELECT DISTINCT C7_FILIAL, C7_NUM, C7_COND, C7_EMISSAO, C7_FORNECE, C7_LOJA, C7_DATPRF,C7_XDTPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
                 cQuery += "FROM " + RetSqlName("SC7") + " SC7 "
                 cQuery += "WHERE SC7.D_E_L_E_T_ <> '*' "
                 cQuery += "AND SC7.C7_FILIAL = '" + xFilial('SC7') + "' "
                 cQuery += "AND SC7.C7_NUM = '" + cNumPC + "' "
                 cQuery += "AND SC7.C7_ENCER = '' "
                 cQuery += "AND SC7.C7_QUJE < SC7.C7_QUANT "
-                cQuery += "GROUP BY C7_FILIAL, C7_NUM, C7_COND, C7_EMISSAO, C7_DATPRF, C7_FORNECE, C7_LOJA "
-                cQuery += "ORDER BY C7_FILIAL, C7_NUM, C7_DATPRF "
+                cQuery += "GROUP BY C7_FILIAL, C7_NUM, C7_COND, C7_EMISSAO, C7_DATPRF, C7_FORNECE, C7_LOJA,C7_XDTPRF "
+                cQuery += "ORDER BY C7_FILIAL, C7_NUM, C7_DATPRF,C7_XDTPRF "
 
                 // Executa a query
                 DbUseArea(.T., "TOPCONN", TcGenQry(,,ChangeQuery(cQuery)), "TSC7", .T., .T.)
 
-                // Processa os resultados da query
             If Empty(SC7->C7_XDTPRF)
 
                 dData :=  SC7->C7_DATPRF
@@ -86,16 +85,16 @@ Private lMsErroAuto := .F.
                 _Lj     := SC7->C7_LOJA
                 cCond   := SC7->C7_COND
             
-                nValTot += SC7->C7_TOTAL + SC7->C7_VALIPI + SC7->C7_VALSOL
-                aParc   := Condicao(nValTot, cCond, nVIPI, dData, nVSol)
-                cItemPc := SC7->C7_ITEM 
+                nValTot += SC7->C7_TOTAL + SC7->C7_VALIPI + SC7->C7_VALSOL // Somando valor total do PC
+                aParc   := Condicao(nValTot, cCond, nVIPI, dData, nVSol)// Calculando o número de parcelas
+                cItemPc := SC7->C7_ITEM //Item PC
 
             SC7->(DbCloseArea())
 
             For i := 1 To Len(aParc)
-                _Venc  := LastDay(aParc[i,1], 3)
-                _Total := aParc[i,2]
-                _Parc  := cValToChar(i)
+                _Venc  := LastDay(aParc[i,1], 3)// Vencimento
+                _Total := aParc[i,2] // Valor da parcela
+                _Parc  := cValToChar(i)// Número da parcela
 
                 // Array de inclusão do título
                 aArray := { {"E2_PREFIXO", "PRV", NIL},;

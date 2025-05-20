@@ -43,6 +43,15 @@ User Function MT100TOK()
     Local nLinha := 0
     Local lRastro := .T.
     local nPosLoteCtl := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
+    Local lPag := .T.
+   /* Local cFormPag := ""
+	Local cPagamento := SupergetMv("MV_FORMPAG", , )
+	Local cBanco := ""
+	Local cAgencia := ""
+	Local cDigitVerAgen := ""
+	Local cDigitVerCon  := ""
+	Local cConta := ""
+    */
     
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
@@ -86,6 +95,31 @@ User Function MT100TOK()
             EndIf
         Next
 
+            /*obtém informações do cadastro do fornecedor
+            cFormPag := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_FORMPAG')
+            cBanco := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_BANCO')
+            cAgencia := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_AGENCIA')
+            cDigitVerAgen := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_DVAGE')
+            cDigitVerCon  := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_DVCTA')
+            cConta := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_NUMCON')
+
+            If Empty(cFormPag)//se o fornecedor não tiver nenhuma forma de pagamento cadastrada, exibe alerta e não permite a inclusão do documento
+                Help(, ,"AVISO#0019", ,"Fornecedor não possui forma de pagamento cadastrada.",1, 0, , , , , , {"Preencher o campo Forma de Pagamento no cadastro desse fornecedor."})
+                lRet := .F.
+                lPag := .F.
+            Else
+                If cFormPag $ cPagamento//caso tenha forma de pagamento cadastrada, verifica se é pagamento por pix ou TED
+                    If Empty(cBanco) .OR. Empty(cAgencia) .OR. Empty(cDigitVerAgen) .OR. Empty(cDigitVerCon) .OR. Empty(cConta) //se algum dos campos estiver vazio, exibe alerta e não permite a inclusão do documento
+                        Help(, ,"AVISO#0020", ,"Divergência de informações.",1, 0, , , , , , {"Preencher os seguintes campos no cadastro deste fornecedor : " + CHR(13) + " 1-Banco" + CHR(13) + "2-Agência" + CHR(13) + "3-Dígito verificador da agência" + CHR(13) + "4-Número da conta" + CHR(13) + "5-Dígito verificador da conta"})
+                        lRet := .F.
+                        lPag := .F.
+                    Else
+                        lRet := .T.
+                        lPag := .T.
+                    EndIf
+                EndIF
+            EndIf*/
+
         cNumPC := ACOLS[nX][35] //Num Pc
         cItemPc := ACOLS[nX][36] //Item Pc 
 
@@ -93,24 +127,31 @@ User Function MT100TOK()
             TSC7->(dbCloseArea())
         EndIf
 
-        _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE, C7_DATPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
+        _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE,C7_LOJA, C7_DATPRF,C7_XDTPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
         _cQry += "FROM " + retsqlname("SC7")+" SC7 "
         _cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
         _cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
         _cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
-        //_cQry += "AND   SC7.C7_ITEM = '" + cItemPc + "' "
         _cQry += "AND   SC7.C7_ENCER = '' "
         _cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
-        _cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE "
-        _cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF "
+        _cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_LOJA,C7_XDTPRF "
+        _cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF, C7_XDTPRF "
 
         DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //filtrando pedido na SC7
 
-            dData :=  stod(TSC7->C7_DATPRF)
+            If Empty(TSC7->C7_XDTPRF)
+
+		        dData :=  stod(TSC7->C7_DATPRF)
+
+	        Else
+
+		        dData :=  stod(TSC7->C7_XDTPRF)
+
+	        EndIf
             _Forn   := AllTrim(TSC7->C7_FORNECE)
             cCond   := TSC7->C7_COND //Condição de pagamento
             nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
-            aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)
+            aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
 
         For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
             _Venc  := Lastday(aParc[i,1],3) //vencimento
@@ -147,20 +188,25 @@ User Function MT100TOK()
 
             Begin Transaction
 
-                If lAchou //se achar título na query acima, deleta ele
-                    MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aDelet,, 5) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
+                If lAchou 
 
-                    If lMsErroAuto //se der erro cancela exclusão e mostra erro
-                        FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
-                        MostraErro()
-                        DisarmTransaction()
-                        lMsg := .F.
-                    Else
-                        lMsErroAuto:= .F.
-                        lRet := .T.
-                        lMsg := .T.
-                    Endif
-                Else 
+                    If lRastro = .F. .OR. lPag = .F.
+                        lRet := .F.
+                    Else //se não tiver pendência de lote nem de condição de pagamento, exclui o título
+                        MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aDelet,, 5) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
+
+                        If lMsErroAuto //se der erro cancela exclusão e mostra erro
+                            FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
+                            MostraErro()
+                            DisarmTransaction()
+                            lMsg := .F.
+                        Else
+                            lMsErroAuto:= .F.
+                            lRet := .T.
+                            lMsg := .T.
+                        Endif
+                    EndIf
+                 Else 
                 lRet := .T.
                 EndIf
 
@@ -174,12 +220,7 @@ User Function MT100TOK()
             SB1->(DbCloseArea())
             FwRestArea(aArea)
 
-           
-		If lRastro = .F. 
-			lRet := .F.
-		EndIf
-
-		If lMsg = .T. .AND. lRastro = .T.
+		If lMsg = .T. .AND. lRastro = .T. .AND. lPag = .T. //se tiver tudo ok, exibe mensagem de sucesso
 			FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
 		EndIf 
 
@@ -199,7 +240,6 @@ User Function MT100TOK()
         _cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
         _cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
         _cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
-        //_cQry += "AND   SC7.C7_ITEM = '" + cItemPc + "' "
         _cQry += "AND   SC7.C7_ENCER = '' "
         _cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
         _cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE "
@@ -211,7 +251,7 @@ User Function MT100TOK()
             _Forn   := AllTrim(TSC7->C7_FORNECE)
             cCond   := TSC7->C7_COND //Condição de pagamento
             nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
-            aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)
+            aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
 
         For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
             _Venc  := Lastday(aParc[i,1],3) //vencimento
@@ -275,7 +315,7 @@ User Function MT100TOK()
             SB1->(DbCloseArea())
             FwRestArea(aArea)
 
-            If lMsg = .T. 
+            If lMsg = .T. //se estiver tudo ok, exibe mensagem de sucesso
                 FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
             EndIf 
       EndIf
