@@ -40,10 +40,10 @@ Private lMsErroAuto := .F.
 
 For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 
-  cNumPC := ACOLS[nX][25]
+  cNumPC := ACOLS[nX][25] //Num PC
   cItemPc := ACOLS[nX][1] //Item Pc 
 
-		If Empty(cNumPc)
+		If Empty(cNumPc) //se não tiver numeração de PC, não prossegue com o processo
 			lMsg := .F.
 		Else
 			lMsg := .T.
@@ -53,25 +53,32 @@ For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 		TSC7->(dbCloseArea())
 	EndIf
 
-	_cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE,C7_LOJA, C7_DATPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
+	_cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE,C7_LOJA, C7_DATPRF,C7_XDTPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
 	_cQry += "FROM " + retsqlname("SC7")+" SC7 "
 	_cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
 	_cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
 	_cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
-	//_cQry += "AND   SC7.C7_ITEM = '" + cItemPc + "' "
 	_cQry += "AND   SC7.C7_ENCER = '' "
 	_cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
-	_cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_LOJA "
-	_cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF "
+	_cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_LOJA,C7_XDTPRF "
+	_cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF, C7_XDTPRF "
 
 	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //filtrando pedido na SC7
 
-	    dData :=  stod(TSC7->C7_DATPRF)
+		If Empty(TSC7->C7_XDTPRF)
+
+			dData :=  stod(TSC7->C7_DATPRF)
+
+		Else
+
+			dData :=  stod(TSC7->C7_XDTPRF)
+
+		EndIf
 		_Forn   := AllTrim(TSC7->C7_FORNECE)
 		_Lj     := TSC7->C7_LOJA
 		cCond   := TSC7->C7_COND //Condição de pagamento
 		nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
-		aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)
+		aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
 
 	For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
 		_Venc  := Lastday(aParc[i,1],3) //vencimento
