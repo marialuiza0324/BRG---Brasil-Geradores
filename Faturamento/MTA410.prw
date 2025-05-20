@@ -20,14 +20,8 @@ User Function MTA410()
 	Local xCfop  := " "
 	Local xTes  := " "
 	Local xCod  := " " //Cod. do Produto
-	//Local xRast := " " //Verifica a rastreabilidade
 	Local i    := 0
-	//Local _TpPag := M->C5_TPPAGF //TIpo de pagamento
-	Local _NfRem := M->C5_NFREM //
-	//Local _VcFat := M->C5_VENCFAT // Venc. Fatura
-	//Local _Cond  := M->C5_CONDLOC // Cond. Pag Locação
-	//Local _VlrFat:= M->C5_VLRFAT  //Vrl Fatura
-	//Local _ForPg := M->C5_XFORPG //Forma de Pagamento   esse tem q ser RE (remessa), para todas as notas de remessa locação
+	Local _NfRem := M->C5_NFREM 
 
 	If Funname() <> "LOCA029"
 
@@ -43,12 +37,8 @@ User Function MTA410()
 						Alert("Pedido de Fatura, Por Favor Preencher o campo nota de Remessa !!!")
 					EndIf
 				EndIf
-
+ 
 				If substr(xCfop,2,3) = "908"
-					//If empty(_TpPag) .or. empty(_VcFat) .or. empty(_Cond) .or. _VlrFat = 0 .or. _ForPg <> "RE"
-					// uRet := .F.
-					// Alert("Pedido Remessa Locação, Por Favor configurar a ABA Locação !!!")
-					//EndIf
 					DbSelectArea("SB1")
 					DbSetOrder(1)
 					If DbSeek(xFilial("SB1")+xCod)
