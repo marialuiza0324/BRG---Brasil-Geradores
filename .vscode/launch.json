@@ -18,6 +18,9 @@
 	"lastPrograms": [
 		{
 			"label": "SIGAMDI"
+		},
+		{
+			"label": "]"
 		}
 	],
 	"lastProgramExecuted": "SIGAMDI",
