@@ -20,17 +20,19 @@ User Function MT410INC()
 	Local cLoja   := M->C5_LOJACLI
 	Local cCliente := M->C5_CLIENTE
 
+	If Funname() <> "LOCA029"
 
-	DbSelectArea("SC5")
-	SC5->(DbSetOrder(3))
-	SC5->(DbGoTop())
+		DbSelectArea("SC5")
+		SC5->(DbSetOrder(3))
+		SC5->(DbGoTop())
 
-	If SC5->(MsSeek(FWxFilial("SC5")+cCliente+cLoja+cPedido))
-		Reclock("SC5", .F.)
-		SC5->C5_XUSER := cNome
-		SC5->(MsUnlock())
+		If SC5->(MsSeek(FWxFilial("SC5")+cCliente+cLoja+cPedido))
+			Reclock("SC5", .F.)
+			SC5->C5_XUSER := cNome
+			SC5->(MsUnlock())
+		EndIf
+
+		SC5->(DbCloseArea())
 	EndIf
-
-	SC5->(DbCloseArea())
-
+	
 Return
