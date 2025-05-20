@@ -21,16 +21,16 @@ User Function MT120OK()
  Local cUserWeb := ""
  Local nPosCC     := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CC"})
  Local nPosRateio := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_RATEIO"})
- Local cFormPag := ""
+ /*Local cFormPag := ""
  Local cPagamento := SupergetMv("MV_FORMPAG", , )
  Local cBanco := ""
  Local cAgencia := ""
  Local cDigitVerAgen := ""
  Local cDigitVerCon  := ""
- Local cConta := ""
+ Local cConta := ""*/
 
 
-    If FunName() == "MATA161"
+    If FunName() == "MATA161" //se for análise de cotação
            cCentroCusto := Posicione("SC1",1,xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC,"C1_CC")
            cRateio := Posicione("SC1",1,xFilial("SC1")+SC7->C7_NUMSC+SC7->C7_ITEMSC,"C1_RATEIO")
     Else
@@ -40,7 +40,7 @@ User Function MT120OK()
     EndIf
 
 
-    If FunName() <> "MATA161"
+    If FunName() <> "MATA161" //se não for análise de cotação
             // Verificando se o centro de custo está vazio e se o rateio está informado
             If Empty(cCentroCusto) .and. cRateio == "1"
                 // Se o centro de custo está vazio e há rateio, permite a confirmação
@@ -51,29 +51,29 @@ User Function MT120OK()
                 lRetorno := .F. // Bloqueia a confirmação
             EndIf
 
-            If SC7 ->(MsSeek(xFilial("SC7")+SC7->C7_NUM+SC7->C7_ITEM))
+            If SC7 ->(MsSeek(xFilial("SC7")+SC7->C7_NUM+SC7->C7_ITEM)) //Posiciona no pedido correto
 
+                //coletando informações de usuário 
                 cUserWeb := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_XSOLWEB")
                 cUser := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_USER")
                 cGrupo := Posicione("SB1",1,xFilial("SB1")+ACOLS[n][2],"B1_GRUPO")
                 
 
-                    If !Empty(cUserWeb)
+                    If !Empty(cUserWeb)//grava usuário do webservice
 
                         RecLock("SC7", .F.)
                         SC7->C7_CODSOL := cUserWeb 
                         SC7->C7_GRUPO  := cGrupo
                         SC7->(MsUnlock())
 
-                    ElseIf !Empty(cUser)
-
+                    ElseIf !Empty(cUser)//grava usuário da solicitação de compra
                         RecLock("SC7", .F.)
                         SC7->C7_CODSOL := cUser
                         SC7->C7_GRUPO  := cGrupo
                         SC7->(MsUnlock())
 
                     Else 
-                        RecLock("SC7", .F.)
+                        RecLock("SC7", .F.) //grava usuário corrente 
                         SC7->C7_CODSOL := RetCodUsr()
                         SC7->C7_GRUPO  := cGrupo
                         SC7->(MsUnlock())
@@ -81,6 +81,7 @@ User Function MT120OK()
 
             EndIf
 
+            /*obtém informações do cadastro de fornecedores
          cFormPag := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_FORMPAG')
          cBanco := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_BANCO')
          cAgencia := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_AGENCIA')
@@ -88,7 +89,7 @@ User Function MT120OK()
          cDigitVerCon  := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_DVCTA')
          cConta := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_NUMCON')
 
-        If Empty(cFormPag)
+        If Empty(cFormPag)//se o fornecedor não tiver nenhuma forma de pagamento cadastrada, exibe alerta e não permite a inclusão do documento
             Help(, ,"AVISO#0019", ,"Fornecedor não possui forma de pagamento cadastrada.",1, 0, , , , , , {"Preencher o campo Forma de Pagamento no cadastro desse fornecedor."})
             lRetorno := .F.
         Else
@@ -101,7 +102,7 @@ User Function MT120OK()
                     lRetorno := .T.
                 EndIf
             EndIF
-        EndIf
+        EndIf*/
 
     EndIf
 
