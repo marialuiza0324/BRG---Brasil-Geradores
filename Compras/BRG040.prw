@@ -38,8 +38,8 @@ User Function BRG040() //BRG040()
 			DbSelectArea("SAI")
 			DbSetOrder(2)
 			If DbSeek(xFilial("SAI")+cUserId)
-				Do While ! EOF() .AND. SAI->AI_USER == cUserId .AND. SAI->AI_FILIAL = xFilial("SAI")
-					If  cGrupo = SAI->AI_GRUPO
+				Do While ! EOF() .AND. SAI->AI_USER == cUserId .AND. SAI->AI_FILIAL = xFilial("SAI") .OR. trim(SAI->AI_GRUPO) == "*"
+					If  cGrupo = SAI->AI_GRUPO .OR. trim(SAI->AI_GRUPO) == "*"
 						cRet := .T.
 					EndIF
 					SAI->(dbSkip())
