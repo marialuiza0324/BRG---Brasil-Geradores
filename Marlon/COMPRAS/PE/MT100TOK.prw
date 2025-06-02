@@ -44,14 +44,6 @@ User Function MT100TOK()
     Local lRastro := .T.
     local nPosLoteCtl := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
     Local lPag := .T.
-   /* Local cFormPag := ""
-	Local cPagamento := SupergetMv("MV_FORMPAG", , )
-	Local cBanco := ""
-	Local cAgencia := ""
-	Local cDigitVerAgen := ""
-	Local cDigitVerCon  := ""
-	Local cConta := ""
-    */
     
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
@@ -94,31 +86,6 @@ User Function MT100TOK()
                 EndIf
             EndIf
         Next
-
-            /*obtém informações do cadastro do fornecedor
-            cFormPag := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_FORMPAG')
-            cBanco := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_BANCO')
-            cAgencia := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_AGENCIA')
-            cDigitVerAgen := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_DVAGE')
-            cDigitVerCon  := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_DVCTA')
-            cConta := Posicione("SA2",1,xFilial("SA2")+CA100FOR+CLOJA,'A2_NUMCON')
-
-            If Empty(cFormPag)//se o fornecedor não tiver nenhuma forma de pagamento cadastrada, exibe alerta e não permite a inclusão do documento
-                Help(, ,"AVISO#0019", ,"Fornecedor não possui forma de pagamento cadastrada.",1, 0, , , , , , {"Preencher o campo Forma de Pagamento no cadastro desse fornecedor."})
-                lRet := .F.
-                lPag := .F.
-            Else
-                If cFormPag $ cPagamento//caso tenha forma de pagamento cadastrada, verifica se é pagamento por pix ou TED
-                    If Empty(cBanco) .OR. Empty(cAgencia) .OR. Empty(cDigitVerAgen) .OR. Empty(cDigitVerCon) .OR. Empty(cConta) //se algum dos campos estiver vazio, exibe alerta e não permite a inclusão do documento
-                        Help(, ,"AVISO#0020", ,"Divergência de informações.",1, 0, , , , , , {"Preencher os seguintes campos no cadastro deste fornecedor : " + CHR(13) + " 1-Banco" + CHR(13) + "2-Agência" + CHR(13) + "3-Dígito verificador da agência" + CHR(13) + "4-Número da conta" + CHR(13) + "5-Dígito verificador da conta"})
-                        lRet := .F.
-                        lPag := .F.
-                    Else
-                        lRet := .T.
-                        lPag := .T.
-                    EndIf
-                EndIF
-            EndIf*/
 
         cNumPC := ACOLS[nX][35] //Num Pc
         cItemPc := ACOLS[nX][36] //Item Pc 
