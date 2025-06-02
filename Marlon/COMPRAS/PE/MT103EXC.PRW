@@ -111,7 +111,7 @@ Private lMsErroAuto := .F.
 
                 // Array de exclusão do título
                 aDelet := { {"E2_PREFIXO", "PRV", NIL},;
-                            {"E2_NUM", PadR(AllTrim(cNumPC), TamSx3("E2_NUM")[1]), NIL},;
+                            {"E2_NUM", PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },;
                             {"E2_PARCELA", PadR(AllTrim(_Parc), TamSx3("E2_PARCELA")[1]), NIL},;
                             {"E2_TIPO", PadR(AllTrim(cTipo), TamSx3("E2_TIPO")[1]), NIL},;
                             {"E2_NATUREZ", PadR(AllTrim("202010058"), TamSx3("E2_NATUREZ")[1]), NIL}}
@@ -121,13 +121,10 @@ Private lMsErroAuto := .F.
                     TSE2->(dbCloseArea())
                 EndIf
 
-                cQuery := "SELECT * FROM " + RetSqlName("SE2") + " "
-                cQuery += "WHERE E2_FILIAL = '" + xFilial("SE2") + "' "
-                cQuery += "AND E2_PREFIXO = 'PRV' "
-                cQuery += "AND E2_NUM = '" + cNumPC + "' "
-                cQuery += "AND E2_PARCELA = '" + _Parc + "' "
-                cQuery += "AND E2_TIPO = '" + cTipo + "' "
-                cQuery += "AND D_E_L_E_T_ <> '*' "
+                    cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
+                    cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
+                    cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'
+                    cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
 
                 DbUseArea(.T., "TOPCONN", TcGenQry(,,ChangeQuery(cQuery)), "TSE2", .T., .T.)
 
