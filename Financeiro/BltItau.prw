@@ -211,7 +211,7 @@ LOCAL aDadosBanco
 LOCAL aDatSacado
 LOCAL aBolText  := {"Após o vencimento cobrar multa de R$ ",;
 					"Mora Diaria de R$ ",;
-					"Sujeito a Protesto apos 14 (quatorze) dias do vencimento"}
+					"Sujeito a Protesto após o vencimento"}
 
 LOCAL _ImpRet := 0
 LOCAL i            := 0
