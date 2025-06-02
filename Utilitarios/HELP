@@ -150,3 +150,13 @@ Problema : Não é possível gerar a requisição: a solicitação está vincula
 Solução : Para gerar a requisição, a OP vinculada deve estar com status FIRME. 
 
 
+"AVISO#0025"
+
+Problema : Usuário locacao não tem permissão para utilizar o armazém selecionado.
+Solução : Para filial 0501, utilize o armazém: 99.
+
+
+"AVISO#0026"
+
+Problema : Usuário locacao não tem permissão para utilizar o armazém selecionado.
+Solução : Para filial 0101, utilize o armazém: 10 ou 11.
