@@ -25,6 +25,8 @@ USER FUNCTION MT410TOK()
 	Local cUserId := RetCodUsr()
 	Local cNome := UsrFullName(cUserID)
 	Local nI := 0
+	Local cEmpLoc := SupergetMv("MV_EMLOCPV", , ) // Parâmetro que controla empresas que irão validar o usuário locacao
+	Local cEmp := FwCodEmp()
 
 
 	If nOpc == 1
@@ -71,11 +73,11 @@ USER FUNCTION MT410TOK()
 		For nI := 1 To Len(aCols)
 			If cUser_Id $ cUser
 				// Verifica se a TES do item não está liberada para o usuário de locação nas filiais 0501 ou 1001
-				If !(aCols[nI][12] $ cTesLoc) .AND. (cFilAnt == "0501" .OR. cFilAnt == "1001")  
+				If !(aCols[nI][12] $ cTesLoc) .AND. cEmp $ cEmpLoc
 					Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
 					lRet := .F.
 					Exit
-				ElseIf !(aCols[nI][12] $ cTesLoc) .AND. cFilAnt == "0101" .AND. cUser_Id $ cUser
+				ElseIf !(aCols[nI][12] $ cTesLoc) .AND. cEmp $ cEmpLoc 
 					Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
 					lRet := .F.
 					Exit
