@@ -69,34 +69,40 @@ return (aCp)
 
 User Function AjustaAcols()
 
-	Local cProdApropri := ""
-	Local cLocPad := ""
-	Local i
-	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
-	Local _Tm  := CTM
-	Local cTMAlm   := SupergetMv("MV_TMALM" , ,)
+       // Declaração de variáveis locais
+       Local cProdApropri := ""
+       Local cLocPad := ""
+       Local i
+       Local cCod := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
+       Local _Tm := CTM
+       Local cTMAlm := SupergetMv("MV_TMALM" , ,)
 
-	_cod  := Acols[n,cCod]
+       // Obtém o código do produto
+       _cod := Acols[n,cCod]
 
-	cProdApropri := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_APROPRI')
-	cLocPad := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_LOCPAD')
+       // Busca apropriação e local padrão do produto
+       cProdApropri := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_APROPRI')
+       cLocPad := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_LOCPAD')
 
+       // Percorre as colunas da matriz Acols
+       For i := 1 to Len(Acols)
+              // Verifica se o tipo de movimento está permitido
+              If _Tm $ cTMAlm
+                     // Se o produto é de apropriação indireta
+                     If cProdApropri == "I"
+                            // Ajusta os campos conforme regra
+                            Acols[i][73] := Acols[i][7]
+                            Acols[i][72] := Acols[i][2]
+                            Acols[i][7] := ""
+                            Acols[i][2] := cLocPad
+                     EndIf
+              Else
+                     // Exibe mensagem de aviso se não tiver permissão
+                     Help(, ,"AVISO#0003", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize a(s) TM(s) : " +cTMAlm})
+              EndIf
+       Next
 
-	For i := 1 to Len(Acols)
-		If _Tm  $ cTMAlm
-			If cProdApropri == "I"
-
-				Acols[i][73]  := Acols[i][7]
-				Acols[i][72] := Acols[i][2]
-
-				Acols[i][7] := ""
-				Acols[i][2] := cLocPad
-
-			EndIf
-		Else
-			Help(, ,"AVISO#0003", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize a(s) TM(s) : " +cTMAlm})
-		EndIf
-	Next
+Return
 Return
 
 
