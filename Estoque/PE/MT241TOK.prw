@@ -38,7 +38,6 @@ User Function MT241TOK()
 	Local cBlq05  := SupergetMv("MV_USER05", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 05
 	Local cOpTm := SupergetMv("MV_OPTM", ,) //TMs utilizadas para não permitir movimentações de produtos fora da OP selecionada
 
-
 	_cod  := Acols[n,cCod]
 	_lote := Acols[n,cLote]
 	_op   := Acols[n,cOp]
@@ -58,6 +57,8 @@ User Function MT241TOK()
 			EndIf
 		EndiF
 	EndiF
+
+
 
 	/*Valida a movimentação de determinadas TMs para usuários autorizados, 
 	  validar a movimentação de OS - Maria Luiza - 07/08/2024
@@ -96,6 +97,7 @@ User Function MT241TOK()
 
 
 
+
 	/* Validação para usuários do almoxarifado conseguirem utilizar a movimentação múltipla para transferência dos itens
 	do armazém atual para o armazém 99, uilizando apenas a TM permitida no parâmetro MV_TMALM - Maria Luiza - 05/11/2024
 	*/
@@ -105,6 +107,8 @@ User Function MT241TOK()
 			lRet := .F.//não permite salvar
 		EndIf
 	EndIf
+
+
 
 
 
@@ -121,11 +125,12 @@ User Function MT241TOK()
 		EndIf
 	EndIF
 
-
-	If _Tm  $ cTMAlm .AND. Empty(_op ) //Verifica se campo da OP esta vazio
-		Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
-		lRet := .F.//não permite salvar
-	EndIf
+	If _local == "99"
+		If _Tm  $ cTMAlm .AND. Empty(_op ) //Verifica se campo da OP esta vazio
+			Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
+			lRet := .F.//não permite salvar
+		EndIf
+	End
 
 
 	/*Validações para que o usuário Levy consiga realizar baixa de OS somente no armazém 01 na GRID
@@ -185,35 +190,7 @@ User Function MT241TOK()
 		lRet:=.F.
 	EndIf
 
-
-
-
-	/*If cFilAnt $ "0101/0901"    //000041 - Guilherme engenharia    //000049 - Guilherme BRG
-		IF !(__CUSERID $ "000000/000031/000049/000004/000120/000150")
-			IF !empty(_Os) .and. !empty(_lote)
-				lRet := .F.
-				MSGINFO("Usuário não tem permissão para devolver item da OS com lote !!! "," Atenção ")
-			endIf
-		EndIf
-		If CTM $ _MovTm .and. empty(_Os)
-			lRet := .F.
-			MSGINFO("Movimentação de TM não Permitida !!! "," Atenção ")
-		EndIf
-	Else
-		If !(__CUSERID $ "000000/000031/000041/000120/000150")
-			IF !empty(_Os) .and. !empty(_lote)
-				lRet := .F.
-				MSGINFO("Usuário não tem permissão para devolver item da OS com lote !!! "," Atenção ")
-			endIf
-		EndiF
-		If CTM $ _MovTm
-			lRet := .F.
-			MSGINFO("Movimentação de TM não Permitida !!! "," Atenção ")
-		EndIf
-
-	EndIf*/
-
- 	DbSelectArea("SF5")
+	DbSelectArea("SF5")
 	DbSetOrder(1)  // Z42_FILIAL +  Z42_NUM
 	dbSeek(xFilial("SF5")+_Tm)
 
@@ -302,34 +279,5 @@ User Function MT241TOK()
 	FOR n := 1 TO len(aCols)
 		Acols[n,nVlCust] := Acols[n,nCusto]
 	NEXT n
-
-//VALIDAÇÃO PARA NÃO DEIXAR SAIR MAIS DO ENTROU 03/03/2023 INICIO
-/*
-If Select("TMP2") > 0
-	TMP2->(DbCloseArea())
-EndIf  
-
-cQry1 := " "
-cQry1 += "SELECT SUM(D3_QUANT) TOTAPON  "
-cQry1 += "FROM " + retsqlname("SD3")+" SD3 "
-cQry1 += "WHERE SD3.D_E_L_E_T_ <> '*' " 
-cQry1 += "AND D3_FILIAL = '" + cFilAnt + "' "
-cQry1 += "AND D3_TM = '005' "
-cQry1 += "AND D3_ESTORNO = '  ' "
-cQry1 += "AND D3_OP = '" + _Op + "' "
-
-DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry1)),"TMP2",.T.,.T.) 
-
-_QtTSd3 := TMP2->TOTAPON  
-
-TMP2->(DbCloseArea())
-
-If _QtTSd3 > 0 //Alerta de Quantidade Devolvida no apontamento.
-   ALERT("Existe Quantidade Devolvida de:  " +cvaltochar(_QtTSd3))
-EndIf
-
-
-//VALIDAÇÃO PARA NÃO DEIXAR SAIR MAIS DO ENTROU 03/03/2023 FIM
-*/
 
 Return(lRet)

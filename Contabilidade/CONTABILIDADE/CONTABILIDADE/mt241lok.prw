@@ -44,7 +44,6 @@ user function MT241LOK()
 	Local cOpTm := SupergetMv("MV_OPTM", ,) //TMs utilizadas para não permitir movimentações com campo de OP vazio
 
 
-
 	_Os   := Acols[n,nOstec]
 	_lote := Acols[n,cLote]
 	_cod  := Acols[n,cCod]
@@ -71,8 +70,6 @@ user function MT241LOK()
 			EndIf
 		EndiF
 	EndiF
-
-
 
 
 
@@ -143,11 +140,12 @@ user function MT241LOK()
 	EndIF
 
 
-	If _Tm  $ cTMAlm .AND. Empty(_op) //Verifica se campo da OP esta vazio
-		Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
-		_lok := .F.//não permite salvar
+	If _local == "99"
+		If _Tm  $ cTMAlm .AND. Empty(_op) //Verifica se campo da OP esta vazio
+			Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
+			_lok := .F.//não permite salvar
+		EndIf
 	EndIf
-
 
 
 
@@ -213,4 +211,4 @@ user function MT241LOK()
 		_lok:=.F.
 	EndIf
 
-return(_lok)
+		return(_lok)
