@@ -26,6 +26,8 @@ local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
 Local nLinha
 
+If FunName() <> "LOCA029"
+
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
 
             DbSelectArea("SB1")
@@ -70,5 +72,6 @@ Local nLinha
                 lRet := .F. // Bloqueia a confirmação
             EndIf
     EndIf
+EndIf
     
 Return lRet

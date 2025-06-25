@@ -21,43 +21,46 @@ local nPosCod        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_COD"})
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
 Local nLinha
 
-If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
+If FunName() <> "LOCA029"
 
-     DbSelectArea("SB1")
-     DbSetOrder(1)   
+    If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
 
-    IF dbSeek(xFilial("SB1")+Acols[n, nPosCod])//busca produto na SB1
-        If SB1->B1_RASTRO == "L" .AND. Empty(Acols[n, nPosLoteCtl])//se produto possuir ratreabilidade e lote estiver vazio
-            ExpL1  := .F. //não permite inclusão do doc 
-            FWAlertInfo("Item com Rastreabilidade, informe o Lote"," Atenção!!!")
-			Return
-        EndIf
-    EndIf
+        DbSelectArea("SB1")
+        DbSetOrder(1)   
 
-
-	  // Verifica se o lote já foi usado em outra linha
-        For nLinha := 1 To Len(Acols)
-            If nLinha != n // Ignora a linha atual
-                If Upper(AllTrim(Acols[nLinha, nPosLoteCtl])) == Upper(AllTrim(Acols[n, nPosLoteCtl])) .And. !Empty(Acols[n, nPosLoteCtl])
-                    FWAlertInfo("O lote '" + Alltrim(Acols[n, nPosLoteCtl]) + "' já foi utilizado em outro item. Corrija para prosseguir.", "Lote Duplicado!")
-                    ExpL1 := .F.
-                    Return
-                EndIf
+        IF dbSeek(xFilial("SB1")+Acols[n, nPosCod])//busca produto na SB1
+            If SB1->B1_RASTRO == "L" .AND. Empty(Acols[n, nPosLoteCtl])//se produto possuir ratreabilidade e lote estiver vazio
+                ExpL1  := .F. //não permite inclusão do doc 
+                FWAlertInfo("Item com Rastreabilidade, informe o Lote"," Atenção!!!")
+                Return
             EndIf
-        Next
+        EndIf
 
-    // Obtendo o centro de custo e o rateio
-    cCentroCusto := ACOLS[1][16] 
-    cRateio := ACOLS[1][57] 
 
-    // Verificando se o centro de custo está vazio e se o rateio está informado
-    If Empty(cCentroCusto) .and. cRateio == "1"
-        // Se o centro de custo está vazio e há rateio, permite a confirmação
-        ExpL1 := .T. // Permite continuar sem erro
-    ElseIf Empty(cCentroCusto) .and. cRateio == "2"
-        // Se ambos estão vazios, bloqueia a gravação e exibe uma mensagem
-        FWAlertInfo("Informe um centro de custo ou rateio", "Atenção!!!")
-        ExpL1 := .F. // Bloqueia a confirmação
+        // Verifica se o lote já foi usado em outra linha
+            For nLinha := 1 To Len(Acols)
+                If nLinha != n // Ignora a linha atual
+                    If Upper(AllTrim(Acols[nLinha, nPosLoteCtl])) == Upper(AllTrim(Acols[n, nPosLoteCtl])) .And. !Empty(Acols[n, nPosLoteCtl])
+                        FWAlertInfo("O lote '" + Alltrim(Acols[n, nPosLoteCtl]) + "' já foi utilizado em outro item. Corrija para prosseguir.", "Lote Duplicado!")
+                        ExpL1 := .F.
+                        Return
+                    EndIf
+                EndIf
+            Next
+
+        // Obtendo o centro de custo e o rateio
+        cCentroCusto := ACOLS[1][16] 
+        cRateio := ACOLS[1][57] 
+
+        // Verificando se o centro de custo está vazio e se o rateio está informado
+        If Empty(cCentroCusto) .and. cRateio == "1"
+            // Se o centro de custo está vazio e há rateio, permite a confirmação
+            ExpL1 := .T. // Permite continuar sem erro
+        ElseIf Empty(cCentroCusto) .and. cRateio == "2"
+            // Se ambos estão vazios, bloqueia a gravação e exibe uma mensagem
+            FWAlertInfo("Informe um centro de custo ou rateio", "Atenção!!!")
+            ExpL1 := .F. // Bloqueia a confirmação
+        EndIf
     EndIf
 EndIf
 
