@@ -14,10 +14,11 @@
 
 User Function MA020TOK()
 
-	Local cPagamento := SupergetMv("MV_FORMPAG", , )
+	Local lRet := .T.
+	/*Local cPagamento := SupergetMv("MV_FORMPAG", , )
 	Local cEmpresa := SupergetMv("MV_EMPPAG", , )
 	Local cCodEmp := FWCodEmp()
-	Local lRet := .T.
+	
 
 
 	If cCodEmp $ cEmpresa
@@ -30,7 +31,7 @@ User Function MA020TOK()
 				lRet := .T.
 			EndIf
 		EndIF
-	EndIf
+	EndIf*/
 
 
 Return lRet

@@ -17,7 +17,7 @@
 User Function MT161OK()
 
 	Local lRetPE  := .T.
-	Local cFormPag := ""
+	/*Local cFormPag := ""
 	Local cPagamento := SupergetMv("MV_FORMPAG", , )
 	Local cBanco := ""
 	Local cAgencia := ""
@@ -29,11 +29,11 @@ User Function MT161OK()
 
 	If cCodEmp $ cEmpresa //verifica se a empresa é a mesma da MV
 		//obtém informações do cadastro de fornecedores
-		cFormPag := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_FORMPAG')
-		cBanco := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_BANCO')
-		cAgencia := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_AGENCIA')
-		cDigitVerCon  := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_DVCTA')
-		cConta := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_NUMCON')
+		cFormPag := Posicione("SA2",1,xFilial("SA2")+SC8->C8_FORNECE+SC8->C8_LOJA,'A2_FORMPAG')
+		cBanco := Posicione("SA2",1,xFilial("SA2")+SC8->C8_FORNECE+SC8->C8_LOJA,'A2_BANCO')
+		cAgencia := Posicione("SA2",1,xFilial("SA2")+SC8->C8_FORNECE+SC8->C8_LOJA,'A2_AGENCIA')
+		cDigitVerCon  := Posicione("SA2",1,xFilial("SA2")+SC8->C8_FORNECE+SC8->C8_LOJA,'A2_DVCTA')
+		cConta := Posicione("SA2",1,xFilial("SA2")+SC8->C8_FORNECE+SC8->C8_LOJA,'A2_NUMCON')
 
 		If Empty(cFormPag)//se o fornecedor não tiver nenhuma forma de pagamento cadastrada, exibe alerta e não permite a inclusão do documento
 			Help(, ,"AVISO#0019", ,"Fornecedor não possui forma de pagamento cadastrada.",1, 0, , , , , , {"Preencher o campo Forma de Pagamento no cadastro desse fornecedor."})
@@ -49,6 +49,6 @@ User Function MT161OK()
 				EndIf
 			EndIF
 		EndIf
-	EndIf
+	EndIf*/
 
 Return lRetPE

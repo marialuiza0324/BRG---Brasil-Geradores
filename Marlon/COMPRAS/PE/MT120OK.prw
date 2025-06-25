@@ -21,14 +21,14 @@ User Function MT120OK()
  Local cUserWeb := ""
  Local nPosCC     := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_CC"})
  Local nPosRateio := AScan(aHeader, {|x| Alltrim(x[2]) == "C7_RATEIO"})
- Local cFormPag := ""
+/* Local cFormPag := ""
  Local cPagamento := SupergetMv("MV_FORMPAG", , )
  Local cBanco := ""
  Local cAgencia := ""
  Local cDigitVerCon  := ""
  Local cConta := ""
  Local cEmpresa := SupergetMv("MV_EMPPAG", , )
- Local cCodEmp := FWCodEmp()
+ Local cCodEmp := FWCodEmp()*/
 
 
     If FunName() == "MATA161" //se for análise de cotação
@@ -82,7 +82,7 @@ User Function MT120OK()
 
             EndIf
 
-        If cCodEmp $ cEmpresa
+        /*If cCodEmp $ cEmpresa
                 //obtém informações do cadastro de fornecedores
             cFormPag := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_FORMPAG')
             cBanco := Posicione("SA2",1,xFilial("SA2")+CA120FORN+CA120LOJ,'A2_BANCO')
@@ -104,7 +104,7 @@ User Function MT120OK()
                     EndIf
                 EndIF
             EndIf
-        EndIf
+        EndIf*/
 
     EndIf
 

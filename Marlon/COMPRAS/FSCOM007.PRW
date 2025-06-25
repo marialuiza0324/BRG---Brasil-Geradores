@@ -5,7 +5,7 @@
 /*/{Protheus.doc} FSCOM007
 
     @type  Function
-    Função que verifica se fornecedor possuiç
+    Função que verifica se fornecedor possui
     condição de pagamento cadastrada.
     @author Maria Luiza
     @since 07/05/2025
@@ -14,13 +14,13 @@
 
 User Function FSCOM007()
 
-	Local cFormPag := ""
+	Local lRetorno := .T.
+	/*Local cFormPag := ""
 	Local cPagamento := SupergetMv("MV_FORMPAG", , )
 	Local cBanco := ""
 	Local cAgencia := ""
 	Local cDigitVerCon  := ""
 	Local cConta := ""
-	Local lRetorno := .T.
 	Local cEmpresa := SupergetMv("MV_EMPPAG", , )
 	Local cCodEmp := FWCodEmp()
 
@@ -46,6 +46,6 @@ User Function FSCOM007()
 				EndIf
 			EndIF
 		EndIf
-	EndIf
+	EndIf*/
 
 Return lRetorno
