@@ -50,12 +50,12 @@ user function MT241LOK()
 	_op   := Acols[n,cOp]
 	_local:= Acols[n,cLocal]
 
-	if empty(aCols[n,nPosOP]) .or. 'OS'$aCols[n,nPosOP]
+	/*if empty(aCols[n,nPosOP]) .or. 'OS'$aCols[n,nPosOP]
 		if empty(cCc)
 			_lok:=.f.
 			FWAlertInfo("MT241LOK: Para este tipo de movimento o centro de custo deve ser informado!")
 		endif
-	endif
+	endif*/
 
 
 	//Tratamento para não fazer devolução 24/02/2021
