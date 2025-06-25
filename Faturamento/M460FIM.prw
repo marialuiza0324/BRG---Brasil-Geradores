@@ -106,10 +106,10 @@ User Function M460FIM()
 		DbSelectArea("TSE1")
 		TSE1->(DBGotop())
 
-		If !Empty(TSE1->E1_PARCELA) //verifica o campo de parcela, pois só é preenchido com mais de 1 título 
+		If !Empty(TSE1->E1_PARCELA) //verifica o campo de parcela, pois só é preenchido com mais de 1 título
 
 			While TSE1->(!EOF())
-				If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero+TSE1->E1_PARCELA)) //caso tenha mais de um título, utiliza a parcela como filtro 
+				If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero+TSE1->E1_PARCELA)) //caso tenha mais de um título, utiliza a parcela como filtro
 
 					Reclock('SE1', .F.)
 
@@ -276,173 +276,138 @@ EndIf
 	//AutoNfeEnv(cEmpAnt, cFilAnt, "0", "1", SF2->F2_SERIE, SF2->F2_DOC, SF2->F2_DOC)
 	// EndIf
 	If lBolet //
-		If cFilAnt == '1001'
-			If MsgYesNo("Deseja Gerar Boleto para o Banco Santander ?","ATENÇÃO")
+		If MsgYesNo("Deseja Gerar Boleto para o Banco Itaú ?","ATENÇÃO")
+			cPerg     :="TBOL04"
+			aAreaSX1 := SX1->(GetArea())
+			cDoc   := SF2->F2_DOC
+			cSerie := SF2->F2_SERIE
 
-				cPerg     :="TBOL04"
-				aAreaSX1 := SX1->(GetArea())
-				cDoc   := SF2->F2_DOC
-				cSerie := SF2->F2_SERIE
-
-				dbSelectArea("SX1")
-				SX1->(DbGoTop())
-				dbSetOrder(1)
-				If dbSeek(cPerg)
-					While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
-						If SX1->X1_ORDEM $ '01/02'
-							RecLock("SX1",.F.)
-							Replace SX1->X1_CNT01 with cSerie
-							MSUnLock()
-						EndIf
-						If SX1->X1_ORDEM $ '03/04'
-							RecLock("SX1",.F.)
-							Replace SX1->X1_CNT01 with cDoc
-							MsUnlock()
-						EndIf
-						If SX1->X1_ORDEM == '18'
-							RecLock("SX1",.F.)
-							Replace SX1->X1_PRESEL with 2
-							MsUnlock()
-						EndIf
-						SX1->(DbSkip())
-					EndDo
-				EndIf
-				RestArea(aAreaSX1)
-				//U_FSFIN003()
+			dbSelectArea("SX1")
+			SX1->(DbGoTop())
+			dbSetOrder(1)
+			If dbSeek(cPerg)
+				While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
+					If SX1->X1_ORDEM $ '01/02'
+						RecLock("SX1",.F.)
+						Replace SX1->X1_CNT01 with cSerie
+						MSUnLock()
+					EndIf
+					If SX1->X1_ORDEM $ '03/04'
+						RecLock("SX1",.F.)
+						Replace SX1->X1_CNT01 with cDoc
+						MsUnlock()
+					EndIf
+					If SX1->X1_ORDEM == '18'
+						RecLock("SX1",.F.)
+						Replace SX1->X1_PRESEL with 2
+						MsUnlock()
+					EndIf
+					SX1->(DbSkip())
+				EndDo
 			EndIf
+			RestArea(aAreaSX1)
+
+			U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
 		Else
-			If MsgYesNo("Deseja Gerar Boleto para o Banco Itaú ?","ATENÇÃO")
-				cPerg     :="TBOL04"
-				aAreaSX1 := SX1->(GetArea())
-				cDoc   := SF2->F2_DOC
-				cSerie := SF2->F2_SERIE
-
-				dbSelectArea("SX1")
-				SX1->(DbGoTop())
-				dbSetOrder(1)
-				If dbSeek(cPerg)
-					While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
-						If SX1->X1_ORDEM $ '01/02'
-							RecLock("SX1",.F.)
-							Replace SX1->X1_CNT01 with cSerie
-							MSUnLock()
-						EndIf
-						If SX1->X1_ORDEM $ '03/04'
-							RecLock("SX1",.F.)
-							Replace SX1->X1_CNT01 with cDoc
-							MsUnlock()
-						EndIf
-						If SX1->X1_ORDEM == '18'
-							RecLock("SX1",.F.)
-							Replace SX1->X1_PRESEL with 2
-							MsUnlock()
-						EndIf
-						SX1->(DbSkip())
-					EndDo
-				EndIf
-				RestArea(aAreaSX1)
-
-				U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
-			Else
-				Return
-				//Gerar o Boleto do Itau - Inicio
-				//U_AFINP001()  //chamada do Acelerador Totvs (Fonte exclusivo TOTVS Goiás)
-			EndIf
+			Return
+			//Gerar o Boleto do Itau - Inicio
+			//U_AFINP001()  //chamada do Acelerador Totvs (Fonte exclusivo TOTVS Goiás)
 		EndIf
-
-	Else
-		cPerg     :="TBOL04"
-		aAreaSX1 := SX1->(GetArea())
-		cDoc   := SF2->F2_DOC
-		cSerie := SF2->F2_SERIE
-
-		dbSelectArea("SX1")
-		SX1->(DbGoTop())
-		dbSetOrder(1)
-		If dbSeek(cPerg)
-			While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
-				If SX1->X1_ORDEM $ '01/02'
-					RecLock("SX1",.F.)
-					Replace SX1->X1_CNT01 with cSerie
-					MSUnLock()
-				EndIf
-				If SX1->X1_ORDEM $ '03/04'
-					RecLock("SX1",.F.)
-					Replace SX1->X1_CNT01 with cDoc
-					MsUnlock()
-				EndIf
-				If SX1->X1_ORDEM == '18'
-					RecLock("SX1",.F.)
-					Replace SX1->X1_PRESEL with 2
-					MsUnlock()
-				EndIf
-				SX1->(DbSkip())
-			EndDo
-		EndIf
-		RestArea(aAreaSX1)
-		U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
-
 	EndIf
 
-	RestArea(aSEA)
-	RestArea(aSCV )
-	RestArea(aSE1 )
-	RestArea(aSF2 )
-	RestArea(aSD2 )
-	RestArea(aDAK )
-	RestArea(aDAI )
-	RestArea(aDAJ )
-	RestArea(aSA1 )
-	RestArea(aSC5 )
-	RestArea(aSC6 )
-	RestArea(aSC9 )
-	RestArea(aDCF )
-	RestArea(aDAU )
-	RestArea(aDA3 )
-	RestArea(aDA4 )
-	RestArea(aDB0 )
-	RestArea(aDA5 )
-	RestArea(aDA6 )
-	RestArea(aDA7 )
-	RestArea(aDA8 )
-	RestArea(aDA9 )
-	RestArea(aSB1 )
-	RestArea(aSB2 )
-	RestArea(aSB6 )
-	RestArea(aSC9 )
-	RestArea(aSED )
-	RestArea(aSEE )
-	RestArea(aSA6 )
-	RestArea(aSX5 )
+Else
+	cPerg     :="TBOL04"
+	aAreaSX1 := SX1->(GetArea())
+	cDoc   := SF2->F2_DOC
+	cSerie := SF2->F2_SERIE
 
-	MV_PAR01 := aMVs[01]
-	MV_PAR02 := aMVs[02]
-	MV_PAR03 := aMVs[03]
-	MV_PAR04 := aMVs[04]
-	MV_PAR05 := aMVs[05]
-	MV_PAR06 := aMVs[06]
-	MV_PAR07 := aMVs[07]
-	MV_PAR08 := aMVs[08]
-	MV_PAR09 := aMVs[09]
-	MV_PAR10 := aMVs[10]
-	MV_PAR11 := aMVs[11]
-	MV_PAR12 := aMVs[12]
-	MV_PAR13 := aMVs[13]
-	MV_PAR14 := aMVs[14]
-	MV_PAR15 := aMVs[15]
-	MV_PAR16 := aMVs[16]
-	MV_PAR17 := aMVs[17]
-	MV_PAR18 := aMVs[18]
-	MV_PAR19 := aMVs[19]
-	MV_PAR20 := aMVs[20]
-	MV_PAR21 := aMVs[21]
-	MV_PAR22 := aMVs[22]
-	MV_PAR23 := aMVs[23]
-	MV_PAR24 := aMVs[24]
-	MV_PAR25 := aMVs[25]
+	dbSelectArea("SX1")
+	SX1->(DbGoTop())
+	dbSetOrder(1)
+	If dbSeek(cPerg)
+		While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
+			If SX1->X1_ORDEM $ '01/02'
+				RecLock("SX1",.F.)
+				Replace SX1->X1_CNT01 with cSerie
+				MSUnLock()
+			EndIf
+			If SX1->X1_ORDEM $ '03/04'
+				RecLock("SX1",.F.)
+				Replace SX1->X1_CNT01 with cDoc
+				MsUnlock()
+			EndIf
+			If SX1->X1_ORDEM == '18'
+				RecLock("SX1",.F.)
+				Replace SX1->X1_PRESEL with 2
+				MsUnlock()
+			EndIf
+			SX1->(DbSkip())
+		EndDo
+	EndIf
+	RestArea(aAreaSX1)
+	U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
 
-	SELECT(nWorkArea)
-	RestArea(aArea)
+EndIf
+
+RestArea(aSEA)
+RestArea(aSCV )
+RestArea(aSE1 )
+RestArea(aSF2 )
+RestArea(aSD2 )
+RestArea(aDAK )
+RestArea(aDAI )
+RestArea(aDAJ )
+RestArea(aSA1 )
+RestArea(aSC5 )
+RestArea(aSC6 )
+RestArea(aSC9 )
+RestArea(aDCF )
+RestArea(aDAU )
+RestArea(aDA3 )
+RestArea(aDA4 )
+RestArea(aDB0 )
+RestArea(aDA5 )
+RestArea(aDA6 )
+RestArea(aDA7 )
+RestArea(aDA8 )
+RestArea(aDA9 )
+RestArea(aSB1 )
+RestArea(aSB2 )
+RestArea(aSB6 )
+RestArea(aSC9 )
+RestArea(aSED )
+RestArea(aSEE )
+RestArea(aSA6 )
+RestArea(aSX5 )
+
+MV_PAR01 := aMVs[01]
+MV_PAR02 := aMVs[02]
+MV_PAR03 := aMVs[03]
+MV_PAR04 := aMVs[04]
+MV_PAR05 := aMVs[05]
+MV_PAR06 := aMVs[06]
+MV_PAR07 := aMVs[07]
+MV_PAR08 := aMVs[08]
+MV_PAR09 := aMVs[09]
+MV_PAR10 := aMVs[10]
+MV_PAR11 := aMVs[11]
+MV_PAR12 := aMVs[12]
+MV_PAR13 := aMVs[13]
+MV_PAR14 := aMVs[14]
+MV_PAR15 := aMVs[15]
+MV_PAR16 := aMVs[16]
+MV_PAR17 := aMVs[17]
+MV_PAR18 := aMVs[18]
+MV_PAR19 := aMVs[19]
+MV_PAR20 := aMVs[20]
+MV_PAR21 := aMVs[21]
+MV_PAR22 := aMVs[22]
+MV_PAR23 := aMVs[23]
+MV_PAR24 := aMVs[24]
+MV_PAR25 := aMVs[25]
+
+SELECT(nWorkArea)
+RestArea(aArea)
 
 /* Prencher a forma de pagamento do pedido de venda na tabela SCV  */
 
