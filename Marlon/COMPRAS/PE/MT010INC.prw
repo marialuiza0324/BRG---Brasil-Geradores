@@ -336,11 +336,4 @@ Static Function fSalvar()
     RestArea(aArea)
 Return
 
-User Function zEnvMail(cPara, cAssunto, xHTM, aAnexos)
 
-	Local aArea    := GetArea()
-	Local lEnvioOK := .F.
-	lEnvioOK := GPEMail(cAssunto, xHTM, cPara, aAnexos)
-	RestArea(aArea)
-
-Return lEnvioOK
