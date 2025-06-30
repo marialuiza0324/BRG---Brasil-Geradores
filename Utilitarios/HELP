@@ -160,3 +160,9 @@ Solução : Para filial 0501, utilize o armazém: 99.
 
 Problema : Usuário locacao não tem permissão para utilizar o armazém selecionado.
 Solução : Para filial 0101, utilize o armazém: 10 ou 11.
+
+
+"AVISO#0027"
+
+Problema : Não é permitido encerrar a OP, pois existem itens requisitados ou consumidos vinculados a ela.
+Solução : É necessário que esses materiais sejam devolvidos e requisitados corretamente na OP onde foram consumidos.
