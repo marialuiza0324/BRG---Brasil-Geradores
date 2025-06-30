@@ -35,13 +35,13 @@ deve ser movimentado após confirmação de que ele realmente está dentro da OP.*/
 User Function MT680VAL()
 
 	Local lRet      := .T.
-	Local cOper     := M->H6_OPERAC
-	Local cGrupo    := Alltrim(M->H6_XGRUPO)
+	Local cOper     := H6_OPERAC
+	Local cGrupo    := Alltrim(H6_XGRUPO)
 	//Local cAlter    := Alltrim(M->H6_XALTERN)
 	//Local cMotor    := Alltrim(M->H6_XMOTOR)
-	Local cLoteCtl  := Posicione('SB1', 1, FWxFilial('SB1') + M->H6_PRODUTO, 'B1_RASTRO')
-	Local cLote     := M->H6_LOTECTL
-	Local cOp       := Alltrim(M->H6_OP)
+	Local cLoteCtl  := Posicione('SB1', 1, FWxFilial('SB1') + ALLTRIM(H6_PRODUTO), 'B1_RASTRO')
+	Local cLote     := H6_LOTECTL
+	Local cOp       := Alltrim(H6_OP)
 	Local cQuery    := ""
 	Local cQry      := ""
 	Local cMensagem := ""
@@ -50,6 +50,11 @@ User Function MT680VAL()
 	Local nValid    := 0
 	Local lCampo := .T.
 	Local lLote  := .T.
+    Local nQtdReq   := 0   // Quantidade total requisitada
+	Local cPara    := SuperGetMV("MV_EMAILOP", ,"") // Parâmetro para destinatários do e-mail de apontamento de OP
+	Local cAssunto := "Atenção: OP sem Baixa de matéria-prima"
+	Local xHTM     := ""
+	Local aAnexos  := {}
 
 
 		While  cOper == 'M1'
@@ -68,75 +73,163 @@ User Function MT680VAL()
 
 	If cOper == "Z1"  .AND. M->H6_PT = "T"
 
-		If Select("TSCP") > 0
-			TSCP->(dbCloseArea())
+				If Select("TSCP") > 0
+					TSCP->(dbCloseArea())
+				EndIf
+
+				cQuery := "SELECT COUNT(CP_FILIAL) AS TOTAL_SA FROM SCP010 SCP "
+				cQuery += "WHERE SCP.D_E_L_E_T_ <> '*' "
+				cQuery += "AND SCP.CP_PREREQU = 'S' "
+				cQuery += "AND SCP.CP_STATUS <> 'E' "
+				cQuery += "AND SCP.CP_QUANT <> SCP.CP_QUJE "
+				cQuery += "AND SCP.CP_OP = '"+cOp+"' "
+
+				DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSCP",.T.,.T.)
+
+				DbSelectArea("TSCP") 
+
+				nTotal1 := TSCP->TOTAL_SA
+
+				If  nTotal1 > 0
+					nValid += nTotal1
+					cMensagem += '<font color="red"><b>'+cValtochar(nTotal1)+'</b></font> Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!' +CHR(13)
+				EndIf
+
+				TSCP->(DbCloseArea())
+
+				If Select("TSD4") > 0
+					TSD4->(dbCloseArea())
+				EndIf
+
+				cQry := "SELECT COUNT(D4_FILIAL) AS TOTAL FROM SD4010 SD4 "
+				cQry += "WHERE SD4.D_E_L_E_T_ <> '*' "
+				cQry += "AND SD4.D4_OP = '"+cOp+"' "
+				cQry += "AND SD4.D4_QUANT > 0 "
+
+				DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TSD4",.T.,.T.)
+
+				DbSelectArea("TSD4") 
+
+				nTotal2 := TSD4->TOTAL
+
+				If  nTotal2 > 0
+					nValid += nTotal2
+					cMensagem += 'Ordem de Produção possui <font color="red"><b>'+cValtochar(nTotal2)+'</b></font> empenhos em aberto ou Parcialmente Baixado!!!' +CHR(13)
+				EndIf
+
+				TSD4->(DbCloseArea())
+
+				If Empty(cLote) .AND. cLoteCtl ==  "L"
+					FWAlertInfo("Preencher o campo LOTE, pois produto possui restreabilidade", "Atenção !!!")
+					lLote := .F.
+					lRet := .F.
+				Else
+					lLote := .T.
+				Endif
+
+				If cMensagem <> ""
+					FWAlertInfo(cMensagem,"Atenção!!!")
+				EndIf
+
+				If nTotal1 > 0 .OR. nTotal2 > 0 .OR. !lCampo .OR. !lLote
+					lRet := .F.
+				Else
+					lRet := .T.
+
+					/*Verificação e disparo de e-mail  
+						quando não houver nenhuma requisição dentro da OP.
+						Solicitante: Matheus Souza - #GLPI 9463 e Kathlen Tainan #GLPI 10152
+						Ajuste: 07/08/2024 - Maria Luiza
+						*/
+
+		// Executa a query
+		If Select("TSD3") > 0
+			TSD3->(DbCloseArea())
 		EndIf
 
-		cQuery := "SELECT COUNT(CP_FILIAL) AS TOTAL_SA FROM SCP010 SCP "
-		cQuery += "WHERE SCP.D_E_L_E_T_ <> '*' "
-		cQuery += "AND SCP.CP_PREREQU = 'S' "
-		cQuery += "AND SCP.CP_STATUS <> 'E' "
-		cQuery += "AND SCP.CP_QUANT <> SCP.CP_QUJE "
-		cQuery += "AND SCP.CP_OP = '"+cOp+"' "
+		// Monta a query para verificar se há requisições na tabela SD3 para a OP
+		cQuery := "SELECT SUM(D3_QUANT) AS QTDREQ "
+		cQuery += "FROM " + RetSQLName("SD3") + " SD3 "
+		cQuery += "WHERE SD3.D3_FILIAL = '" + xFilial("SD3") + "' "
+		cQuery += "AND SD3.D3_OP = '" + cOP + "' "
+		cQuery += "AND SD3.D_E_L_E_T_ = ' '"
 
-		DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSCP",.T.,.T.)
 
-		DbSelectArea("TSCP") 
+		DbUseArea(.T., "TOPCONN", TcGenQry(,,ChangeQuery(cQuery)), "TSD3", .T., .T.)
 
-		nTotal1 := TSCP->TOTAL_SA
-
-		If  nTotal1 > 0
-			nValid += nTotal1
-			cMensagem += '<font color="red"><b>'+cValtochar(nTotal1)+'</b></font> Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!' +CHR(13)
+		// Verifica o resultado
+		If !TSD3->(Eof())
+			nQtdReq := TSD3->QTDREQ
 		EndIf
 
-		TSCP->(DbCloseArea())
+		// Fecha o alias temporário
+		DbSelectArea("TSD3")
+		TSD3->(DbCloseArea())
 
-		If Select("TSD4") > 0
-			TSD4->(dbCloseArea())
+		// Validação: bloqueia se não houver requisições
+		If nQtdReq <= 0
+
+			// Monta o corpo do e-mail para ausência de requisições de matéria-prima
+			xHTM := "<html><body>" + CRLF
+			xHTM += "<p>Informamos que o usuário <b>" + AllTrim(UsrFullName(RetCodUsr())) + " (" + AllTrim(RetCodUsr()) + ")</b> realizou o apontamento da Ordem de Produção <b>" + cOp + "</b>.<br>" + CRLF
+			xHTM += "Contudo, não foram identificadas baixas de matéria-prima associadas a esta OP.</p>" + CRLF
+			xHTM += "<p>Solicitamos, por gentileza, a verificação do apontamento de produção para garantir a conformidade do processo.</p>" + CRLF
+			xHTM += "<p>Atenciosamente,</p>" + CRLF
+			xHTM += "</body></html>"
+
+			// Envia e-mail informando ausência de requisições de matéria-prima para a OP
+			U_zEnvMail(cPara, cAssunto, xHTM, aAnexos)
+		EndIf
 		EndIf
 
-		cQry := "SELECT COUNT(D4_FILIAL) AS TOTAL FROM SD4010 SD4 "
-		cQry += "WHERE SD4.D_E_L_E_T_ <> '*' "
-		cQry += "AND SD4.D4_OP = '"+cOp+"' "
-		cQry += "AND SD4.D4_QUANT > 0 "
+	ElseIF cOper == "Z1" .AND. M->H6_PT = "P"
 
-		DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TSD4",.T.,.T.)
+								/*Verificação e disparo de e-mail  
+								quando não houver nenhuma requisição dentro da OP.
+								Solicitante: Matheus Souza - #GLPI 9463 e Kathlen Tainan #GLPI 10152
+								Ajuste: 07/08/2024 - Maria Luiza
+								*/
 
-		DbSelectArea("TSD4") 
+			// Executa a query
+			If Select("TSD3") > 0
+				TSD3->(DbCloseArea())
+			EndIf
 
-		nTotal2 := TSD4->TOTAL
+			// Monta a query para verificar se há requisições na tabela SD3 para a OP
+			cQuery := "SELECT SUM(D3_QUANT) AS QTDREQ "
+			cQuery += "FROM " + RetSQLName("SD3") + " SD3 "
+			cQuery += "WHERE SD3.D3_FILIAL = '" + xFilial("SD3") + "' "
+			cQuery += "AND SD3.D3_OP = '" + cOP + "' "
+			cQuery += "AND SD3.D_E_L_E_T_ = ' '"
 
-		If  nTotal2 > 0
-			nValid += nTotal2
-			cMensagem += 'Ordem de Produção possui <font color="red"><b>'+cValtochar(nTotal2)+'</b></font> empenhos em aberto ou Parcialmente Baixado!!!' +CHR(13)
-		EndIf
 
-		TSD4->(DbCloseArea())
+			DbUseArea(.T., "TOPCONN", TcGenQry(,,ChangeQuery(cQuery)), "TSD3", .T., .T.)
 
-		If Empty(cLote) .AND. cLoteCtl ==  "L"
-			FWAlertInfo("Preencher o campo LOTE, pois produto possui restreabilidade", "Atenção !!!")
-			lLote := .F.
-			lRet := .F.
-		Else
-			lLote := .T.
-		Endif
+			// Verifica o resultado
+			If !TSD3->(Eof())
+				nQtdReq := TSD3->QTDREQ
+			EndIf
 
-		If cMensagem <> ""
-			FWAlertInfo(cMensagem,"Atenção!!!")
-		EndIf
-	EndIf
+			// Fecha o alias temporário
+			DbSelectArea("TSD3")
+			TSD3->(DbCloseArea())
 
-	If nTotal1 > 0 .OR. nTotal2 > 0 .OR. !lCampo .OR. !lLote 
-			lRet := .F.
-	Else
-			lRet := .T.
-	EndIf
+			// Validação: bloqueia se não houver requisições
+			If nQtdReq <= 0
+
+				// Monta o corpo do e-mail para ausência de requisições de matéria-prima
+				xHTM := "<html><body>" + CRLF
+				xHTM += "<p>Informamos que o usuário <b>" + AllTrim(UsrFullName(RetCodUsr())) + " (" + AllTrim(RetCodUsr()) + ")</b> realizou o apontamento Parcial da Ordem de Produção <b>" + cOp + "</b>.<br>" + CRLF
+				xHTM += "Contudo, não foram identificadas baixas de matéria-prima associadas a esta OP.</p>" + CRLF
+				xHTM += "<p>Solicitamos, por gentileza, a verificação do apontamento de produção para garantir a conformidade do processo.</p>" + CRLF
+				xHTM += "<p>Atenciosamente,</p>" + CRLF
+				xHTM += "</body></html>"
+
+				// Envia e-mail informando ausência de requisições de matéria-prima para a OP
+				U_zEnvMail(cPara, cAssunto, xHTM, aAnexos)
+			EndIf
+EndIf // Fim do cOper == "Z1" .AND. M->H6_PT = "T"
 
 Return lRet
-
-/*
-Validar apontamento de OP (Testando envio de informações simultaneas com a Maria) Teste
-*/
 
 
