@@ -14,7 +14,8 @@ User Function MT160WF()
 	Local aRatCC := {}
 	Local cDoc  := ""
 	Local aRateio := {}
-	
+	Local dDtEnt
+
 	If Select("TSC7") > 0
 		TSC7->(dbCloseArea())
 	EndIf
@@ -33,6 +34,17 @@ User Function MT160WF()
 
 		nOpc := 4
 		cDoc := TSC7->C7_NUM // Número do pedido
+
+
+		dDtEnt := Posicione("SC8", 1, xFilial("SC2") + AITEM[1]+AITEM[5]+AITEM[6]+AITEM[2], "C8_XDTENT")
+
+		// Atualiza a data de entrada utilizando RECLOCK para garantir integridade
+		DbSelectArea("SC7")
+		If SC7->(DbSeek(xFilial("SC7") + TSC7->C7_NUM + TSC7->C7_ITEM))
+			SC7->(Reclock("SC7", .F.))
+			SC7->C7_XDTPRF := dDtEnt
+			SC7->(MsUnlock())
+		EndIf
 
 		// Rateio
 		aRateio := {} // Reinicializa para cada item
@@ -113,7 +125,6 @@ User Function MT160WF()
 
 		TSC7->(DbSkip())
 	Enddo
-
 
 	ConOut("Alterado PC: "+cDoc)
 
