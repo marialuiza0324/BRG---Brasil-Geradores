@@ -315,7 +315,6 @@ EndIf
 		EndIf
 	EndIf
 
-Else
 	cPerg     :="TBOL04"
 	aAreaSX1 := SX1->(GetArea())
 	cDoc   := SF2->F2_DOC
@@ -346,8 +345,6 @@ Else
 	EndIf
 	RestArea(aAreaSX1)
 	U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
-
-EndIf
 
 RestArea(aSEA)
 RestArea(aSCV )
