@@ -101,8 +101,8 @@ User Function MT241TOK()
 	/* Validação para usuários do almoxarifado conseguirem utilizar a movimentação múltipla para transferência dos itens
 	do armazém atual para o armazém 99, uilizando apenas a TM permitida no parâmetro MV_TMALM - Maria Luiza - 05/11/2024
 	*/
-	If _Tm  $ cTMAlm .AND. FunName() <> "MATA185" //verifica se usuário está utilizando TM que está fora do parâmetro,só entra na validação na rotina MATA241
-		If !(cUserid $ cUserAlm)
+	If !(_Tm  $ cTMAlm) .AND. FunName() <> "MATA185" //verifica se usuário está utilizando TM que está fora do parâmetro,só entra na validação na rotina MATA241
+		If cUserid $ cUserAlm
 			Help(, ,"AVISO#0003", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize a(s) TM(s) : " +cTMAlm})
 			lRet := .F.//não permite salvar
 		EndIf
