@@ -25,7 +25,7 @@ PARAMIXB[11] := Quantidade a Requisitar
 */
 
 Local lRet := .T.
-Local cBlq28 := SuperGetMV("MV_USER28", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 28
+/*Local cBlq28 := SuperGetMV("MV_USER28", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 28
 Local cBlq13 := SuperGetMV("MV_USER13", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 13
 Local cBlq01 := SuperGetMV("MV_USER01", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 01 
 Local cBlqAll := SuperGetMV("MV_USERALL", ," ") //  
@@ -49,6 +49,6 @@ EndIf
 If !(cCodUser $ cBlq01) .and. SCP->CP_LOCAL == "01"
    lRet:=.F.  
    MSGINFO("Usuário não autorizado para gerar Pre Requisição nesse Almoxarifado."," Atenção ") 
-EndIf
+EndIf*/
 
 Return lRet
