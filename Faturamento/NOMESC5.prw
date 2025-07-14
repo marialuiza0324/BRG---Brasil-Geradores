@@ -30,23 +30,26 @@ Local cContrib := ""
     DbSetOrder(1)  
     dbSeek(xFilial("SA1")+M->C5_CLIENTE)
 
-	IF SA1->A1_CONTRIB == '2'
-		cContrib := '<b style="color:red">NÃO CONTRIBUINTE!!!</b>'
-	ELSE
-		cContrib := 'Contribuinte SIM/NÃO CHR(13)<b style="color:red">NÃO INFORMADO</b> no cadastro do cliente!!!'
-	ENDIF
+	If Funname() <> "LOCA029"
 
-	FWAlertWarning('Cliente '+cContrib, "Aviso Cliente Contribuinte")
+			IF SA1->A1_CONTRIB == '2'
+				cContrib := '<b style="color:red">NÃO CONTRIBUINTE!!!</b>'
+			ELSE
+				cContrib := 'Contribuinte SIM/NÃO CHR(13)<b style="color:red">NÃO INFORMADO</b> no cadastro do cliente!!!'
+			ENDIF
+
+			FWAlertWarning('Cliente '+cContrib, "Aviso Cliente Contribuinte")
 
 
-//FIM
+		//FIM
 
- 
-//Validar se o tipo do Pedido de Vendas contém D ou B
-IF (M->C5_TIPO $ 'DB')                              
-	cNomCli := POSICIONE ("SA2",1,XFILIAL("SA2")+M->C5_CLIENTE+M->C5_LOJACLI,"A2_NOME") 
-Else
-	cNomCli := POSICIONE ("SA1",1,XFILIAL("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_NREDUZ")                                                                                         
-EndIf
-
+		
+		//Validar se o tipo do Pedido de Vendas contém D ou B
+		IF (M->C5_TIPO $ 'DB')                              
+			cNomCli := POSICIONE ("SA2",1,XFILIAL("SA2")+M->C5_CLIENTE+M->C5_LOJACLI,"A2_NOME") 
+		Else
+			cNomCli := POSICIONE ("SA1",1,XFILIAL("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_NREDUZ")                                                                                         
+		EndIf
+	EndIf
+	
 Return (cNomCli)

@@ -9,8 +9,8 @@
   inclusão, alteração, exclusão e cópia do Pedido de Venda.
   Utilizado para excluir amarração do PV X OP quando 
   Pedido de venda for excluído.
-  @type  USER FUNCTION
-  @author Maria Luiza
+  @type  USER FUNCTION 
+  @author Maria Luiza,
   @since 07/03/2025
 /*/
 
@@ -28,38 +28,38 @@ USER FUNCTION MT410TOK()
 	Local cEmpLoc := SupergetMv("MV_EMLOCPV", , ) // Parâmetro que controla empresas que irão validar o usuário locacao
 	Local cEmp := FwCodEmp()
 
+	If Funname() <> "LOCA029"
+		If nOpc == 1
 
-	If nOpc == 1
-
-		If Select("TMP1") > 0
-			TMP1->(dbCloseArea())
-		EndIf
-
-		cQry := "SELECT * FROM " +RetSqlName("SC6")+ " SC6 "
-		cQry += "WHERE C6_NUM = " +SC5->C5_NUM+ " "
-		cQry += "AND D_E_L_E_T_ = '' "
-
-		DbUseArea(.T., "TOPCONN", TcGenQry(,,ChangeQuery(cQry)), "TMP1", .T., .T.)
-
-		DbSelectArea("TMP1")
-
-		While TMP1->(!EOF())
-			// Desfazendo a amarração na SC6
-			dbSelectArea("Z10")
-			dbsetorder(4)
-			If Z10->(MsSeek(xFilial("Z10") + TMP1->C6_NUM + TMP1->C6_PRODUTO + TMP1->C6_ITEM))
-				Reclock("Z10", .F.)
-				DbDelete()
-				Z10->(MsUnlock())
+			If Select("TMP1") > 0
+				TMP1->(dbCloseArea())
 			EndIf
-			TMP1->(DbSkip())
-		EndDo
 
-		TMP1->(DbCloseArea())
+			cQry := "SELECT * FROM " +RetSqlName("SC6")+ " SC6 "
+			cQry += "WHERE C6_NUM = " +SC5->C5_NUM+ " "
+			cQry += "AND D_E_L_E_T_ = '' "
+
+			DbUseArea(.T., "TOPCONN", TcGenQry(,,ChangeQuery(cQry)), "TMP1", .T., .T.)
+
+			DbSelectArea("TMP1")
+
+			While TMP1->(!EOF())
+				// Desfazendo a amarração na SC6
+				dbSelectArea("Z10")
+				dbsetorder(4)
+				If Z10->(MsSeek(xFilial("Z10") + TMP1->C6_NUM + TMP1->C6_PRODUTO + TMP1->C6_ITEM))
+					Reclock("Z10", .F.)
+					DbDelete()
+					Z10->(MsUnlock())
+				EndIf
+				TMP1->(DbSkip())
+			EndDo
+
+			TMP1->(DbCloseArea())
 
 
 
-	ElseIf nOpc == 3
+		ElseIf nOpc == 3
 
 		/*Validação criada para quando for feita cópia do pedido de venda, validar o RESPONSÁVEL 
 			pelo pedido 28/05/2025 Solicitante - Brenda #GLPI 9692*/
@@ -98,12 +98,12 @@ USER FUNCTION MT410TOK()
 		
 		If cUser_Id $ cUser
 			For nI := 1 To Len(aCols)
-				// aCols[nI][17] = Armazém do item
-				If cFilAnt == "0501" .AND. aCols[nI][17] <> "99"
+				// aCols[nI][16] = Armazém do item
+				If cFilAnt == "0501" .AND. aCols[nI][16] <> "99"
 					Help(, ,"AVISO#0025", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 99"})
 					lRet := .F.
 					Exit
-				ElseIf cFilAnt == "0101" .AND. aCols[nI][17] <> "11" .AND. aCols[nI][17] <> "10"
+				ElseIf cFilAnt == "0101" .AND. aCols[nI][16] <> "11" .AND. aCols[nI][16] <> "10"
 					Help(, ,"AVISO#0026", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 10 ou 11"})
 					lRet := .F.
 					Exit
@@ -112,6 +112,7 @@ USER FUNCTION MT410TOK()
 		EndIf
 
 	EndIf
+EndIf
 
 Return lRet
 
