@@ -166,3 +166,9 @@ Solução : Para filial 0101, utilize o armazém: 10 ou 11.
 
 Problema : Não é permitido encerrar a OP, pois existem itens requisitados ou consumidos vinculados a ela.
 Solução : É necessário que esses materiais sejam devolvidos e requisitados corretamente na OP onde foram consumidos.
+
+
+"AVISO#0028"
+
+Problema : A data de vencimento é igual ou menor a data de hoje.
+Solução : Renegocie com o fornecedor e ajuste a condição de pagamento do pedido.
