@@ -125,61 +125,71 @@ User Function MT100TOK()
                 _Total := aParc[i,2] //valor da parcela
                 _Parc  := cvaltochar(i) //Nº da parcela
 
-                aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
-                { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
-                { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
-                { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
-                { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
+            
+            If _Venc == Date() .OR. _Venc < Date() //verifica se a data de vencimento é igual ou menor que a data atual
 
-                If Select("TSE2") > 0
-                    TSE2->(dbCloseArea())
-                EndIf
+			    Help(, ,"AVISO#0028", ,"A data de vencimento é igual ou menor a data de hoje.",1, 0, , , , , , {"Renegocie com o fornecedor e ajuste a condição de pagamento do pedido."})
+                lRet := .F.
+                Exit
 
-                cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
-                cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
-                cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'
-                cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
+            Else
 
-                DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSE2",.T.,.T.)
+                    aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
+                    { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
+                    { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
+                    { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
+                    { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
 
-                DbSelectArea("TSE2") //query retorna se existe título na SE2 com chave informada
-
-                TSE2->( dbGoTop() )
-                Count To nTotal
-
-                If  nTotal > 0
-                    lAchou := .T.
-                EndIf
-
-                TSE2->(DbCloseArea())
-
-                Begin Transaction
-
-                    If lAchou 
-
-                        If lRastro = .F. .OR. lPag = .F.
-                            lRet := .F.
-                        Else //se não tiver pendência de lote nem de condição de pagamento, exclui o título
-                            MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aDelet,, 5) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
-
-                            If lMsErroAuto //se der erro cancela exclusão e mostra erro
-                                FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
-                                MostraErro()
-                                DisarmTransaction()
-                                lMsg := .F.
-                            Else
-                                lMsErroAuto:= .F.
-                                lRet := .T.
-                                lMsg := .T.
-                            Endif
-                        EndIf
-                    Else 
-                    lRet := .T.
+                    If Select("TSE2") > 0
+                        TSE2->(dbCloseArea())
                     EndIf
 
-                End Transaction
+                    cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
+                    cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
+                    cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'
+                    cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
 
-                lAchou := .F. // zera variável
+                    DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSE2",.T.,.T.)
+
+                    DbSelectArea("TSE2") //query retorna se existe título na SE2 com chave informada
+
+                    TSE2->( dbGoTop() )
+                    Count To nTotal
+
+                    If  nTotal > 0
+                        lAchou := .T.
+                    EndIf
+
+                    TSE2->(DbCloseArea())
+
+                    Begin Transaction
+
+                        If lAchou 
+
+                            If lRastro = .F. .OR. lPag = .F.
+                                lRet := .F.
+                            Else //se não tiver pendência de lote nem de condição de pagamento, exclui o título
+                                MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aDelet,, 5) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
+
+                                If lMsErroAuto //se der erro cancela exclusão e mostra erro
+                                    FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
+                                    MostraErro()
+                                    DisarmTransaction()
+                                    lMsg := .F.
+                                Else
+                                    lMsErroAuto:= .F.
+                                    lRet := .T.
+                                    lMsg := .T.
+                                Endif
+                            EndIf
+                        Else 
+                        lRet := .T.
+                        EndIf
+
+                    End Transaction
+
+                    lAchou := .F. // zera variável
+            EndIf
             Next i
 
         Next nX
