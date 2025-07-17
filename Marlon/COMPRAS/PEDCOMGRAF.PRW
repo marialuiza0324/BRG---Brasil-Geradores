@@ -554,7 +554,7 @@ Private cNumPedido
 			endif
 
 			//Verifica tamanho do campo CC
-			/*cCentrC := Alltrim(QRY->C7_CC) + " - "+ AllTrim(Posicione("CTT",1,xFilial("CTT")+ QRY->C7_CC,"CTT_DESC01")) //CTT_DESC01)
+			cCentrC := Alltrim(QRY->C7_CC) + " - "+ AllTrim(Posicione("CTT",1,xFilial("CTT")+ QRY->C7_CC,"CTT_DESC01")) //CTT_DESC01)
 			nDiv2:= Len(cCentrC)/17
 			nInteiro2 := Int(nDiv2)
 			nDecimais2 := nDiv2 - nInteiro2
@@ -562,10 +562,10 @@ Private cNumPedido
 				nQtdLin2 := nInteiro2 + 1
 			else
 				nQtdLin2 := nInteiro2
-			endif*/
+			endif
 
 			//Verifica a quantidade de linhas
-			/*If nQtdLin1 > nQtdLin2
+			If nQtdLin1 > nQtdLin2
 				nQtdLinhas := nQtdLin1
 			ElseIf nQtdLin1 == nQtdLin2
 				nQtdLinhas	:= nQtdLin1
@@ -573,7 +573,7 @@ Private cNumPedido
 				nQtdLinhas := nQtdLin2
 			EndIf
 			nAltLiBox:= nAltLinha * nQtdLinhas
-			nLinInf:= nLinSup + nAltLiBox*/
+			nLinInf:= nLinSup + nAltLiBox
 
 			oPrn:Box(nLinSup, nMinCol,nLinInf , nColIt1+1)
 			oPrn:Say(nLinSup+42, nMinCol+5, QRY->C7_ITEM	, oFont10	, 100)
@@ -633,9 +633,9 @@ Private cNumPedido
 
 			nTotFrt += QRY->C7_VALFRE
 
-			//oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
+			oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
 			// LEANDROM 11/12/2017 (AJUSTE PARA QUEBRA DE LINHA NA DESCRI플O DO CENTRO DE CUSTO)
-			/*aDescric := {}
+			aDescric := {}
 			nTamCol := 17	//Tamanho da coluna do centro de custo
 			nQtdLinCC := 0
   			While ! Empty(cCentrC)
@@ -653,7 +653,7 @@ Private cNumPedido
 
 			For nI := 1 To Len(aDescric)
 				oPrn:Say(nLinSup+(nI*42), nColIt10+5, aDescric[nI], oFont10	, 100)
-			Next nI*/
+			Next nI
 
 			/*
 			If Len(cCentrC) > 17
@@ -676,7 +676,7 @@ Private cNumPedido
 			*/
 			//oPrn:SayAlign(nLinSup+42, nColIt10+5, cCentrC , oFont10	,nColIt11-nColIt10,nLinInf-nLinSup,0,0,0)//cCentroC
 
-			/*cSolicit := ""
+			cSolicit := ""
 			If !Empty(QRY->C7_NUMSC)
 				cSolicit := Posicione("SC1",1,xFilial("SC1") + QRY->C7_NUMSC, "C1_SOLICIT")
 			EndIf
@@ -688,7 +688,7 @@ Private cNumPedido
 			oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
 			For nI := 1 To Len(aDescric)
 				oPrn:Say(nLinSup+(nI*42), nColIt11+5, aDescric[nI], oFont10	, 100)
-			Next nI*/
+			Next nI
 
 			oPrn:Box(nLinSup, nColIt12, nLinInf, nColIt13)
  			oPrn:Say(nLinSup+42, nColIt12+5, DTOC(STOD(QRY->C7_DATPRF))	, oFont10	, 100)
@@ -858,10 +858,10 @@ Static Function ImpCabecIt(nLinSup, nLinInf)
 
 	oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
 	oPrn:FillRect({nLinSup+4,nColIt10+2,nLinInf,nColIt11-2},oBrush)
-	oPrn:Say(nLinSup+40, nColIt10+5, "DT ENTR."	, oFont10N	, 100)
+	oPrn:Say(nLinSup+40, nColIt10+5, "C. CUSTO"	, oFont10N	, 100)
 	//oPrn:SayAlign(nLinSup,nColIt10,"DT ENTR." ,oFont13N,nLinInf-nLinSup, nColIt9-nColIt10,, 2, 2 )
 
-	/*oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
+	oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
 	oPrn:FillRect({nLinSup+4,nColIt11+2,nLinInf,nColIt12-5},oBrush)
 	oPrn:Say(nLinSup+40, nColIt11+5, "SOLIC"	, oFont10N	, 100)
 	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVA플O" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )
@@ -869,7 +869,7 @@ Static Function ImpCabecIt(nLinSup, nLinInf)
 	oPrn:Box(nLinSup, nColIt12-1, nLinInf, nColIt13)
 	oPrn:FillRect({nLinSup+4,nColIt12+2,nLinInf,nColIt13-5},oBrush)
 	oPrn:Say(nLinSup+40, nColIt12+5, "DT ENTR."	, oFont10N	, 100)
-	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVA플O" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )*/
+	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVA플O" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )
 
 Return
 
@@ -1010,7 +1010,7 @@ Local nI
 	   	oPrn:Box(nLinInf-48, nMinCol, nLinInf-48, nMaxCol+2)
 
     	//Box assinatura do Fornecedor e do Comprador
-	    	/*nLinSup += 30
+	    	nLinSup += 30
 	    	nLinInf += 100
 	    	oPrn:Box(nLinSup, nMinCol ,nLinInf ,nMaxCol/2)
 	    	oPrn:Say(nLinSup+38, nMinCol + 40, "Diretor:", ofont14N, 100)
@@ -1019,7 +1019,7 @@ Local nI
 	    	oPrn:Box(nLinSup, nMaxCol/2 ,nLinInf ,nMaxCol)
 	    	oPrn:Say(nLinSup+38, nMaxCol/2 + 40, "Comprador:", ofont14N, 100)
 	    	//oPrn:Box(nLinInf-30, nMinCol/2+20 ,nLinInf-30 ,nMaxCol-20)
-	    	oPrn:Line(nLinInf-30, nMaxCol/2+100 ,nLinInf-30 ,nMaxCol-100)*/
+	    	oPrn:Line(nLinInf-30, nMaxCol/2+100 ,nLinInf-30 ,nMaxCol-100)
 Return
 
 //===============================================================
