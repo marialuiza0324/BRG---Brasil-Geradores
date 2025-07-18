@@ -98,16 +98,28 @@ USER FUNCTION MT410TOK()
 		
 		If cUser_Id $ cUser
 			For nI := 1 To Len(aCols)
-				// aCols[nI][16] = Armazém do item
-				If cFilAnt == "0501" .AND. aCols[nI][16] <> "99"
-					Help(, ,"AVISO#0025", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 99"})
-					lRet := .F.
-					Exit
-				ElseIf cFilAnt == "0101" .AND. aCols[nI][16] <> "11" .AND. aCols[nI][16] <> "10"
-					Help(, ,"AVISO#0026", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 10 ou 11"})
-					lRet := .F.
-					Exit
+				If CCADASTRO == "Pedidos de Venda - INCLUIR"
+					If cFilAnt == "0501" .AND. aCols[nI][16] <> "99"
+						Help(, ,"AVISO#0025", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 99"})
+						lRet := .F.
+						Exit
+					ElseIf cFilAnt == "0101" .AND. aCols[nI][16] <> "11" .AND. aCols[nI][16] <> "10"
+						Help(, ,"AVISO#0026", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 10 ou 11"})
+						lRet := .F.
+						Exit
+					EndIf
+				ElseIf CCADASTRO == "Pedidos de Venda - COPIAR"
+						If cFilAnt == "0501" .AND. aCols[nI][17] <> "99"
+							Help(, ,"AVISO#0025", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 99"})
+							lRet := .F.
+							Exit
+						ElseIf cFilAnt == "0101" .AND. aCols[nI][17] <> "11" .AND. aCols[nI][17] <> "10"
+							Help(, ,"AVISO#0026", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 10 ou 11"})
+							lRet := .F.
+							Exit
+						EndIf
 				EndIf
+
 			Next
 		EndIf
 
