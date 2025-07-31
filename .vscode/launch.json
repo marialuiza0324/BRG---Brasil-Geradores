@@ -4,12 +4,40 @@
 		{
 			"type": "totvs_language_web_debug",
 			"request": "launch",
-			"name": "TOTVS language web debug",
+			"name": "Debug COMPILA",
+			"program": "${command:AskForProgramName}",
+			"isMultiSession": true,
+			"enableTableSync": true
+		},
+		{
+			"type": "totvs_language_web_debug",
+			"request": "launch",
+			"name": "Debug ENG",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
 			"isMultiSession": true,
 			"enableTableSync": true,
-			"smartclientUrl": "http://geradores.datasetsolucoes.com.br:54035/webapp"
+			"smartclientUrl": "http://geradores.datasetsolucoes.com.br:54072/webapp"
+		},
+		{
+			"type": "totvs_language_web_debug",
+			"request": "launch",
+			"name": "Debug COMPILA",
+			"program": "${command:AskForProgramName}",
+			"cwb": "${workspaceFolder}",
+			"isMultiSession": true,
+			"enableTableSync": true,
+			"smartclientUrl": "http://geradores.datasetsolucoes.com.br:54030/webapp"
+		},
+		{
+			"type": "totvs_language_web_debug",
+			"request": "launch",
+			"name": "Debug DESENV",
+			"program": "${command:AskForProgramName}",
+			"cwb": "${workspaceFolder}",
+			"isMultiSession": true,
+			"enableTableSync": true,
+			"smartclientUrl": "http://geradores.datasetsolucoes.com.br:54036/webapp"
 		},
 		{
 			"type": "totvs_language_debug",
