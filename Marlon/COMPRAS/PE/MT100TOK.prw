@@ -44,12 +44,13 @@ User Function MT100TOK()
     Local lRastro := .T.
     local nPosLoteCtl := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
     Local lPag := .T.
+    local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
+    local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
     
-    If  FunName() <> "LOCA029"
+    If Funname() <> "LOCA001"
         If !FWIsInCallStack("A103Devol")//só entra na validação caso não esteja selecionada a opção de retornar NF
-            cCentroCusto := ACOLS[1][16] // Obtendo o centro de custo e o rateio
-            cRateio := ACOLS[1][57] 
-
+             cCentroCusto := ACOLS[n][nCentroC] 
+             cRateio := ACOLS[n][nRateio] 
             // Verificando se o centro de custo está vazio e se o rateio está informado
             If Empty(cCentroCusto) .and. cRateio == "1"
                 // Se o centro de custo está vazio e há rateio, permite a confirmação
@@ -126,13 +127,13 @@ User Function MT100TOK()
                 _Parc  := cvaltochar(i) //Nº da parcela
 
             
-            If _Venc == Date() .OR. _Venc < Date() //verifica se a data de vencimento é igual ou menor que a data atual
+            /*If _Venc == Date() .OR. _Venc < Date() //verifica se a data de vencimento é igual ou menor que a data atual
 
 			    Help(, ,"AVISO#0028", ,"A data de vencimento é igual ou menor a data de hoje.",1, 0, , , , , , {"Renegocie com o fornecedor e ajuste a condição de pagamento do pedido."})
                 lRet := .F.
                 Exit
 
-            Else
+            Else*/
 
                     aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
                     { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
@@ -189,7 +190,7 @@ User Function MT100TOK()
                     End Transaction
 
                     lAchou := .F. // zera variável
-            EndIf
+            //EndIf
             Next i
 
         Next nX

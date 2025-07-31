@@ -26,7 +26,7 @@ local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
 Local nLinha
 
-If FunName() <> "LOCA029"
+If Funname() <> "LOCA001"
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
 

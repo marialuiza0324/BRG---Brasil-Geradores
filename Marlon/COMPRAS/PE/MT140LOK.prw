@@ -23,6 +23,8 @@ local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
 Local nLinha
 
+If Funname() <> "LOCA001"
+
        DbSelectArea("SB1")
        DbSetOrder(1)   
 
@@ -66,5 +68,6 @@ Local nLinha
         FWAlertInfo("Os campos de Centro de Custo e rateio estão preenchidos, preencha somente um", "Atenção!!!")
         lRet := .F. // Bloqueia a confirmação
     EndIf
+EndIf
 
 Return lRet

@@ -28,7 +28,7 @@ USER FUNCTION MT410TOK()
 	Local cEmpLoc := SupergetMv("MV_EMLOCPV", , ) // Parâmetro que controla empresas que irão validar o usuário locacao
 	Local cEmp := FwCodEmp()
 
-	If Funname() <> "LOCA029"
+	If Funname() <> "LOCA001"
 		If nOpc == 1
 
 			If Select("TMP1") > 0

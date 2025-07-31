@@ -23,7 +23,7 @@ User Function MTA410()
 	Local i    := 0
 	Local _NfRem := M->C5_NFREM 
 
-	If Funname() <> "LOCA029"
+	If Funname() <> "LOCA001"
 
 		For i:= 1 to Len(aCols)
 			If !aCols[i,Len(aHeader)+1]

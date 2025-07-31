@@ -30,7 +30,7 @@ Local cContrib := ""
     DbSetOrder(1)  
     dbSeek(xFilial("SA1")+M->C5_CLIENTE)
 
-	If Funname() <> "LOCA029"
+	If Funname() <> "LOCA001"
 
 			IF SA1->A1_CONTRIB == '2'
 				cContrib := '<b style="color:red">NÃO CONTRIBUINTE!!!</b>'

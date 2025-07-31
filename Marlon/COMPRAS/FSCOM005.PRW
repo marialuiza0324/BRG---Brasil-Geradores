@@ -21,17 +21,20 @@ User Function FSCOM005()
 	Local cLocal   := SD1->D1_LOCAL
 	Local lRet     := .T.
 
-	//Abrindo a e posicionando no topo
-	DbSelectArea("SB8")
-	SB8->(DbSetOrder(3))
-	SB8->(DbGoTop())
 
-	If SB8->(MsSeek(FWxFilial("SB8")+cProduto+cLocal+ clote))
-		If SB8->B8_SALDO > 0 //Valida se lote cadastrado na SB8 possui saldo
-			FWAlertInfo("Lote já cadastrado na tabela de saldos","Atenção!")
-			lRet :=  .F.
-		Else
-			lRet := .T.
+	If Funname() <> "LOCA001"
+		//Abrindo a e posicionando no topo
+		DbSelectArea("SB8")
+		SB8->(DbSetOrder(3))
+		SB8->(DbGoTop())
+
+		If SB8->(MsSeek(FWxFilial("SB8")+cProduto+cLocal+ clote))
+			If SB8->B8_SALDO > 0 //Valida se lote cadastrado na SB8 possui saldo
+				FWAlertInfo("Lote já cadastrado na tabela de saldos","Atenção!")
+				lRet :=  .F.
+			Else
+				lRet := .T.
+			EndIf
 		EndIf
 	EndIf
 

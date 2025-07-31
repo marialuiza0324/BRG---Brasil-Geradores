@@ -20,7 +20,7 @@ User Function MT410INC()
 	Local cLoja   := M->C5_LOJACLI
 	Local cCliente := M->C5_CLIENTE
 
-	If Funname() <> "LOCA029"
+	If Funname() <> "LOCA001"
 
 		DbSelectArea("SC5")
 		SC5->(DbSetOrder(3))

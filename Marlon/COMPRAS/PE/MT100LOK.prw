@@ -19,9 +19,11 @@ Local cRateio := "" // Variável que vai armazenar o rateio
 Local cCentroCusto := "" // Variável para o centro de custo
 local nPosCod        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_COD"})
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
+local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
+local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
 Local nLinha
 
-If FunName() <> "LOCA029"
+If Funname() <> "LOCA001"
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
 
@@ -49,8 +51,8 @@ If FunName() <> "LOCA029"
             Next
 
         // Obtendo o centro de custo e o rateio
-        cCentroCusto := ACOLS[1][16] 
-        cRateio := ACOLS[1][57] 
+        cCentroCusto := ACOLS[n][nCentroC] 
+        cRateio := ACOLS[n][nRateio] 
 
         // Verificando se o centro de custo está vazio e se o rateio está informado
         If Empty(cCentroCusto) .and. cRateio == "1"
