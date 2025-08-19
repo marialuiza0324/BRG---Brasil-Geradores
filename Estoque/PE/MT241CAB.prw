@@ -40,7 +40,7 @@ User Function MT241CAB()
 			@ 1.5,55.5 MSGET aCp[2][2] SIZE 40,08 OF oNewDialog
 
 			// Botão - ajustado para ficar acima do campo Cpo2
-			@ 1.6,135 BUTTON "Armazém de Processo" SIZE 60,08 OF oNewDialog ACTION U_AjustaAcols()
+			@ 0.5,145 BUTTON "Armazém de Processo" SIZE 60,08 OF oNewDialog ACTION U_AjustaAcols()
 		ENDIF
 	Else
 		aCp:=Array(2,2)
@@ -81,8 +81,8 @@ User Function AjustaAcols()
        _cod := Acols[n,cCod]
 
        // Busca apropriação e local padrão do produto
-       cProdApropri := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_APROPRI')
-       cLocPad := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_LOCPAD')
+       cProdApropri := Posicione('SB1', 1, FWxFilial('SB1') + Alltrim(_cod), 'B1_APROPRI')
+       cLocPad := Posicione('SB1', 1, FWxFilial('SB1') + Alltrim(_cod), 'B1_LOCPAD')
 
        // Percorre as colunas da matriz Acols
        For i := 1 to Len(Acols)
