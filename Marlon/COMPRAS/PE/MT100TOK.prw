@@ -47,7 +47,7 @@ User Function MT100TOK()
     local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
     local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
     
-    If Funname() <> "LOCA001"
+    If Funname() <> "LOCA001" .AND. Funname() <> "MATA461"
         If !FWIsInCallStack("A103Devol")//só entra na validação caso não esteja selecionada a opção de retornar NF
              cCentroCusto := ACOLS[n][nCentroC] 
              cRateio := ACOLS[n][nRateio] 

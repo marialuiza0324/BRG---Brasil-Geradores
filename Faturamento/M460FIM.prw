@@ -88,28 +88,43 @@ User Function M460FIM()
 	Local cQry  := ''
 	Local cMsg := ""
 
-	If !Empty(SC5->C5_MENNOTA) //verifica se o campo de mensagem da nota está vazio no PV
+	If Funname() <> "FSFAT004" .AND. Funname() <> "MATA461"
 
-		cMsg := SUBSTR(SC5->C5_XMENNOT,1,40) //mensagem pra nota no PV
+		If !Empty(SC5->C5_MENNOTA) //verifica se o campo de mensagem da nota está vazio no PV
 
-		cQry:= "SELECT * FROM "+RetSqlName("SE1")+" SE1 "
-		cQry+= "WHERE E1_FILIAL = '"+xFilial("SE1")+"'" "
-		cQry+= "AND E1_CLIENTE = '"+SC5->C5_CLIENTE+"' "
-		cQry+= "AND E1_LOJA = '"+SC5->C5_LOJACLI+"' "
-		cQry+= "AND E1_PREFIXO = '"+CMV_1DUPREF+"' "
-		cQry+= "AND E1_NUM = '"+cNumero+"' "
-		cQry+= "AND D_E_L_E_T_ <> '*'
+			cMsg := SUBSTR(SC5->C5_XMENNOT,1,40) //mensagem pra nota no PV
 
-		cQry := ChangeQuery(cQry)
-		dbUseArea(.T., "TOPCONN", tcGenQry(,, cQry), "TSE1", .F., .T.) //busca os títulos criados
+			cQry:= "SELECT * FROM "+RetSqlName("SE1")+" SE1 "
+			cQry+= "WHERE E1_FILIAL = '"+xFilial("SE1")+"'" "
+			cQry+= "AND E1_CLIENTE = '"+SC5->C5_CLIENTE+"' "
+			cQry+= "AND E1_LOJA = '"+SC5->C5_LOJACLI+"' "
+			cQry+= "AND E1_PREFIXO = '"+CMV_1DUPREF+"' "
+			cQry+= "AND E1_NUM = '"+cNumero+"' "
+			cQry+= "AND D_E_L_E_T_ <> '*'
 
-		DbSelectArea("TSE1")
-		TSE1->(DBGotop())
+			cQry := ChangeQuery(cQry)
+			dbUseArea(.T., "TOPCONN", tcGenQry(,, cQry), "TSE1", .F., .T.) //busca os títulos criados
 
-		If !Empty(TSE1->E1_PARCELA) //verifica o campo de parcela, pois só é preenchido com mais de 1 título
+			DbSelectArea("TSE1")
+			TSE1->(DBGotop())
 
-			While TSE1->(!EOF())
-				If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero+TSE1->E1_PARCELA)) //caso tenha mais de um título, utiliza a parcela como filtro
+			If !Empty(TSE1->E1_PARCELA) //verifica o campo de parcela, pois só é preenchido com mais de 1 título
+
+				While TSE1->(!EOF())
+					If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero+TSE1->E1_PARCELA)) //caso tenha mais de um título, utiliza a parcela como filtro
+
+						Reclock('SE1', .F.)
+
+						SE1->E1_HIST := cMsg //grava a informação no campo de histórico
+
+						SE1->(MsUnlock())
+
+					EndIf
+
+					TSE1->(DbSkip())
+				EndDo
+			Else //caso a parcela esteja vazia significa que é apenas um título, então não utiliza a parcela como filtro nem while, grava somente na linha encontrada
+				If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero))
 
 					Reclock('SE1', .F.)
 
@@ -118,32 +133,19 @@ User Function M460FIM()
 					SE1->(MsUnlock())
 
 				EndIf
-
-				TSE1->(DbSkip())
-			EndDo
-		Else //caso a parcela esteja vazia significa que é apenas um título, então não utiliza a parcela como filtro nem while, grava somente na linha encontrada
-			If SE1->(DbSeek(xFilial("SE1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI+CMV_1DUPREF+cNumero))
-
-				Reclock('SE1', .F.)
-
-				SE1->E1_HIST := cMsg //grava a informação no campo de histórico
-
-				SE1->(MsUnlock())
-
 			EndIf
+			TSE1->(dbCloseArea())
 		EndIf
-		TSE1->(dbCloseArea())
-	EndIf
 
 
 //INFORMAR O DESCONTO FINANCEIRO DO CADASTRO DO CLIENTE PARA ALIMENTAR A SE1 E EMITIR BOLETO COM DESCONTO
 //PEDRO PAULO - TOTVS 05/08/2016
 
-	DbSelectArea("SA1")
-	SA1->(DbSetOrder(1))
-	if SA1->( DbSeek( xFilial("SA1")+SF2->(F2_CLIENTE+F2_LOJA),.f. ) )
-		nDescCli := SA1->A1_XDESCFI
-	endif
+		DbSelectArea("SA1")
+		SA1->(DbSetOrder(1))
+		if SA1->( DbSeek( xFilial("SA1")+SF2->(F2_CLIENTE+F2_LOJA),.f. ) )
+			nDescCli := SA1->A1_XDESCFI
+		endif
 
 //Gravar nas informações complementares na RPS (F3_OBSERV), conforme fonte MATR968.PRW , o campo C5_MENNOTA - Inicio 08/07/2021
 /*
@@ -163,100 +165,100 @@ EndIf
 
 
 //Gravar na na SAE - Administradora Financeira - SAE - Inicio
-	If Cfilant == '0502' //Somente para Grid Minas - 0502
-		DbSelectArea("SE4")
-		SE4->( DbSetOrder(1) )
-		If !DbSeek(xFilial("SE4")+SF2->F2_COND)
-			RecLock("SE4",.T.)
-			SAE->AE_COD     := xFilial("SAE")
-			SAE->AE_DESC    := SE4->F4_DESCRI
-			SAE->AE_TIPO    := SE4->F4_FORMA
-			SAE->AE_FINPRO  := 'N'
-			SAE->AE_USAFATO := 'N'
-			SAE->AE_CODCLI  := SF2->F2_CLIENTE
-			SAE->AE_REDE    := '04'
-			SAE->( MsUnLock() )
+		If Cfilant == '0502' //Somente para Grid Minas - 0502
+			DbSelectArea("SE4")
+			SE4->( DbSetOrder(1) )
+			If !DbSeek(xFilial("SE4")+SF2->F2_COND)
+				RecLock("SE4",.T.)
+				SAE->AE_COD     := xFilial("SAE")
+				SAE->AE_DESC    := SE4->F4_DESCRI
+				SAE->AE_TIPO    := SE4->F4_FORMA
+				SAE->AE_FINPRO  := 'N'
+				SAE->AE_USAFATO := 'N'
+				SAE->AE_CODCLI  := SF2->F2_CLIENTE
+				SAE->AE_REDE    := '04'
+				SAE->( MsUnLock() )
+			EndIf
 		EndIf
-	EndIf
 //Gravar na SAE - Adminstradora Financeira - SAE - Fim
 
-	DbSelectArea("SE1")
-	SE1->( DbSetOrder(2) ) //E1_FILIAL+E1_CLIENTE+E1_LOJA+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO
-	If SE1->(DbSeek( xFilial("SE1")+SF2->F2_CLIENTE+SF2->F2_LOJA+SF2->F2_SERIE+SF2->F2_DOC))
+		DbSelectArea("SE1")
+		SE1->( DbSetOrder(2) ) //E1_FILIAL+E1_CLIENTE+E1_LOJA+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO
+		If SE1->(DbSeek( xFilial("SE1")+SF2->F2_CLIENTE+SF2->F2_LOJA+SF2->F2_SERIE+SF2->F2_DOC))
 
-		While xFilial("SE1")+SF2->F2_CLIENTE+SF2->F2_LOJA+SF2->F2_SERIE+SF2->F2_DOC == SE1->(E1_FILIAL+E1_CLIENTE+E1_LOJA+E1_PREFIXO+E1_NUM)
-			If SE1->E1_TIPO $ "'NF ','BOL','CH ','DEP','R$ '"
-				RecLock("SE1",.F.)
-				If	nDescCli > 0
-					SE1->E1_DECRESC := ((SE1->E1_VALOR * nDescCli)/100)
-					SE1->E1_SDDECRE := ((SE1->E1_VALOR * nDescCli)/100)
-				Endif
-				SE1->( MsUnLock() )
-			EndIf
+			While xFilial("SE1")+SF2->F2_CLIENTE+SF2->F2_LOJA+SF2->F2_SERIE+SF2->F2_DOC == SE1->(E1_FILIAL+E1_CLIENTE+E1_LOJA+E1_PREFIXO+E1_NUM)
+				If SE1->E1_TIPO $ "'NF ','BOL','CH ','DEP','R$ '"
+					RecLock("SE1",.F.)
+					If	nDescCli > 0
+						SE1->E1_DECRESC := ((SE1->E1_VALOR * nDescCli)/100)
+						SE1->E1_SDDECRE := ((SE1->E1_VALOR * nDescCli)/100)
+					Endif
+					SE1->( MsUnLock() )
+				EndIf
 
-			SE1->( DbSkip() )
-		EndDo
+				SE1->( DbSkip() )
+			EndDo
 
-	endif
+		endif
 
 //FINALIZA GRAVAÇÃO DO DESCONTO FINANCEIRO NO TÍTULO     
 
 
-	DBSelectArea("SC9")
-	SC9->(DBSetOrder(2))
+		DBSelectArea("SC9")
+		SC9->(DBSetOrder(2))
 
-	If Select("TQC9") > 0
-		TQC9->(DBCloseArea())
-	EndIf
+		If Select("TQC9") > 0
+			TQC9->(DBCloseArea())
+		EndIf
 //===Busca Produtos Faturados do pedido posicionado
-	cQuery := " SELECT C9_FILIAL,C9_CLIENTE,C9_LOJA,C9_PEDIDO,C9_PRODUTO,C9_ITEM,C9_QTDLIB,C9_PRCVEN FROM " + cEOL
-	cQuery += " "+RetSqlName("SC9")+" SC9" + cEOL
-	cQuery += "	WHERE SC9.C9_FILIAL='"+xFilial("SC9")+"'" + cEOL
-	cQuery += "		AND SC9.C9_PEDIDO='"+SC5->C5_NUM+"' AND " + cEOL
-	cQuery += "		SC9.C9_BLCRED='10' AND " + cEOL
-	cQuery += "		SC9.C9_BLEST='10' AND " + cEOL
-	cQuery += "		SC9.C9_NFISCAL = '"+SF2->F2_DOC+"' AND " + cEOL
-	cQuery += "		SC9.C9_SERIENF = '"+SF2->F2_SERIE+"' AND " + cEOL
-	cQuery += "		SC9.C9_CLIENTE = '"+SF2->F2_CLIENTE+"' AND " + cEOL
-	cQuery += "		SC9.C9_LOJA = '"+SF2->F2_LOJA+"' AND " + cEOL
-	cQuery += "		SC9.D_E_L_E_T_<>'*' " + cEOL
-	cQuery += " ORDER BY C9_ITEM,C9_PRODUTO " + cEOL
+		cQuery := " SELECT C9_FILIAL,C9_CLIENTE,C9_LOJA,C9_PEDIDO,C9_PRODUTO,C9_ITEM,C9_QTDLIB,C9_PRCVEN FROM " + cEOL
+		cQuery += " "+RetSqlName("SC9")+" SC9" + cEOL
+		cQuery += "	WHERE SC9.C9_FILIAL='"+xFilial("SC9")+"'" + cEOL
+		cQuery += "		AND SC9.C9_PEDIDO='"+SC5->C5_NUM+"' AND " + cEOL
+		cQuery += "		SC9.C9_BLCRED='10' AND " + cEOL
+		cQuery += "		SC9.C9_BLEST='10' AND " + cEOL
+		cQuery += "		SC9.C9_NFISCAL = '"+SF2->F2_DOC+"' AND " + cEOL
+		cQuery += "		SC9.C9_SERIENF = '"+SF2->F2_SERIE+"' AND " + cEOL
+		cQuery += "		SC9.C9_CLIENTE = '"+SF2->F2_CLIENTE+"' AND " + cEOL
+		cQuery += "		SC9.C9_LOJA = '"+SF2->F2_LOJA+"' AND " + cEOL
+		cQuery += "		SC9.D_E_L_E_T_<>'*' " + cEOL
+		cQuery += " ORDER BY C9_ITEM,C9_PRODUTO " + cEOL
 
-	cQuery := ChangeQuery(cQuery)
-	dbUseArea(.T., "TOPCONN", tcGenQry(,, cQuery), "TQC9", .F., .T.)
+		cQuery := ChangeQuery(cQuery)
+		dbUseArea(.T., "TOPCONN", tcGenQry(,, cQuery), "TQC9", .F., .T.)
 
-	TQC9->(DBGotop())
+		TQC9->(DBGotop())
 
 //Varre arquivo temporario gerando volume, peso bruto e liquidos dos produtos faturados		
-	While TQC9->(!EOF())
-		If SB1->(dbseek(xFilial("SB1")+TQC9->C9_PRODUTO))
-			_nVol   += TQC9->C9_QTDLIB//Soma volume
-			_nPesoB += TQC9->C9_QTDLIB*SB1->B1_PESBRU //soma o peso bruto total
-			_nPesoL += TQC9->C9_QTDLIB*SB1->B1_PESO //soma o peso liquido total
-		EndIf
-		TQC9->(DBSkip())
-	EndDo
+		While TQC9->(!EOF())
+			If SB1->(dbseek(xFilial("SB1")+TQC9->C9_PRODUTO))
+				_nVol   += TQC9->C9_QTDLIB//Soma volume
+				_nPesoB += TQC9->C9_QTDLIB*SB1->B1_PESBRU //soma o peso bruto total
+				_nPesoL += TQC9->C9_QTDLIB*SB1->B1_PESO //soma o peso liquido total
+			EndIf
+			TQC9->(DBSkip())
+		EndDo
 
-	TQC9->(DBCloseArea())
+		TQC9->(DBCloseArea())
 
 //Grava na SF2 o peso e volume calculado
 //IF RecLock("SF2",.F.)
-	//SF2->F2_VOLUME1 := _nVol
-	//SF2->F2_PBRUTO  := _nPesoB
-	//SF2->F2_PLIQUI  := _nPesoL
-	//SF2->(MsUnlock())
+		//SF2->F2_VOLUME1 := _nVol
+		//SF2->F2_PBRUTO  := _nPesoB
+		//SF2->F2_PLIQUI  := _nPesoL
+		//SF2->(MsUnlock())
 //EndIf
 
 //FIM GRAVA VOLUME - PEDRO PAULO - TOTVS
 
 //Grava SCV conforme campo C5_XFORPG
-	GravaSCV()
+		GravaSCV()
 
 //*************************************************************
 //Grava CDL - Gerar Automatico Dados SPED Exportação  (Claudio)
-	GravaCDL()
+		GravaCDL()
 //Grava as informações Adicionais na remessa de locação // 29/04/2021
-	GravZL()
+		GravZL()
 //*************************************************************                                   
 
 /* -- Transmite a nota automaticamente para Sefaz --
@@ -270,142 +272,142 @@ EndIf
 		cDoc.Final
 		*/
 
-	//Transmite nota automatica ES_AUTNFE
-	// if lAutNFE .and. ALLTRIM(SF2->F2_SERIE) == '1' //verifica espécie == 1
-	//Conout('- > [AUTONFE] Inicio Processo ' + Time() + ' ' + SF2->F2_DOC + '/' + SF2->F2_SERIE )
-	//AutoNfeEnv(cEmpAnt, cFilAnt, "0", "1", SF2->F2_SERIE, SF2->F2_DOC, SF2->F2_DOC)
-	// EndIf
-	If lBolet //
-		If MsgYesNo("Deseja Gerar Boleto para o Banco Itaú ?","ATENÇÃO")
-			cPerg     :="TBOL04"
-			aAreaSX1 := SX1->(GetArea())
-			cDoc   := SF2->F2_DOC
-			cSerie := SF2->F2_SERIE
+		//Transmite nota automatica ES_AUTNFE
+		// if lAutNFE .and. ALLTRIM(SF2->F2_SERIE) == '1' //verifica espécie == 1
+		//Conout('- > [AUTONFE] Inicio Processo ' + Time() + ' ' + SF2->F2_DOC + '/' + SF2->F2_SERIE )
+		//AutoNfeEnv(cEmpAnt, cFilAnt, "0", "1", SF2->F2_SERIE, SF2->F2_DOC, SF2->F2_DOC)
+		// EndIf
+		If lBolet //
+			If MsgYesNo("Deseja Gerar Boleto para o Banco Itaú ?","ATENÇÃO")
+				cPerg     :="TBOL04"
+				aAreaSX1 := SX1->(GetArea())
+				cDoc   := SF2->F2_DOC
+				cSerie := SF2->F2_SERIE
 
-			dbSelectArea("SX1")
-			SX1->(DbGoTop())
-			dbSetOrder(1)
-			If dbSeek(cPerg)
-				While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
-					If SX1->X1_ORDEM $ '01/02'
-						RecLock("SX1",.F.)
-						Replace SX1->X1_CNT01 with cSerie
-						MSUnLock()
-					EndIf
-					If SX1->X1_ORDEM $ '03/04'
-						RecLock("SX1",.F.)
-						Replace SX1->X1_CNT01 with cDoc
-						MsUnlock()
-					EndIf
-					If SX1->X1_ORDEM == '18'
-						RecLock("SX1",.F.)
-						Replace SX1->X1_PRESEL with 2
-						MsUnlock()
-					EndIf
-					SX1->(DbSkip())
-				EndDo
+				dbSelectArea("SX1")
+				SX1->(DbGoTop())
+				dbSetOrder(1)
+				If dbSeek(cPerg)
+					While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
+						If SX1->X1_ORDEM $ '01/02'
+							RecLock("SX1",.F.)
+							Replace SX1->X1_CNT01 with cSerie
+							MSUnLock()
+						EndIf
+						If SX1->X1_ORDEM $ '03/04'
+							RecLock("SX1",.F.)
+							Replace SX1->X1_CNT01 with cDoc
+							MsUnlock()
+						EndIf
+						If SX1->X1_ORDEM == '18'
+							RecLock("SX1",.F.)
+							Replace SX1->X1_PRESEL with 2
+							MsUnlock()
+						EndIf
+						SX1->(DbSkip())
+					EndDo
+				EndIf
+				RestArea(aAreaSX1)
+
+				U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
+			Else
+				Return
+				//Gerar o Boleto do Itau - Inicio
+				//U_AFINP001()  //chamada do Acelerador Totvs (Fonte exclusivo TOTVS Goiás)
 			EndIf
-			RestArea(aAreaSX1)
-
-			U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
-		Else
-			Return
-			//Gerar o Boleto do Itau - Inicio
-			//U_AFINP001()  //chamada do Acelerador Totvs (Fonte exclusivo TOTVS Goiás)
 		EndIf
-	EndIf
 
-	cPerg     :="TBOL04"
-	aAreaSX1 := SX1->(GetArea())
-	cDoc   := SF2->F2_DOC
-	cSerie := SF2->F2_SERIE
+		cPerg     :="TBOL04"
+		aAreaSX1 := SX1->(GetArea())
+		cDoc   := SF2->F2_DOC
+		cSerie := SF2->F2_SERIE
 
-	dbSelectArea("SX1")
-	SX1->(DbGoTop())
-	dbSetOrder(1)
-	If dbSeek(cPerg)
-		While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
-			If SX1->X1_ORDEM $ '01/02'
-				RecLock("SX1",.F.)
-				Replace SX1->X1_CNT01 with cSerie
-				MSUnLock()
-			EndIf
-			If SX1->X1_ORDEM $ '03/04'
-				RecLock("SX1",.F.)
-				Replace SX1->X1_CNT01 with cDoc
-				MsUnlock()
-			EndIf
-			If SX1->X1_ORDEM == '18'
-				RecLock("SX1",.F.)
-				Replace SX1->X1_PRESEL with 2
-				MsUnlock()
-			EndIf
-			SX1->(DbSkip())
-		EndDo
-	EndIf
-	RestArea(aAreaSX1)
-	U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
+		dbSelectArea("SX1")
+		SX1->(DbGoTop())
+		dbSetOrder(1)
+		If dbSeek(cPerg)
+			While SX1->(!EoF()) .AND. ALLTRIM(SX1->X1_GRUPO) == cPerg
+				If SX1->X1_ORDEM $ '01/02'
+					RecLock("SX1",.F.)
+					Replace SX1->X1_CNT01 with cSerie
+					MSUnLock()
+				EndIf
+				If SX1->X1_ORDEM $ '03/04'
+					RecLock("SX1",.F.)
+					Replace SX1->X1_CNT01 with cDoc
+					MsUnlock()
+				EndIf
+				If SX1->X1_ORDEM == '18'
+					RecLock("SX1",.F.)
+					Replace SX1->X1_PRESEL with 2
+					MsUnlock()
+				EndIf
+				SX1->(DbSkip())
+			EndDo
+		EndIf
+		RestArea(aAreaSX1)
+		U_BltItau() //Chama a função do Boleto do Itaú - Ricardo Moreira 21/07/2020
 
-RestArea(aSEA)
-RestArea(aSCV )
-RestArea(aSE1 )
-RestArea(aSF2 )
-RestArea(aSD2 )
-RestArea(aDAK )
-RestArea(aDAI )
-RestArea(aDAJ )
-RestArea(aSA1 )
-RestArea(aSC5 )
-RestArea(aSC6 )
-RestArea(aSC9 )
-RestArea(aDCF )
-RestArea(aDAU )
-RestArea(aDA3 )
-RestArea(aDA4 )
-RestArea(aDB0 )
-RestArea(aDA5 )
-RestArea(aDA6 )
-RestArea(aDA7 )
-RestArea(aDA8 )
-RestArea(aDA9 )
-RestArea(aSB1 )
-RestArea(aSB2 )
-RestArea(aSB6 )
-RestArea(aSC9 )
-RestArea(aSED )
-RestArea(aSEE )
-RestArea(aSA6 )
-RestArea(aSX5 )
+		RestArea(aSEA)
+		RestArea(aSCV )
+		RestArea(aSE1 )
+		RestArea(aSF2 )
+		RestArea(aSD2 )
+		RestArea(aDAK )
+		RestArea(aDAI )
+		RestArea(aDAJ )
+		RestArea(aSA1 )
+		RestArea(aSC5 )
+		RestArea(aSC6 )
+		RestArea(aSC9 )
+		RestArea(aDCF )
+		RestArea(aDAU )
+		RestArea(aDA3 )
+		RestArea(aDA4 )
+		RestArea(aDB0 )
+		RestArea(aDA5 )
+		RestArea(aDA6 )
+		RestArea(aDA7 )
+		RestArea(aDA8 )
+		RestArea(aDA9 )
+		RestArea(aSB1 )
+		RestArea(aSB2 )
+		RestArea(aSB6 )
+		RestArea(aSC9 )
+		RestArea(aSED )
+		RestArea(aSEE )
+		RestArea(aSA6 )
+		RestArea(aSX5 )
 
-MV_PAR01 := aMVs[01]
-MV_PAR02 := aMVs[02]
-MV_PAR03 := aMVs[03]
-MV_PAR04 := aMVs[04]
-MV_PAR05 := aMVs[05]
-MV_PAR06 := aMVs[06]
-MV_PAR07 := aMVs[07]
-MV_PAR08 := aMVs[08]
-MV_PAR09 := aMVs[09]
-MV_PAR10 := aMVs[10]
-MV_PAR11 := aMVs[11]
-MV_PAR12 := aMVs[12]
-MV_PAR13 := aMVs[13]
-MV_PAR14 := aMVs[14]
-MV_PAR15 := aMVs[15]
-MV_PAR16 := aMVs[16]
-MV_PAR17 := aMVs[17]
-MV_PAR18 := aMVs[18]
-MV_PAR19 := aMVs[19]
-MV_PAR20 := aMVs[20]
-MV_PAR21 := aMVs[21]
-MV_PAR22 := aMVs[22]
-MV_PAR23 := aMVs[23]
-MV_PAR24 := aMVs[24]
-MV_PAR25 := aMVs[25]
+		MV_PAR01 := aMVs[01]
+		MV_PAR02 := aMVs[02]
+		MV_PAR03 := aMVs[03]
+		MV_PAR04 := aMVs[04]
+		MV_PAR05 := aMVs[05]
+		MV_PAR06 := aMVs[06]
+		MV_PAR07 := aMVs[07]
+		MV_PAR08 := aMVs[08]
+		MV_PAR09 := aMVs[09]
+		MV_PAR10 := aMVs[10]
+		MV_PAR11 := aMVs[11]
+		MV_PAR12 := aMVs[12]
+		MV_PAR13 := aMVs[13]
+		MV_PAR14 := aMVs[14]
+		MV_PAR15 := aMVs[15]
+		MV_PAR16 := aMVs[16]
+		MV_PAR17 := aMVs[17]
+		MV_PAR18 := aMVs[18]
+		MV_PAR19 := aMVs[19]
+		MV_PAR20 := aMVs[20]
+		MV_PAR21 := aMVs[21]
+		MV_PAR22 := aMVs[22]
+		MV_PAR23 := aMVs[23]
+		MV_PAR24 := aMVs[24]
+		MV_PAR25 := aMVs[25]
 
-SELECT(nWorkArea)
-RestArea(aArea)
-
+		SELECT(nWorkArea)
+		RestArea(aArea)
+EndIf
 /* Prencher a forma de pagamento do pedido de venda na tabela SCV  */
 
 Static Function GravaSCV() //Grava Forma de Pagamento
@@ -464,7 +466,6 @@ Static Function GravaSCV() //Grava Forma de Pagamento
 		endif
 
 	endIf
-
 
 Return .T.
 
