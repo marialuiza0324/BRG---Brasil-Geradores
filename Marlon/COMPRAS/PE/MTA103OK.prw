@@ -22,11 +22,11 @@ Local cCentroCusto := "" // Variável para o centro de custo
 Local lRastro := .T.
 local nPosCod        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_COD"})
 local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
-local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
+local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"}) 
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
 Local nLinha
 
-If Funname() <> "LOCA001" .AND. Funname() <> "MATA461"
+If Funname() <> "LOCA001" .AND. Funname() <> "MATA461" .AND. FunName() <> "RPC"
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
 

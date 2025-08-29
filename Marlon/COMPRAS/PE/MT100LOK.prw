@@ -23,7 +23,7 @@ local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
 local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
 Local nLinha
 
-If Funname() <> "LOCA001" .AND. Funname() <> "MATA461"
+If Funname() <> "LOCA001" .AND. Funname() <> "MATA461"  .AND. FunName() <> "RPC"
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
 
