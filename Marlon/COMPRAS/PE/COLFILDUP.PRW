@@ -21,8 +21,6 @@ Local cAlerta := ""
 // Verifica se a empresa é válida
 If cCodEmpresa <> '97' .AND. cCodEmpresa <> '98' .AND. cCodEmpresa <> '99'
     aRet := {cCodEmpresa,cCodFilial}
-    cAlerta:= ArrTokStr(aRet, ",")
-    FWAlertInfo(cAlerta,"Atenção!")
 EndIf
 
 Return aRet
