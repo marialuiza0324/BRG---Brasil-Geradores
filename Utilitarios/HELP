@@ -172,3 +172,28 @@ Solução : É necessário que esses materiais sejam devolvidos e requisitados c
 
 Problema : A data de vencimento é igual ou menor a data de hoje.
 Solução : Renegocie com o fornecedor e ajuste a condição de pagamento do pedido.
+
+
+"AVISO#0029"
+
+Problema : O campo Nº de série do Grupo está vazio.
+Solução : Preencha o campo, pois ele é obrigatório para operação M1.
+
+
+"AVISO#0030"
+
+Problema : O campo LOTE está vazio.
+Solução : Preencher o campo LOTE, pois produto possui restreabilidade.
+
+
+"AVISO#0031"
+
+Problema : Solicitações manuais ou geradas por firmamento de OP pendentes de baixa!!!
+Ordem de Produção possui (n) empenhos em aberto ou Parcialmente Baixado!!!
+Solução : Corrija as pendências para prosseguir cpom o apontamento.
+
+
+"AVISO#0032"
+
+Problema : As informações não foram enviadas.
+Solução : Verifique se a Nota foi autorizada ou contate o administrador do sistema.
