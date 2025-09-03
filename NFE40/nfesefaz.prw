@@ -6363,7 +6363,9 @@ If !Empty(aNota)
 		
        //If aScan( aDetPag,{ |x|x[1] == "14"} ) > 0			
 		If lGrupCob
-			cString += NfeCob(aDupl,aFat,(Alltrim(cSerie)+ Alltrim(cNota)))
+			If cIndPag <> "0"
+				cString += NfeCob(aDupl,aFat,(Alltrim(cSerie)+ Alltrim(cNota)))
+			EndIf
 		EndIf
 		//EndIf
 		cString += NfePag(aDetPag)
