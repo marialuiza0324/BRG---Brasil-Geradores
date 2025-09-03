@@ -48,9 +48,9 @@ User Function MT100TOK()
     local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
     
     If Funname() <> "LOCA001" .AND. Funname() <> "MATA461" .AND. FunName() <> "RPC"
-        If !FWIsInCallStack("A103Devol")//só entra na validação caso não esteja selecionada a opção de retornar NF
-             cCentroCusto := ACOLS[n][nCentroC] 
-             cRateio := ACOLS[n][nRateio] 
+        If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
+            cCentroCusto := ACOLS[n][nCentroC] 
+            cRateio := ACOLS[n][nRateio] 
             // Verificando se o centro de custo está vazio e se o rateio está informado
             If Empty(cCentroCusto) .and. cRateio == "1"
                 // Se o centro de custo está vazio e há rateio, permite a confirmação
@@ -60,116 +60,207 @@ User Function MT100TOK()
                 FWAlertInfo("Informe um centro de custo ou rateio.", "Atenção!!!")
                 lRet := .F. // Bloqueia a confirmação
             EndIf
-    
 
             For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 
-            DbSelectArea("SB1")
-            DbSetOrder(1)   
+                DbSelectArea("SB1")
+                DbSetOrder(1)   
 
-            IF dbSeek(xFilial("SB1")+ACOLS[nX][2])//busca produto na SB1
-                If SB1->B1_RASTRO == "L" .AND. Empty(ACOLS[nX][7])//se produto possuir ratreabilidade e lote estiver vazio
-                    lRet  := .F. //não permite inclusão do doc 
-                    lRastro := .F.
-                    FWAlertInfo("Item com Rastreabilidade, informe o Lote"," Atenção!!!")
-                    Return
-                EndIf
-            EndIf
-
-
-        // Verifica se o lote já foi usado em outra linha
-            For nLinha := 1 To Len(Acols)
-                If nLinha != n // Ignora a linha atual
-                    If Upper(AllTrim(Acols[nLinha, nPosLoteCtl])) == Upper(AllTrim(Acols[n, nPosLoteCtl])) .And. !Empty(Acols[n, nPosLoteCtl])
-                        FWAlertInfo("O lote '" + Alltrim(Acols[n, nPosLoteCtl]) + "' já foi utilizado em outro item. Corrija para prosseguir.", "Lote Duplicado!")
-                        lRet := .F.
+                IF dbSeek(xFilial("SB1")+ACOLS[nX][2]) //busca produto na SB1
+                    If SB1->B1_RASTRO == "L" .AND. Empty(ACOLS[nX][7]) //se produto possuir ratreabilidade e lote estiver vazio
+                        lRet  := .F. //não permite inclusão do doc 
+                        lRastro := .F.
+                        FWAlertInfo("Item com Rastreabilidade, informe o Lote"," Atenção!!!")
                         Return
                     EndIf
                 EndIf
-            Next
 
-            cNumPC := ACOLS[nX][35] //Num Pc
-            cItemPc := ACOLS[nX][36] //Item Pc 
+                // Verifica se o lote já foi usado em outra linha
+                For nLinha := 1 To Len(Acols)
+                    If nLinha != n // Ignora a linha atual
+                        If Upper(AllTrim(Acols[nLinha, nPosLoteCtl])) == Upper(AllTrim(Acols[n, nPosLoteCtl])) .And. !Empty(Acols[n, nPosLoteCtl])
+                            FWAlertInfo("O lote '" + Alltrim(Acols[n, nPosLoteCtl]) + "' já foi utilizado em outro item. Corrija para prosseguir.", "Lote Duplicado!")
+                            lRet := .F.
+                            Return
+                        EndIf
+                    EndIf
+                Next
 
-            If Select("TSC7") > 0
-                TSC7->(dbCloseArea())
-            EndIf
+                cNumPC := ACOLS[nX][35] //Num Pc
+                cItemPc := ACOLS[nX][36] //Item Pc 
 
-            _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE,C7_LOJA, C7_DATPRF,C7_XDTPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
-            _cQry += "FROM " + retsqlname("SC7")+" SC7 "
-            _cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
-            _cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
-            _cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
-            _cQry += "AND   SC7.C7_ENCER = '' "
-            _cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
-            _cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_LOJA,C7_XDTPRF "
-            _cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF, C7_XDTPRF "
+                If !Empty(cNumPC) .And. !Empty(cItemPc) //se num pc e item pc estiverem preenchidos, entra na rotina de exclusão do título
 
-            DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //filtrando pedido na SC7
+                    If Select("TSC7") > 0
+                        TSC7->(dbCloseArea())
+                    EndIf
 
-                If Empty(TSC7->C7_XDTPRF)
+                    _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE,C7_LOJA, C7_DATPRF,C7_XDTPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
+                    _cQry += "FROM " + retsqlname("SC7")+" SC7 "
+                    _cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
+                    _cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
+                    _cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
+                    _cQry += "AND   SC7.C7_ENCER = '' "
+                    _cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
+                    _cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE,C7_LOJA,C7_XDTPRF "
+                    _cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF, C7_XDTPRF "
+
+                    DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //filtrando pedido na SC7
+
+                    If Empty(TSC7->C7_XDTPRF)
+                        dData :=  stod(TSC7->C7_DATPRF)
+                    Else
+                        dData :=  stod(TSC7->C7_XDTPRF)
+                    EndIf
+                    _Forn   := AllTrim(TSC7->C7_FORNECE)
+                    cCond   := TSC7->C7_COND //Condição de pagamento
+                    nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
+                    aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
+
+                    For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
+                        _Venc  := Lastday(aParc[i,1],3) //vencimento
+                        _Total := aParc[i,2] //valor da parcela
+                        _Parc  := cvaltochar(i) //Nº da parcela
+
+                        /*If _Venc == Date() .OR. _Venc < Date() //verifica se a data de vencimento é igual ou menor a data atual
+                            Help(, ,"AVISO#0028", ,"A data de vencimento é igual ou menor a data de hoje.",1, 0, , , , , , {"Renegocie com o fornecedor e ajuste a condição de pagamento do pedido."})
+                            lRet := .F.
+                            Exit
+                        Else*/
+
+                        aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
+                                    { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
+                                    { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
+                                    { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
+                                    { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
+
+                        If Select("TSE2") > 0
+                            TSE2->(dbCloseArea())
+                        EndIf
+
+                        cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
+                        cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
+                        cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'"
+                        cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
+
+                        DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSE2",.T.,.T.)
+
+                        DbSelectArea("TSE2") //query retorna se existe título na SE2 com chave informada
+
+                        TSE2->( dbGoTop() )
+                        Count To nTotal
+
+                        If  nTotal > 0
+                            lAchou := .T.
+                        EndIf
+
+                        TSE2->(DbCloseArea())
+
+                        Begin Transaction
+
+                            If lAchou 
+                                If lRastro = .F. .OR. lPag = .F.
+                                    lRet := .F.
+                                Else //se não tiver pendência de lote nem de condição de pagamento, exclui o título
+                                    MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aDelet,, 5) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
+
+                                    If lMsErroAuto //se der erro cancela exclusão e mostra erro
+                                        FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
+                                        MostraErro()
+                                        DisarmTransaction()
+                                        lMsg := .F.
+                                    Else
+                                        lMsErroAuto:= .F.
+                                        lRet := .T.
+                                        lMsg := .T.
+                                    Endif
+                                EndIf
+                            Else 
+                                lRet := .T.
+                            EndIf
+
+                        End Transaction
+
+                        lAchou := .F. // zera variável
+                        //EndIf
+                    Next i
+                EndIf
+            Next nX
+
+            SB1->(DbCloseArea())
+            FwRestArea(aArea)
+
+            If lMsg = .T. .AND. lRastro = .T. .AND. lPag = .T. //se tiver tudo ok, exibe mensagem de sucesso
+                FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
+            EndIf 
+
+        Else
+
+            For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
+
+                If !Empty(cNumPC) .And. !Empty(cItemPc) //se num pc e item pc estiverem preenchidos, entra na rotina de exclusão do título
+
+                    cNumPC := ACOLS[nX][25] //Num Pc
+                    cItemPc := ACOLS[nX][1] //Item Pc 
+
+                    If Select("TSC7") > 0
+                        TSC7->(dbCloseArea())
+                    EndIf
+
+                    _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE, C7_DATPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
+                    _cQry += "FROM " + retsqlname("SC7")+" SC7 "
+                    _cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
+                    _cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
+                    _cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
+                    _cQry += "AND   SC7.C7_ENCER = '' "
+                    _cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
+                    _cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE "
+                    _cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF "
+
+                    DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //filtrando pedido na SC7
 
                     dData :=  stod(TSC7->C7_DATPRF)
+                    _Forn   := AllTrim(TSC7->C7_FORNECE)
+                    cCond   := TSC7->C7_COND //Condição de pagamento
+                    nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
+                    aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
 
-                Else
+                    For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
+                        _Venc  := Lastday(aParc[i,1],3) //vencimento
+                        _Total := aParc[i,2] //valor da parcela
+                        _Parc  := cvaltochar(i) //Nº da parcela
 
-                    dData :=  stod(TSC7->C7_XDTPRF)
+                        aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
+                                    { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
+                                    { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
+                                    { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
+                                    { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
 
-                EndIf
-                _Forn   := AllTrim(TSC7->C7_FORNECE)
-                cCond   := TSC7->C7_COND //Condição de pagamento
-                nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
-                aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
+                        If Select("TSE2") > 0
+                            TSE2->(dbCloseArea())
+                        EndIf
 
-            For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
-                _Venc  := Lastday(aParc[i,1],3) //vencimento
-                _Total := aParc[i,2] //valor da parcela
-                _Parc  := cvaltochar(i) //Nº da parcela
+                        cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
+                        cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
+                        cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'"
+                        cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
 
-            
-            /*If _Venc == Date() .OR. _Venc < Date() //verifica se a data de vencimento é igual ou menor que a data atual
+                        DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSE2",.T.,.T.)
 
-			    Help(, ,"AVISO#0028", ,"A data de vencimento é igual ou menor a data de hoje.",1, 0, , , , , , {"Renegocie com o fornecedor e ajuste a condição de pagamento do pedido."})
-                lRet := .F.
-                Exit
+                        DbSelectArea("TSE2") //query retorna se existe título na SE2 com chave informada
 
-            Else*/
+                        TSE2->( dbGoTop() )
+                        Count To nTotal
 
-                    aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
-                    { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
-                    { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
-                    { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
-                    { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
+                        If  nTotal > 0
+                            lAchou := .T.
+                        EndIf
 
-                    If Select("TSE2") > 0
-                        TSE2->(dbCloseArea())
-                    EndIf
+                        TSE2->(DbCloseArea())
 
-                    cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
-                    cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
-                    cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'
-                    cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
+                        Begin Transaction
 
-                    DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSE2",.T.,.T.)
-
-                    DbSelectArea("TSE2") //query retorna se existe título na SE2 com chave informada
-
-                    TSE2->( dbGoTop() )
-                    Count To nTotal
-
-                    If  nTotal > 0
-                        lAchou := .T.
-                    EndIf
-
-                    TSE2->(DbCloseArea())
-
-                    Begin Transaction
-
-                        If lAchou 
-
-                            If lRastro = .F. .OR. lPag = .F.
-                                lRet := .F.
-                            Else //se não tiver pendência de lote nem de condição de pagamento, exclui o título
+                            If lAchou //se achar título na query acima, deleta ele
                                 MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aDelet,, 5) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
 
                                 If lMsErroAuto //se der erro cancela exclusão e mostra erro
@@ -182,121 +273,25 @@ User Function MT100TOK()
                                     lRet := .T.
                                     lMsg := .T.
                                 Endif
+                            Else 
+                                lRet := .T.
                             EndIf
-                        Else 
-                        lRet := .T.
-                        EndIf
 
-                    End Transaction
+                        End Transaction
 
-                    lAchou := .F. // zera variável
-            //EndIf
-            Next i
+                        lAchou := .F. // zera variável
+                    Next i
+                EndIf
+            Next nX
 
-        Next nX
+            SB1->(DbCloseArea())
+            FwRestArea(aArea)
 
-                SB1->(DbCloseArea())
-                FwRestArea(aArea)
-
-            If lMsg = .T. .AND. lRastro = .T. .AND. lPag = .T. //se tiver tudo ok, exibe mensagem de sucesso
+            If lMsg = .T. //se estiver tudo ok, exibe mensagem de sucesso
                 FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
             EndIf 
-
-        Else
-
-            For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
-
-        cNumPC := ACOLS[nX][25] //Num Pc
-        cItemPc := ACOLS[nX][1] //Item Pc 
-
-            If Select("TSC7") > 0
-                TSC7->(dbCloseArea())
-            EndIf
-
-            _cQry := "SELECT DISTINCT C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO,C7_FORNECE, C7_DATPRF, SUM(C7_TOTAL) TOTAL, SUM(C7_VALIPI) VALIPI, SUM(C7_VALSOL) VALSOL "
-            _cQry += "FROM " + retsqlname("SC7")+" SC7 "
-            _cQry += "WHERE SC7.D_E_L_E_T_ <> '*' "
-            _cQry += "AND   SC7.C7_FILIAL   = '" + cFilAnt  + "' "
-            _cQry += "AND   SC7.C7_NUM	= '" + cNumPC  + "' "
-            _cQry += "AND   SC7.C7_ENCER = '' "
-            _cQry += "AND   SC7.C7_QUJE <  SC7.C7_QUANT "
-            _cQry += "GROUP BY C7_FILIAL,C7_NUM,C7_COND ,C7_EMISSAO, C7_DATPRF,C7_FORNECE "
-            _cQry += "ORDER BY C7_FILIAL, C7_NUM , C7_DATPRF "
-
-            DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(_cQry)),"TSC7",.T.,.T.) //filtrando pedido na SC7
-
-                dData :=  stod(TSC7->C7_DATPRF)
-                _Forn   := AllTrim(TSC7->C7_FORNECE)
-                cCond   := TSC7->C7_COND //Condição de pagamento
-                nValTot := TSC7->TOTAL + TSC7->VALIPI + TSC7->VALSOL //somando valor total do PC
-                aParc := Condicao(nValTot,cCond,nVIPI,dData,nVSol)//calculando o numero de parcelas
-
-            For i:= 1 to Len(aParc)  //laço de repetição de acordo com a quantidade de parcelas
-                _Venc  := Lastday(aParc[i,1],3) //vencimento
-                _Total := aParc[i,2] //valor da parcela
-                _Parc  := cvaltochar(i) //Nº da parcela
-
-                aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
-                { "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
-                { "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
-                { "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
-                { "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
-
-                If Select("TSE2") > 0
-                    TSE2->(dbCloseArea())
-                EndIf
-
-                cQuery := " SELECT * FROM " + retsqlname("SE2") + " "
-                cQuery += " WHERE E2_FILIAL = '" + xFilial("SE2") + "' AND E2_PREFIXO = 'PRV' "
-                cQuery += " AND E2_NUM = '"+cNumPC+"/"+substr(cItemPc,3,4)+"' AND E2_PARCELA = '"+_Parc+"'
-                cQuery += " AND E2_TIPO = '" +cTipo+"' AND D_E_L_E_T_ <> '*' "
-
-                DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSE2",.T.,.T.)
-
-                DbSelectArea("TSE2") //query retorna se existe título na SE2 com chave informada
-
-                TSE2->( dbGoTop() )
-                Count To nTotal
-
-                If  nTotal > 0
-                    lAchou := .T.
-                EndIf
-
-                TSE2->(DbCloseArea())
-
-                Begin Transaction
-
-                    If lAchou //se achar título na query acima, deleta ele
-                        MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aDelet,, 5) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
-
-                        If lMsErroAuto //se der erro cancela exclusão e mostra erro
-                            FWAlertInfo("Sistema não conseguiu excluir o título, refaça o processo","Atenção!!!")
-                            MostraErro()
-                            DisarmTransaction()
-                            lMsg := .F.
-                        Else
-                            lMsErroAuto:= .F.
-                            lRet := .T.
-                            lMsg := .T.
-                        Endif
-                    Else 
-                    lRet := .T.
-                    EndIf
-
-                End Transaction
-
-                lAchou := .F. // zera variável
-            Next i
-
-        Next nX
-
-                SB1->(DbCloseArea())
-                FwRestArea(aArea)
-
-                If lMsg = .T. //se estiver tudo ok, exibe mensagem de sucesso
-                    FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
-                EndIf 
         EndIf
     EndIf
 
 Return lRet 
+
