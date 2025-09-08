@@ -170,7 +170,7 @@ Solução : É necessário que esses materiais sejam devolvidos e requisitados c
 
 "AVISO#0028"
 
-Problema : A data de vencimento é igual ou menor a data de hoje.
+Problema : A data de vencimento (" + DToC(_Venc) + ") é inválida. O vencimento mínimo permitido é " + DToC(Date() + 2) + "."
 Solução : Renegocie com o fornecedor e ajuste a condição de pagamento do pedido.
 
 
