@@ -3,39 +3,25 @@
 #INCLUDE "TOPCONN.CH"
 #INCLUDE "COLORS.CH"
 #INCLUDE "FONT.CH"  
-//----------------------------------------------------------
-/*{Protheus.doc} ANALISE
-Função ANALISE
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@version Protheus 10, Protheus 11
-@since 04/10/2012 - data de revisão do artefato
- 
-@8sample 
-
-ANALISE - Rotina utilizada para corrigir desbalanceamento de saldos entre as tabelas SB2xSB8xSBF e as movimentacoes SD1xSD2xSD3xSD5xSDB
-Return
- 
-@obs Rotina Analise 
-Link oficial de rotinas relacionadas: http://tdn.totvs.com.br
- 
-@project MIT044_Analise.doc
-@menu \SIGAEST\Atualizacoes\Miscelanea\Acertos\Analise de Saldos
- 
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-05/10/2012 - Inclusao do botao de parametros e validacao para utilizacao somente em ambiente TOP.
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ANALISE   ºAutor  ³Reinaldo Dias       º Data ³  19/08/2005 º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ Rotina analisar movimentacao e saldo em estoque.           º±±
+±±º          ³ Controle de lote e localizacao ativo.                      º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ AP8                                                        º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
-//----------------------------------------------------------
 User Function ANALISE()            
 Local oDlgMain    
 Local aArea          := GetArea()
 Local oNoMarked      := LoaDBitmap( GetResources(), "LBNO" )
 Local oMarked        := LoaDBitmap( GetResources(), "LBOK" )
-Local cPerg          := "ANALISE"
- 
 Private cPict        := PesqPict('SB2','B2_QATU')
 Private cPict2UM     := PesqPict('SB2','B2_QTSEGUM')
 Private cPictD5      := PesqPict('SD5','D5_QUANT')
@@ -56,6 +42,7 @@ Private aDet02B8BF   := {}
 Private aKarLocal    := {}
 Private aKarLote     := {}
 Private aKarEnde     := {}                                               
+//Private aDocto       := {}
 Private aNumSeq      := {}
 Private cLocal       := Space(TamSX3("B2_LOCAL")[1])
 Private dDtProces    := dDataBase
@@ -109,6 +96,9 @@ Private oSDA
 Private oDASB2  
 Private oDASB8  
 Private lNumLote := SuperGetMV('MV_LOTEUNI', .F., .F.)
+Private cUser    := SuperGetMV('MV_USANALI', .F., .F.)
+
+//Aadd(aDocto    ,{Space(06),Space(03),Space(06),Space(02),0,0,0,0,0,0,0,0,Space(03),Space(08),Space(03),Space(01),Space(01)})
 
                //Data            ,Lote     ,Num.Lote ,Validade        ,Saldo,Qtde.Original,Status   ,Empenho,Qtde.2UM,Empenho 2UM
 Aadd(aDetSB8   ,{CTOD("  /  /  "),Space(10),Space(06),CTOD("  /  /  "),0    ,0            ,Space(08),0      ,0       ,0})
@@ -142,18 +132,10 @@ AAdd(aKarLocal ,{Space(03),CTOD("  /  /  "),Space(03),Space(03),Space(06),0     
 AAdd(aKarLote  ,{Space(03),CTOD("  /  /  "),Space(03),Space(06),Space(06),Space(08),CTOD("  /  /  "),0         ,0    ,Space(30),Space(01)})
                //Origem   ,Data            ,TM       ,Documento,Localização,Lote     ,Quantidade,Saldo,Num.Seq.
 AAdd(aKarEnde  ,{Space(03),CTOD("  /  /  "),Space(03),Space(06),Space(15)  ,Space(10),0         ,0    ,Space(06),Space(01)})
-
-#IFDEF TOP
-    IF !fDigSenha()
-       Return
-    Endif
-#ELSE
-    MsgStop("Essa rotina funciona somente no ambiente TOP.")
-    Return
-#ENDIF
-
-AjustaSX1(cPerg)
-Pergunte(cPerg,.F.)               
+                                                                                                                 
+//IF !fDigSenha()
+//   Return
+//Endif
 
 DEFINE MSDIALOG oDlgMain TITLE "Analise de Saldos"  OF oMainWnd PIXEL FROM 040,040 TO 650,1017
 DEFINE FONT oBold   NAME "Arial" SIZE 0, -12 BOLD
@@ -227,7 +209,7 @@ DBSelectArea("SB1")
 //@ 154,320 SAY cMensSBF                       SIZE 120,10 PIXEL OF oFolder:aDialogs[1] FONT oBold  COLOR CLR_HRED
 
 @ 220,002 SAY "Sugestões e melhorias para Reinaldo Dias e-mail: rdias@totvs.com.br"   SIZE 200,10 PIXEL OF oFolder:aDialogs[1] FONT oBold  COLOR CLR_HBLUE
-@ 220,370 SAY "Versão: 30/11/2011"                                                    SIZE 200,10 PIXEL OF oFolder:aDialogs[1] FONT oBold  COLOR CLR_HBLUE
+@ 220,410 SAY "Versão: 30/11/2011"                                                    SIZE 200,10 PIXEL OF oFolder:aDialogs[1] FONT oBold  COLOR CLR_HBLUE
                                                                           
 @ 102,015 TO 167, 095 PROMPT "Saldo a Classificar"         PIXEL OF oFolder:aDialogs[1] 
 @ 114,020 SAY "SB2"                             SIZE 015,10 PIXEL OF oFolder:aDialogs[1] FONT oBold 
@@ -252,27 +234,28 @@ oBox:bLine:={ ||{IIF(aFolder[oBox:nAT,1],oMarked,oNoMarked),aFolder[oBox:nAT,2]}
 @ 050,410 BUTTON  "Desmarcar Todos") SIZE 50,12 ACTION MarcaTodos(.F.) PIXEL OF oFolder:aDialogs[1]
 */
 
-@ 010,420 BUTTON "&Processar"   SIZE 36,16 PIXEL ACTION Processa({||fProcessa()})
-
+@ 008,420 BUTTON "&Processar"   SIZE 50,16 PIXEL ACTION Processa({||fProcessa()})
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 005,015 BUTTON  "Alterar SB9" SIZE 50,12 ACTION fAjustSB9("SALDO_SB9") PIXEL OF oFolder:aDialogs[1]
 @ 005,115 BUTTON  "Saldo Atual" SIZE 50,12 ACTION fSaldoAtual()          PIXEL OF oFolder:aDialogs[1]
 @ 005,215 BUTTON  "Alterar SB2" SIZE 50,12 ACTION fAjustSB2("SALDO_SB2") PIXEL OF oFolder:aDialogs[1]
-
-@ 218,445 BUTTON "&Parâmetros"  SIZE 30,10 PIXEL OF oFolder:aDialogs[1] ACTION fPermiteAjsute(cPerg)
+endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FOLDER 02
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SB8            
 cB8xD5 := "B8=>D5"
-@ 003,005 SAY "SB8"                SIZE 200,50                                                       PIXEL OF oFolder:aDialogs[2] FONT oBold
+@ 003,005 SAY "SB8"                SIZE 200,50                                                     PIXEL OF oFolder:aDialogs[2] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,030 BUTTON "SB8 => SD5"      SIZE 30,10 ACTION (cB8xD5 := "B8=>D5",Processa({||fDetaSB8(0)})) PIXEL OF oFolder:aDialogs[2]
-@ 001,075 BUTTON "Incluir"         SIZE 30,10 ACTION (fAjustSB8("B8_I"))                             PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
-@ 001,120 BUTTON "Alterar"         SIZE 30,10 ACTION (fAjustSB8("B8_A"))                             PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
-@ 001,165 BUTTON "Excluir"         SIZE 30,10 ACTION (fAjustSB8("B8_E"))                             PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
-@ 001,320 BUTTON "Lote e Num.Lote" SIZE 40,10 ACTION (nOpSB8:= 1,Processa({||fDetaSB8(0)}))         PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=2,.T.,.F.)
+@ 001,075 BUTTON "Incluir"         SIZE 30,10 ACTION (fAjustSB8("B8_I"))                           PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
+@ 001,120 BUTTON "Alterar"         SIZE 30,10 ACTION (fAjustSB8("B8_A"))                           PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
+@ 001,165 BUTTON "Excluir"         SIZE 30,10 ACTION (fAjustSB8("B8_E"))                           PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
+@ 001,320 BUTTON "Lote e Num.Lote"  SIZE 40,10 ACTION (nOpSB8:= 1,Processa({||fDetaSB8(0)}))         PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=2,.T.,.F.)
 @ 001,375 BUTTON "Lote"            SIZE 30,10 ACTION (nOpSB8:= 2,Processa({||fDetaSB8(0)}))         PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
-@ 001,420 BUTTON "Pesquisar"       SIZE 30,10 ACTION (fPesquisa("SB8",oDetSB8))                      PIXEL OF oFolder:aDialogs[2]
+endif
+@ 001,420 BUTTON "Pesquisar"       SIZE 30,10 ACTION (fPesquisa("SB8",oDetSB8))                    PIXEL OF oFolder:aDialogs[2]
 @ 010,005 LISTBOX oDetSB8 Var cModelo FIELDS HEADER; 
      "Data"   ,;
      "Lote"   ,;
@@ -291,6 +274,7 @@ cB8xD5 := "B8=>D5"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SD5
 @ 123,005 SAY "SD5"                 SIZE 200,50                                                      PIXEL OF oFolder:aDialogs[2] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 121,030 BUTTON "SD5 => SB8"       SIZE 30,10 ACTION (cB8xD5 := "D5=>B8",Processa({||fDetaSD5(0)})) PIXEL OF oFolder:aDialogs[2]
 @ 121,075 BUTTON "Incluir D5"       SIZE 30,10 ACTION (fAjustSD5("D5_I","02"))                      PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
 @ 121,120 BUTTON "Alterar D5"       SIZE 30,10 ACTION (fAjustSD5("D5_A","02"))                      PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
@@ -299,6 +283,7 @@ cB8xD5 := "B8=>D5"
 @ 121,265 BUTTON "Subtrair D5+B8"   SIZE 40,10 ACTION (fAjustSD5("D5+B8_S","02"))                   PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
 @ 121,320 BUTTON "Estornar D5+B8"   SIZE 40,10 ACTION (fAjustSD5("D5+B8_E","02"))                   PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
 @ 121,375 BUTTON "Analisar"         SIZE 30,10 ACTION (Processa({||fMontaSB8(.F.,0)}))                PIXEL OF oFolder:aDialogs[2] When IF(nOpSB8=1,.T.,.F.)
+endif
 @ 121,420 BUTTON "Pesquisar"        SIZE 30,10 ACTION (fPesquisa("SD5",oDetSD5))                    PIXEL OF oFolder:aDialogs[2]
 
 @ 130,005 LISTBOX oDetSD5 Var cDetSD5 FIELDS HEADER; 
@@ -326,10 +311,12 @@ cB8xD5 := "B8=>D5"
 // Detalhe do SBF
 cBFxDB := "BF=>DB"
 @ 003,005 SAY "SBF"                SIZE 200,50                                                     PIXEL OF oFolder:aDialogs[3] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,030 BUTTON "SBF => SDB"      SIZE 30,10 ACTION (cBFxDB := "BF=>DB",Processa({||fDetaSBF(0)})) PIXEL OF oFolder:aDialogs[3]
 @ 001,075 BUTTON "Incluir"         SIZE 30,10 ACTION (fAjustSBF("BF_I"))                           PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
 @ 001,120 BUTTON "Alterar"         SIZE 30,10 ACTION (fAjustSBF("BF_A"))                           PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
 @ 001,165 BUTTON "Excluir"         SIZE 30,10 ACTION (fAjustSBF("BF_E"))                           PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
+endif
 @ 001,420 BUTTON "Pesquisar"       SIZE 30,10 ACTION (fPesquisa("SBF",oDetSBF))                    PIXEL OF oFolder:aDialogs[3]
 @ 010,005 LISTBOX oDetSBF Var cModelo FIELDS HEADER; 
      "Localização",;
@@ -349,6 +336,7 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SDB
 @ 123,005 SAY "SDB"                 SIZE 200,50                                                     PIXEL OF oFolder:aDialogs[3] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 121,030 BUTTON "SDB => SBF"       SIZE 30,10 ACTION (cBFxDB := "DB=>BF",Processa({||fDetaSDB(0)})) PIXEL OF oFolder:aDialogs[3]
 @ 121,075 BUTTON "Incluir DB"       SIZE 30,10 ACTION (fAjustSDB("DB_I","03"))                      PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
 @ 121,120 BUTTON "Alterar DB"       SIZE 30,10 ACTION (fAjustSDB("DB_A","03"))                      PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
@@ -357,6 +345,7 @@ cBFxDB := "BF=>DB"
 @ 121,265 BUTTON "Subtrair DB+BF"   SIZE 40,10 ACTION (fAjustSDB("DB+BF_S","03"))                   PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
 @ 121,320 BUTTON "Estornar DB+BF"   SIZE 40,10 ACTION (fAjustSDB("DB+BF_E","03"))                   PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
 @ 121,375 BUTTON "Analisar"         SIZE 30,10 ACTION (Processa({||fMontaSBF(.F.,0)}))                PIXEL OF oFolder:aDialogs[3] When IF(nOpSBF=1,.T.,.F.)
+endif
 @ 121,420 BUTTON "Pesquisar"        SIZE 30,10 ACTION (fPesquisa("SDB",oDetSDB))                    PIXEL OF oFolder:aDialogs[3]
 @ 130,005 LISTBOX oDetSDB Var cDetSDB FIELDS HEADER; 
 	 "Origem" ,;
@@ -382,7 +371,9 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SB8
 @ 003,005 SAY "SB8"                SIZE 200,50                                          PIXEL OF oFolder:aDialogs[4] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,420 BUTTON "Processar"       SIZE 30,10 ACTION (Processa({||fDetaB8BF(0)}))        PIXEL OF oFolder:aDialogs[4]
+endif
 @ 010,005 LISTBOX oDet01B8BF Var cModelo FIELDS HEADER; 
 	 "Lote" ,;
 	 "Qtde." ,;
@@ -415,7 +406,9 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SBJ
 @ 003,005 SAY "SBJ"                 SIZE 200,50                                                         PIXEL OF oFolder:aDialogs[5] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,420 BUTTON "Processar"        SIZE 30,10 ACTION (Processa({||fDetaBJBK(0),fDetaSBJ(0),fDetaSBK(0)})) PIXEL OF oFolder:aDialogs[5]
+endif
 @ 010,005 LISTBOX oDetSBJ Var cModelo FIELDS HEADER; 
 	 "Lote" ,;
 	 "Qtde." ,;
@@ -441,10 +434,12 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SBJ
 @ 003,005 SAY "SBJ"                SIZE 200,50                                  PIXEL OF oFolder:aDialogs[6] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,210 BUTTON "Incluir"         SIZE 30,10 ACTION (fAjustSBJ("BJ_I"))        PIXEL OF oFolder:aDialogs[6]
 @ 001,265 BUTTON "Alterar"         SIZE 30,10 ACTION (fAjustSBJ("BJ_A"))        PIXEL OF oFolder:aDialogs[6]
 @ 001,320 BUTTON "Excluir"         SIZE 30,10 ACTION (fAjustSBJ("BJ_E"))        PIXEL OF oFolder:aDialogs[6]
 @ 001,375 BUTTON "Processar"       SIZE 30,10 ACTION (Processa({||fDetaSBJ(0)})) PIXEL OF oFolder:aDialogs[6]
+endif
 @ 001,420 BUTTON "Pesquisar"       SIZE 30,10 ACTION (fPesquisa("SBJ",oAnaSBJ)) PIXEL OF oFolder:aDialogs[6]
 @ 010,005 LISTBOX oAnaSBJ Var cModelo FIELDS HEADER; 
 	 "Lote" ,;
@@ -459,10 +454,12 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SBK
 @ 123,005 SAY "SBK"                SIZE 200,50                                  PIXEL OF oFolder:aDialogs[7] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,210 BUTTON "Incluir"         SIZE 30,10 ACTION (fAjustSBK("BK_I"))        PIXEL OF oFolder:aDialogs[7]
 @ 001,265 BUTTON "Alterar"         SIZE 30,10 ACTION (fAjustSBK("BK_A"))        PIXEL OF oFolder:aDialogs[7]
 @ 001,320 BUTTON "Excluir"         SIZE 30,10 ACTION (fAjustSBK("BK_E"))        PIXEL OF oFolder:aDialogs[7]
-@ 001,375 BUTTON "Processar"       SIZE 30,10 ACTION (Processa({||fDetaSBK(0)})) PIXEL OF oFolder:aDialogs[7] 
+@ 001,375 BUTTON "Processar"       SIZE 30,10 ACTION (Processa({||fDetaSBK(0)})) PIXEL OF oFolder:aDialogs[7]
+endif 
 @ 001,420 BUTTON "Pesquisar"       SIZE 30,10 ACTION (fPesquisa("SBK",oAnaSBK)) PIXEL OF oFolder:aDialogs[7]
 @ 010,005 LISTBOX oAnaSBK Var cDet02B8BK FIELDS HEADER; 
      "Endereco" ,;
@@ -476,10 +473,12 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SDAxsSB2xSB8
 @ 003,005 SAY "SDA"                                SIZE 200,50                                    PIXEL OF oFolder:aDialogs[8] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 003,040 SAY "Saldo a Classificar no SB2 : "+Trans(nDASB2,cPict)   SIZE 180,50                   PIXEL OF oFolder:aDialogs[8] FONT oBold
 @ 001,220 BUTTON "Alterar no SB2"                  SIZE 45,10 ACTION (fAjustSB2("CLASS_SB2"))     PIXEL OF oFolder:aDialogs[8] 
 @ 001,320 BUTTON "Alterar no SDA"                  SIZE 45,10 ACTION (fAjustSDA("SDA"))           PIXEL OF oFolder:aDialogs[8] 
-@ 001,420 BUTTON "Processar"                       SIZE 30,10 ACTION (Processa({||fDetaSDA(0),fDetaDASB8(0)})) PIXEL OF oFolder:aDialogs[8] 
+@ 001,420 BUTTON "Processar"                       SIZE 30,10 ACTION (Processa({||fDetaSDA(0),fDetaDASB8(0)})) PIXEL OF oFolder:aDialogs[8]
+endif 
 @ 010,005 LISTBOX oDetDASDA Var cModelo FIELDS HEADER; 
      "Data" ,;
      "Lote" ,;
@@ -499,7 +498,9 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Detalhe do SDAxsSB2xSB8
 @ 123,005 SAY "SB8"            SIZE 200,50                              PIXEL OF oFolder:aDialogs[8] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 121,420 BUTTON "Alterar"     SIZE 30,10 ACTION (fAjustDAB8("DAxB8"))  PIXEL OF oFolder:aDialogs[8]
+endif
 @ 130,005 LISTBOX oDetDASB8 Var cDet02B8BK FIELDS HEADER; 
      "Data" ,;
      "Lote" ,;
@@ -521,7 +522,9 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kardex - Almoxarifado
 @ 003,005 SAY "Saldo Final : "+Trans(nSldKarLocal,cPict) SIZE 200,50                                    PIXEL OF oFolder:aDialogs[9] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,420 BUTTON "Processar"                             SIZE 30,10 ACTION (Processa({||fKardLocal(0)})) PIXEL OF oFolder:aDialogs[9]
+endif
 @ 010,005 LISTBOX oKarLocal Var cModelo FIELDS HEADER; 
      "Origem" ,;
 	 "Data" ,;
@@ -540,9 +543,11 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kardex - Lote
 @ 003,005 SAY "Saldo Final : "+Trans(nSldKarLote,cPict) SIZE 100,50                                                PIXEL OF oFolder:aDialogs[10] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,100 BUTTON "Pesquisa Diferença - Próxima"         SIZE 080,10 ACTION (fPesqDifLote("Prox"))                  PIXEL OF oFolder:aDialogs[10]
 @ 001,200 BUTTON "Pesquisa Diferença - Anterior"        SIZE 080,10 ACTION (fPesqDifLote("Ante"))                  PIXEL OF oFolder:aDialogs[10]
 @ 001,420 BUTTON "Processar"                            SIZE 030,10 ACTION (Processa({||fDetaSB8(0),fKardLote(0)}))  PIXEL OF oFolder:aDialogs[10]
+endif
 @ 010,005 LISTBOX oKarLote Var cModelo FIELDS HEADER; 
      "Origem" ,;
 	 "Data" ,;
@@ -564,9 +569,11 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kardex - Localizacao
 @ 003,005 SAY "Saldo Final : "+Trans(nSldKarEnde,cPict) SIZE 100,50                                              PIXEL OF oFolder:aDialogs[11] FONT oBold
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,100 BUTTON "Pesquisa Diferença - Próxima"         SIZE 080,10 ACTION (fPesqDifEnde("Prox"))                PIXEL OF oFolder:aDialogs[11]
 @ 001,200 BUTTON "Pesquisa Diferença - Anterior"        SIZE 080,10 ACTION (fPesqDifEnde("Ante"))                PIXEL OF oFolder:aDialogs[11]
 @ 001,420 BUTTON "Processar"                            SIZE 030,10 ACTION (Processa({||fDetaSBF(0),fKardEnde(0)})) PIXEL OF oFolder:aDialogs[11]
+endif
 @ 010,005 LISTBOX oKarEnde Var cModelo FIELDS HEADER; 
      "Origem" ,;
 	 "Data" ,;
@@ -585,12 +592,44 @@ cBFxDB := "BF=>DB"
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FOLDER 12
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Documento
+/*
+@ 001,040 BUTTON "Somente Movimento Com Diferença"     SIZE 100,10 ACTION (Processa({||fSoDocto()})) PIXEL OF oFolder:aDialogs[12]
+@ 001,375 BUTTON "Processar"        SIZE 30,10 ACTION (Processa({||fAnaliseDoc(),fDetaSDA()}))       PIXEL OF oFolder:aDialogs[12]
+@ 001,420 BUTTON "Pesquisar"        SIZE 30,10 ACTION (fPesquisa("DOCTO",oDocto))                    PIXEL OF oFolder:aDialogs[12]
+@ 010,005 LISTBOX oDocto Var cModelo FIELDS HEADER; 
+     "Documento" ,;
+     "Serie" ,;
+     "Cli/For" ,;
+     "Loja" ,;
+	 "SD1" ,;
+	 "SD2" ,;
+     "SD3_E" ,;
+	 "SD3_S" ,;
+	 "SD5_E" ,;
+	 "SD5_S" ,;	
+	 "SDB_E" ,;
+     "SDB_S" ,;    
+	 "Origem" ,;
+	 "Status" ,;  
+	 "Serviço" ,;
+	 "Status Serviço" ,;
+     "Serviço Pendente"  SIZE 467,215 ON DBLCLICK () PIXEL OF oFolder:aDialogs[12]
+	 oDocto:SetArray(aDocto)
+     oDocto:bLine:={ ||{aDocto[oDocto:nAT,1],aDocto[oDocto:nAT,2],aDocto[oDocto:nAT,3],aDocto[oDocto:nAT,4],aDocto[oDocto:nAT,5],aDocto[oDocto:nAT,6],aDocto[oDocto:nAT,7],aDocto[oDocto:nAT,8],aDocto[oDocto:nAT,9],aDocto[oDocto:nAT,10],aDocto[oDocto:nAT,11],aDocto[oDocto:nAT,12],aDocto[oDocto:nAT,13],aDocto[oDocto:nAT,14],aDocto[oDocto:nAT,15],aDocto[oDocto:nAT,16],aDocto[oDocto:nAT,17]}}
+     oDocto:Refresh()
+*/    
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FOLDER 12
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // NumSeq
 @ 001,040 BUTTON "Somente Movimento Com Diferença"     SIZE 100,10 ACTION (Processa({||fSoNumSeq()})) PIXEL OF oFolder:aDialogs[12]
+if FwIsAdmin() .OR. __CUSERID $ cUser
 @ 001,180 BUTTON "Incluir SD5"     SIZE 30,10 ACTION (fAjustSD5("D5_I","13"))                         PIXEL OF oFolder:aDialogs[12]
 @ 001,240 BUTTON "Incluir SDB"     SIZE 30,10 ACTION (fAjustSDB("DB_I","13"))                         PIXEL OF oFolder:aDialogs[12]
 @ 001,300 BUTTON "Alterar"         SIZE 30,10 ACTION (fAjustD5DB("D5DB_A"))                           PIXEL OF oFolder:aDialogs[12]
 @ 001,375 BUTTON "Processar"       SIZE 30,10 ACTION (Processa({||fNumSeq(0),fDetaSDA(0)}))             PIXEL OF oFolder:aDialogs[12]
+endif
 @ 001,420 BUTTON "Pesquisar"       SIZE 30,10 ACTION (fPesquisa("NUMSEQ",oNumSeq))                    PIXEL OF oFolder:aDialogs[12]
 @ 010,005 LISTBOX oNumSeq Var cModelo FIELDS HEADER; 
      "Num.Seq." ,;
@@ -624,8 +663,8 @@ cBFxDB := "BF=>DB"
 @ 114,321 BUTTON "SB8 diferente do Kardex por Lote"     SIZE 115,10 PIXEL ACTION (oFolder:nOption:= 10,oAnaSBJ:Refresh()) When !Empty(cMensSB8)    PIXEL OF oFolder:aDialogs[1]
 @ 134,321 BUTTON "SBF diferente do Kardex por Endereço" SIZE 115,10 PIXEL ACTION (oFolder:nOption:= 11,oAnaSBJ:Refresh()) When !Empty(cMensSBF)    PIXEL OF oFolder:aDialogs[1]
     
-//@ 010,420 BUTTON "&Processar"   SIZE 36,16 PIXEL ACTION Processa({||fProcessa()})
-@ 040,420 BUTTON "&Sair"        SIZE 36,16 PIXEL ACTION oDlgMain:End()
+@ 026,420 BUTTON "&Alt. Fechamento"		SIZE 50,16 PIXEL ACTION TelData()
+@ 044,420 BUTTON "&Sair"        		SIZE 50,16 PIXEL ACTION oDlgMain:End()
 
 ACTIVATE MSDIALOG oDlgMain  CENTERED
 
@@ -633,40 +672,18 @@ RestArea(aArea)
 
 Return(.T.)
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} TrocaTip
-Função TrocaTip
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Troca o tipo do folder
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function TrocaTip()
-Local nI    := 0
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 aFolder[oBox:nAt,1] := IIF(aFolder[oBox:nAt,1],.F.,.T. )
 oBox:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} MarcaTodos
-Função MarcaTodos
-@param lMark Recebo o lMark
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Marca todos os itens do folder
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function MarcaTodos(lMark)
-Local nI    := 0
+local nI := 1
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 For nI:= 1 To Len(aFolder)
   aFolder[nI,1] := IIF(lMark,.T.,.F.)
 Next
@@ -674,19 +691,9 @@ oBox:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fProcessa
-Função fProcessa
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar a movimentacao dos saldos.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fProcessa()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 nSB9        := 0
 nSBJ        := 0
 nSBK        := 0
@@ -722,7 +729,6 @@ DBSeek(xFilial("SB1")+cProduto)
 ProcRegua(15)
 
 IncProc("Processando Saldo Inicial")
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 DBSelectArea("SB9")
 DBSetOrder(1) 
@@ -744,7 +750,6 @@ nSBK := QrySBK->BK_QINI
 DBCloseArea()
 
 IncProc("Processando Saldo Atual")
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Saldo Atual
 DBSelectArea("SB2")
@@ -774,7 +779,6 @@ nSDA   := QrySDA->DA_SALDO
 DBCloseArea()
 
 IncProc("Processando Movimento")
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Saldo Movimentacao
 DBSelectArea('SB1')
@@ -833,10 +837,7 @@ Do Case
       Endif
       IF nSBK = 0 .AND. nKAR = nSDB .AND. nKAR = nSBF .AND. nKAR = nSB2 .AND. nSBF = nSDB .AND. nSB2 = nSBF 
          cMensagem := "OK"  
-      Endif  
-      IF !Empty(cMensNumSeq) .AND. nKAR = nSDB .AND. nKAR = nSBF .AND. nKAR = nSB2 .AND. nSBF = nSDB .AND. nSB2 = nSBF 
-         cMensagem := "OK"  
-      Endif 
+      Endif
    Case SB1->B1_RASTRO == "L"
       IF nKAR <> nSB8 .OR. nKAR <> nSD5 .OR. nKAR <> nSB2 .OR. nSB8 <> nSD5 .OR. nSB2 <> nSB8
          cMensagem := "DIVERGENCIA"
@@ -845,9 +846,6 @@ Do Case
          cMensagem := "DIVERGENCIA"
       Endif
       IF nSBJ = 0 .AND. nKAR = nSB8 .AND. nKAR = nSD5 .AND. nKAR = nSB2 .AND. nSB8 = nSD5 .AND. nSB2 = nSB8 
-         cMensagem := "OK"  
-      Endif
-      IF !Empty(cMensNumSeq) .AND. nKAR = nSB8 .AND. nKAR = nSD5 .AND. nKAR = nSB2 .AND. nSB8 = nSD5 .AND. nSB2 = nSB8 
          cMensagem := "OK"  
       Endif
    OtherWise   
@@ -888,19 +886,9 @@ DBSelectArea('SB1')
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} GetDescProd
-Função GetDescProd
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para buscar os dados do produto.             
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function GetDescProd()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local aArea  := GetArea()
 
 DBSelectArea("SB1")
@@ -924,67 +912,72 @@ DBSetOrder(1)
 DBSeek(xFilial("SB5")+cProduto)
 cZona := SB5->B5_CODZON   
 
-IF MV_PAR02 == 2 //Verifica se deve gravar o log de alteração.
-   IF !Empty(cProduto)
-      If File("ANALISE.LOG")
-         hdl := FOpen("ANALISE.LOG", 1)
-         FSeek(hdl,0,2)
-      Else
-         hdl := FCreate("ANALISE.LOG", 0)
-      Endif
-      FWrite(hdl,"Produto: "+cProduto+"    Usuario:  "+cUserName+"    Data: "+Dtoc(Date())+"    Hora: "+Time()+CHR(13)+CHR(10))
-      FClose(hdl)
+IF !Empty(cProduto)
+   If File("ANALISE.LOG")
+      hdl := FOpen("ANALISE.LOG", 1)
+      FSeek(hdl,0,2)
+   Else
+      hdl := FCreate("ANALISE.LOG", 0)
    Endif
+   FWrite(hdl,"Produto: "+cProduto+"    Usuario:  "+cUserName+"    Data: "+Dtoc(Date())+"    Hora: "+Time()+CHR(13)+CHR(10))
+   FClose(hdl)
 Endif
-
 RestArea(aArea)
 
 Return(.T.)
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} GetDatas
-Função GetDatas
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para calcular a data inicial e final do processamento.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function GetDatas()
-Local aArea  := GetArea()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	Local aArea  := GetArea()
 
-cQuery := "SELECT MAX(B9_DATA) AS B9_DATA FROM "+RETSQLNAME('SB9')+" WHERE B9_FILIAL='"+xFilial("SB9")+"' AND B9_LOCAL='"+cLocal+"' AND D_E_L_E_T_ <> '*' AND B9_COD = '"+cProduto+"' AND B9_DATA < '"+DTOS(dDtProces)+"'"
-cQuery := ChangeQuery(cQuery)
-DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QrySB9",.F.,.T.)
-TCSETFIELD( "QrySB9","B9_DATA","D")
-dUltFech := QrySB9->B9_DATA
-DBCloseArea()
+	cQuery := "SELECT MAX(B9_DATA) AS B9_DATA FROM "+RETSQLNAME('SB9')+" WHERE B9_FILIAL='"+xFilial("SB9")+"' AND B9_LOCAL='"+cLocal+"' AND D_E_L_E_T_ <> '*' AND B9_COD = '"+cProduto+"' AND B9_DATA < '"+DTOS(dDtProces)+"'"
+	cQuery := ChangeQuery(cQuery)
+	DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QrySB9",.F.,.T.)
+	TCSETFIELD( "QrySB9","B9_DATA","D")
+	dUltFech := QrySB9->B9_DATA
+	DBCloseArea()
+	dDataI := (dUltFech + 1)
+	dDataF := dDtProces
+	
+	RestArea(aArea)
 
-dDataI := (dUltFech + 1)
-dDataF := dDtProces
+Return .T.
 
-RestArea(aArea)
+//Função para chamar tela de Data de Fechamento
+Static Function TelData()
+	Private dGetFecha  := CtoD(" ")
+	SetPrvt("oDlgFecha","oGetFecha","oBtnOK")
+	
+	oDlgFecha  := MSDialog():New( 092,232,180,410,"Data Fechamento",,,.F.,,,,,,.T.,,,.T. )
+	oGetFecha  := TGet():New( 005,004,{|u| If(PCount()>0,dGetFecha:=u,dGetFecha)},oDlgFecha,076,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.T.,.F.,,.F.,.F.,"","dGetFecha",,,,,, .T. ,"Data Fechamento: ", 1 )
+	oBtnOK     := TButton():New( 030,004,"&OK",oDlgFecha,{||VldData(dGetFecha)},076,012,,,,.T.,,"",,,,.F. )
 
-Return(.T.)
+	oDlgFecha:lEscClose	:= .F. //Nao permite sair ao se pressionar a tecla ESC.
+	oDlgFecha:lCentered	:= .T.
+	oDlgFecha:Activate(,,,.T.)
+
+Return .T.
+
+//Tela para validar a data
+Static Function VldData(dGetFecha)
+	    
+	If Empty(StrTran(cValToChar(dGetFecha),"/",""))
+	     MsgStop("Data inválida, verifique!!!","Atenção") 
+	Else
+		dUltFech := Lastday(dGetFecha)
+		dDataI := (dUltFech + 1)
+		dDataF := dDtProces
+		oDlgFecha:End()
+	EndIF
+	
+Return .T.
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaSB8
-Função fDetaSB8
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SB8.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaSB8(nPosAT)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SB8")
 
 aSize(aDetSB8, 0)
@@ -1033,21 +1026,9 @@ oDetSD5:Refresh()
    
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaSD5
-Função fDetaSD5
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SD5.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaSD5(nPosAT)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SD5")
 
 aSize(aDetSB8, 0)
@@ -1106,23 +1087,11 @@ oDetSB8:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fMontaSB8
-Função fMontaSB8
-@param lFiltro Filtra os dados por lote
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SB8.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fMontaSB8(lFiltro,nPosAT)
-Local J    := 0
-Local I    := 0
-
+Local J:= 1
+Local I:= 1
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IF Len(aDetSD5) = 0 .OR. Empty(aDetSD5[1,1])
    Return
 Endif
@@ -1209,21 +1178,10 @@ oDetSD5:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fMontaSD5
-Função fMontaSD5
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SD5.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fMontaSD5(nPosAT)
-Local I    := 0
-
+Local I:= 1
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IF Len(aDetSB8) = 0 .OR. Empty(aDetSB8[1,1])
    Return
 Endif
@@ -1351,21 +1309,9 @@ oDetSD5:Refresh()
    
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaSBF
-Função fDetaSBF
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SBF.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaSBF(nPosAT)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SBF")
 
 aSize(aDetSBF, 0)
@@ -1419,22 +1365,10 @@ oDetSBF:Refresh()
 oDetSDB:Refresh()   
 
 Return
-                                                            
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaSDB
-Função fDetaSDB
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SDB.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaSDB(nPosAT)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SDB")
 
 aSize(aDetSDB, 0)
@@ -1475,24 +1409,9 @@ oDetSBF:Refresh()
    
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fMontaSBF
-Função fMontaSBF
-@param lFiltro Filtra os dados por lote
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SBF.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fMontaSBF(lFiltro,nPosAT)
-Local J    := 0
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IF Len(aDetSDB) = 0 .OR. Empty(aDetSDB[1,1])
    Return
 Endif
@@ -1591,21 +1510,9 @@ oDetSDB:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fMontaSDB
-Função fMontaSDB
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SDB.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fMontaSDB(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IF Len(aDetSBF) = 0 .OR. Empty(aDetSBF[1,1])
    Return
 Endif
@@ -1697,23 +1604,10 @@ oDetSBF:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaB8BF
-Função fDetaB8BF
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SB8 e SBF.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaB8BF(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SB8xSBF")
-
 cMensB8BF   := ""
 
 aSize(aDet01B8BF, 0)
@@ -1788,21 +1682,9 @@ oDet02B8BF:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaBJBK
-Função fDetaBJBK
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SBJ e SBK.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaBJBK(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SBJxSBK")
 
 cMensBJBK   := ""
@@ -1878,20 +1760,9 @@ oDetSBK:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaSBJ
-Função fDetaSBJ
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SBJ.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaSBJ(nPosAT)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SBJ")
 
 aSize(aAnaSBJ, 0)
@@ -1930,20 +1801,9 @@ oAnaSBJ:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaSBK
-Função fDetaSBK
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SBK.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaSBK(nPosAT)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SBK")
 
 aSize(aAnaSBK, 0)
@@ -1979,22 +1839,9 @@ oAnaSBK:Refresh()
    
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaSDA
-Função fDetaSDA
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SDA.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaSDA(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SDA")
 
 cMensDocto  := ""
@@ -2235,21 +2082,9 @@ oDetDASDA:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDetaDASB8
-Função fDetaDASB8
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento da tabela SDA e SB8.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDetaDASB8(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe - SDAxSB8")
 
 cMensDAB8   := ""
@@ -2316,21 +2151,9 @@ oDetDASDA:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fKardLocal
-Função fKardLocal
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento do kardex por almoxarifado.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fKardLocal(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Kardex - Almoxarifado")
 
 aSize(aKarLocal, 0)
@@ -2414,21 +2237,9 @@ oKarLocal:Refresh()
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fKardLote
-Função fKardLote
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento do kardex por lote.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fKardLote(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Kardex - Lote")
 
 aSize(aKarLote, 0)
@@ -2521,22 +2332,9 @@ oKarLote:Refresh()
    
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fKardEnde
-Função fKardEnde
-@param nPosAT recebe a posicao da varialvel AT no acols
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar o movimento do kardex por endereco.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fKardEnde(nPosAT)
-Local I    := 0
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Kardex - Endereco")
 
 aSize(aKarEnde, 0)
@@ -2630,23 +2428,183 @@ oKarEnde:Refresh()
    
 Return
 
+/*
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Static Function fAnaliseDoc()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+IncProc("Processando Detalhe Documento")
+aSize(aDocto,0)
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fSoNumseq
-Função fSoNumseq
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para filtrar somente movimentos com divergencias.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
-Static Function fSoNumseq()
+// SD1
+cQuery := " SELECT D1_DOC AS DOC,D1_SERIE AS SERIE, D1_FORNECE AS CLIEFOR, D1_LOJA AS LOJA,D1_SERVIC AS SERVIC,D1_STSERV AS STSERV,SUM(D1_QUANT) AS QUANT FROM "+RETSQLNAME("SD1")+", "+RETSQLNAME("SF4")
+cQuery += " WHERE D1_FILIAL='"+xFilial("SD1")+"' AND D1_LOCAL='"+cLocal+"' AND "+RETSQLNAME("SD1")+".D_E_L_E_T_ <> '*' AND D1_COD = '"+cProduto+"'"
+cQuery += " AND D1_ORIGLAN <> 'LF' AND D1_DTDIGIT >= '"+DTOS(dDataI)+"' AND D1_DTDIGIT <= '"+DTOS(dDataF)+"'"
+cQuery += " AND "+IF(Empty(xFilial("SF4")),"D1_TES=F4_CODIGO","D1_FILIAL=F4_FILIAL AND D1_TES=F4_CODIGO")+" AND F4_ESTOQUE = 'S' AND "+RETSQLNAME("SF4")+".D_E_L_E_T_ <> '*'"
+cQuery += " GROUP BY D1_DOC,D1_SERIE,D1_FORNECE,D1_LOJA,D1_SERVIC,D1_STSERV"
+cQuery := ChangeQuery(cQuery)
+DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QryTRB",.F.,.T.)
+While !Eof()
+  Do Case
+     Case !Empty(QryTRB->SERVIC) .AND. QryTRB->STSERV = "1"; cStServ := "A Executar"
+     Case !Empty(QryTRB->SERVIC) .AND. QryTRB->STSERV = "2"; cStServ := "Interrompido"
+     Case !Empty(QryTRB->SERVIC) .AND. QryTRB->STSERV = "3"; cStServ := "Ja Executado"   
+     OtherWise;                                              cStServ := Space(1)     
+  EndCase   
+  AAdd(aDocto,{QryTRB->DOC,QryTRB->SERIE,QryTRB->CLIEFOR,QryTRB->LOJA,QryTRB->QUANT,0 ,0   ,0   ,0   ,0   ,0   ,0   ,"SD1","OK",QryTRB->SERVIC,cStServ,Space(1)})
+ //                                                                   D1           ,D2,D3_E,D3_S,D5_E,D5_S,DB_E,DB_S
+  DBSkip()
+Enddo
+DBCloseArea()
 
+// SD2
+cQuery := " SELECT D2_DOC AS DOC,D2_SERIE AS SERIE, D2_CLIENTE AS CLIEFOR, D2_LOJA AS LOJA,SUM(D2_QUANT) AS QUANT FROM "+RETSQLNAME("SD2")+", "+RETSQLNAME("SF4")
+cQuery += " WHERE D2_FILIAL='"+xFilial("SD2")+"' AND D2_LOCAL='"+cLocal+"' AND "+RETSQLNAME("SD2")+".D_E_L_E_T_ <> '*' AND D2_COD = '"+cProduto+"'"
+cQuery += " AND D2_ORIGLAN <> 'LF' AND D2_EMISSAO >= '"+DTOS(dDataI)+"' AND D2_EMISSAO <= '"+DTOS(dDataF)+"'"
+cQuery += " AND "+IF(Empty(xFilial("SF4")),"D2_TES=F4_CODIGO","D2_FILIAL=F4_FILIAL AND D2_TES=F4_CODIGO")+" AND F4_ESTOQUE = 'S' AND "+RETSQLNAME("SF4")+".D_E_L_E_T_ <> '*'"
+cQuery += " GROUP BY D2_DOC,D2_SERIE,D2_CLIENTE,D2_LOJA"
+cQuery := ChangeQuery(cQuery)
+DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QryTRB",.F.,.T.)
+While !Eof()
+  AAdd(aDocto,{QryTRB->DOC,QryTRB->SERIE,QryTRB->CLIEFOR,QryTRB->LOJA,0 ,QryTRB->QUANT,0   ,0   ,0   ,0   ,0   ,0   ,"SD2","OK",Space(01),Space(01),Space(01)})
+  //                                                                  D1,D2           ,D3_E,D3_S,D5_E,D5_S,DB_E,DB_S
+
+  DBSkip()
+Enddo
+DBCloseArea()
+
+// SD3
+cQuery := " SELECT D3_DOC,D3_SERVIC,D3_STSERV,D3_TM,D3_QUANT FROM "+RETSQLNAME("SD3")
+cQuery += " WHERE D3_FILIAL='"+xFilial("SD3")+"' AND D3_LOCAL='"+cLocal+"' AND "+RETSQLNAME("SD3")+".D_E_L_E_T_ <> '*' AND D3_COD = '"+cProduto+"'"
+cQuery += " AND D3_ESTORNO = ' ' AND D3_EMISSAO >= '"+DTOS(dDataI)+"' AND D3_EMISSAO <= '"+DTOS(dDataF)+"'"
+cQuery += " ORDER BY D3_DOC"
+cQuery := ChangeQuery(cQuery)
+DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QryTRB",.F.,.T.)
+While !Eof()
+  Do Case
+     Case !Empty(D3_SERVIC) .AND. D3_STSERV = "1"; cStServ := "A Executar"
+     Case !Empty(D3_SERVIC) .AND. D3_STSERV = "2"; cStServ := "Interrompido"
+     Case !Empty(D3_SERVIC) .AND. D3_STSERV = "3"; cStServ := "Ja Executado"   
+     OtherWise;                                    cStServ := Space(1)     
+  EndCase   
+  nPos := Ascan(aDocto,{|x|x[1]== D3_DOC })
+  IF nPos == 0
+     IF D3_TM <= "500"
+        AAdd(aDocto,{D3_DOC,Space(03),Space(06),Space(02),0 ,0 ,D3_QUANT,0   ,0   ,0   ,0   ,0   ,"SD3","OK",D3_SERVIC,cStServ,Space(01)})
+//                                                        D1,D2,D3_E    ,D3_S,D5_E,D5_S,DB_E,DB_S
+     Else
+        AAdd(aDocto,{D3_DOC,Space(03),Space(06),Space(02),0 ,0 ,0   ,D3_QUANT,0   ,0   ,0   ,0   ,"SD3","OK",D3_SERVIC,cStServ,Space(01)})
+//                                                        D1,D2,D3_E,D3_S    ,D5_E,D5_S,DB_E,DB_S
+     Endif
+  Else
+     IF D3_TM <= "500"
+        aDocto[nPos,7] += D3_QUANT
+     Else
+        aDocto[nPos,8] += D3_QUANT
+     Endif    
+  Endif   
+  DBSkip()
+Enddo
+DBCloseArea()
+
+// SD5
+cQuery := " SELECT D5_DOC,D5_SERIE,D5_CLIFOR,D5_LOJA,D5_ORIGLAN,D5_QUANT FROM "+RETSQLNAME("SD5")
+cQuery += " WHERE D5_FILIAL='"+xFilial("SD5")+"' AND D5_LOCAL='"+cLocal+"' AND "+RETSQLNAME("SD5")+".D_E_L_E_T_ <> '*' AND D5_PRODUTO = '"+cProduto+"'"
+cQuery += " AND D5_ESTORNO = ' ' AND D5_DATA >= '"+DTOS(dDataI)+"' AND D5_DATA <= '"+DTOS(dDataF)+"'"
+cQuery += " ORDER BY D5_DOC,D5_SERIE,D5_CLIFOR,D5_LOJA"
+cQuery := ChangeQuery(cQuery)
+DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QryTRB",.F.,.T.)
+While !Eof()
+//  nPos := Ascan(aDocto,{|x|x[1]+x[2]+x[3]+x[4] == D5_DOC+D5_SERIE+D5_CLIFOR+D5_LOJA })
+  nPos := Ascan(aDocto,{|x|x[1] == D5_DOC })
+  IF nPos == 0
+     IF D5_ORIGLAN <= "500" .OR. Substr(D5_ORIGLAN,1,2) $ 'DE/PR/MA'
+        AAdd(aDocto,{D5_DOC,D5_SERIE,D5_CLIFOR,D5_LOJA,0 ,0 ,0  ,0   ,D5_QUANT,0   ,0   ,0   ,"SD5","OK",Space(01),Space(01),Space(01)})
+//                                                     D1,D2,D3_E,D3_S,D5_E    ,D5_S,DB_E,DB_S
+     Else
+        AAdd(aDocto,{D5_DOC,D5_SERIE,D5_CLIFOR,D5_LOJA,0 ,0 ,0  ,0   ,0   ,D5_QUANT,0   ,0   ,"SD5","OK",Space(01),Space(01),Space(01)})
+//                                                     D1,D2,D3_E,D3_S,D5_E,D5_S    ,DB_E,DB_S
+     Endif
+  Else                                    
+     IF D5_ORIGLAN <= "500" .OR. Substr(D5_ORIGLAN,1,2) $ 'DE/PR/MA'
+        aDocto[nPos,09] += D5_QUANT
+     Else
+        aDocto[nPos,10] += D5_QUANT
+     Endif    
+  Endif   
+  DBSkip()
+Enddo
+DBCloseArea()
+
+// SDB
+cQuery := " SELECT DB_DOC,DB_SERIE,DB_CLIFOR,DB_LOJA,DB_TM,DB_QUANT FROM "+RETSQLNAME("SDB")
+cQuery += " WHERE DB_FILIAL='"+xFilial("SDB")+"' AND DB_LOCAL='"+cLocal+"' AND "+RETSQLNAME("SDB")+".D_E_L_E_T_ <> '*' AND DB_PRODUTO = '"+cProduto+"'"
+cQuery += " AND DB_ESTORNO = ' ' AND DB_ATUEST='S' AND DB_DATA >= '"+DTOS(dDataI)+"' AND DB_DATA <= '"+DTOS(dDataF)+"'"
+cQuery += " ORDER BY DB_DOC,DB_SERIE,DB_CLIFOR,DB_LOJA"
+cQuery := ChangeQuery(cQuery)
+DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QryTRB",.F.,.T.)
+While !Eof()
+//  nPos := Ascan(aDocto,{|x|x[1]+x[2]+x[3]+x[4] == DB_DOC+DB_SERIE+DB_CLIFOR+DB_LOJA })
+  nPos := Ascan(aDocto,{|x|x[1] == DB_DOC })
+  IF nPos == 0
+     IF DB_TM <= "500" .OR. Substr(DB_TM,1,2) $ 'DE/PR/MA'
+        AAdd(aDocto,{DB_DOC,DB_SERIE,DB_CLIFOR,DB_LOJA,0 ,0 ,0   ,0   ,0   ,0   ,DB_QUANT,0   ,"SDB","OK",Space(01),Space(01),Space(01)})
+//                                                     D1,D2,D3_E,D3_S,D5_E,D5_S,DB_E    ,DB_S
+     Else
+        AAdd(aDocto,{DB_DOC,DB_SERIE,DB_CLIFOR,DB_LOJA,0 ,0 ,0   ,0   ,0   ,0   ,0   ,DB_QUANT,"SDB","OK",Space(01),Space(01),Space(01)})
+//                                                     D1,D2,D3_E,D3_S,D5_E,D5_S,DB_E,DB_S
+     Endif
+  Else                                    
+     IF DB_TM <= "500" .OR. Substr(DB_TM,1,2) $ 'DE/PR/MA'
+        aDocto[nPos,11] += DB_QUANT
+     Else
+        aDocto[nPos,12] += DB_QUANT
+     Endif    
+  Endif   
+  DBSkip()
+Enddo
+DBCloseArea()
+
+// SDB - Servicos Pendentes
+cQuery := " SELECT DB_DOC,DB_SERIE,DB_CLIFOR,DB_LOJA,DB_TM,DB_QUANT FROM "+RETSQLNAME("SDB")
+cQuery += " WHERE DB_FILIAL='"+xFilial("SDB")+"' AND DB_LOCAL='"+cLocal+"' AND "+RETSQLNAME("SDB")+".D_E_L_E_T_ <> '*' AND DB_PRODUTO = '"+cProduto+"'"
+cQuery += " AND DB_ESTORNO = ' ' AND DB_ATUEST='N' AND DB_STATUS IN ('2','3','4') AND DB_DATA >= '"+DTOS(dDataI)+"' AND DB_DATA <= '"+DTOS(dDataF)+"'"
+cQuery += " ORDER BY DB_DOC,DB_SERIE,DB_CLIFOR,DB_LOJA"
+cQuery := ChangeQuery(cQuery)
+DBUseArea(.T.,"TOPCONN",TCGENQRY(,,cQuery),"QryTRB",.F.,.T.)
+While !Eof()
+  nPos := Ascan(aDocto,{|x|x[1]+x[2]+x[3]+x[4] == DB_DOC+DB_SERIE+DB_CLIFOR+DB_LOJA })
+  IF nPos <> 0
+     aDocto[nPos,17] := "Sim"
+  Endif   
+  DBSkip()
+Enddo
+DBCloseArea()
+
+Return
+*/
+
+/*
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Static Function fSoDocto()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local aArray := {}
-Local I    := 0
+For I:= 1 To Len(aDocto)
+   IF aDocto[I,14] = "Analisar"
+      AAdd(aArray,aDocto[I])
+  Endif 
+Next
+aSize(aDocto,0)
+For I:= 1 To Len(aArray)
+   AAdd(aDocto,aArray[I])
+Next
+oDocto:Refresh()
+Return
+*/
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Static Function fSoNumseq()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Local aArray := {}
 For I:= 1 To Len(aNumseq)
    IF aNumseq[I,11] = "Analisar"
       AAdd(aArray,aNumseq[I])
@@ -2660,20 +2618,9 @@ oNumseq:Refresh()
 Return
                   
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fNumSeq
-Função fNumSeq
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para processar a movimentacao atraves do NUMSEQ.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fNumSeq()
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IncProc("Processando Detalhe NumSeq")
 
 aSize(aNumSeq, 0)
@@ -2833,29 +2780,12 @@ Endif
 
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSB2
-Função fAjustSB2
-@param cOpcao  utilizado para identificar o tipo de alteracao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o saldo da tabela SB2.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSB2(cOpcao)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSB2
 Local aArea    := GetArea()
 Local nQuant   := IF(cOpcao="SALDO_SB2",nSB2,nDASB2)
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 DBSelectArea("SB1")
 
@@ -2875,27 +2805,12 @@ RestArea(aArea)
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSB9
-Função fAjustSB9
-@param cOpcao  utilizado para identificar o tipo de alteracao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o saldo da tabela SB9.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSB9(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSB9
 Local aArea    := GetArea()
 Local nQuant   := nSB9
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 DBSelectArea("SB1")
 
@@ -2914,20 +2829,9 @@ RestArea(aArea)
 
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSB8
-Função fAjustSB8
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o saldo da tabela SB8.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSB8(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSB8
 Local aArea    := GetArea()
 Local dData    := IF(Len(aDetSB8)>0,aDetSB8[oDetSB8:nAT][01],dDataBase)
@@ -2936,11 +2840,6 @@ Local cNumLote := IF(Len(aDetSB8)>0,aDetSB8[oDetSB8:nAT][03],SPACE(06))
 Local nQuant   := IF(Len(aDetSB8)>0,aDetSB8[oDetSB8:nAT][05],0)
 Local cDoc     :=  "AJ"+Substr(DTOC(dDataBase),4,2)+Substr(DTOC(dDataBase),7,2)
 Local lVisLote := lVisDoc := lVisData := lVisNumLote := lVisQuant := .T.
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 IF cOpcao = "B8_A" //Alterar
    lVisLote  := lVisDoc := lVisData := lVisNumLote := .F.
@@ -2973,21 +2872,9 @@ RestArea(aArea)
 
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSD5
-Função fAjustSD5
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@param cFolder utilizado para identificar o folder
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o movimento na tabela SD5.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSD5(cOpcao,cFolder)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSD5
 Local aArea    := GetArea()
 Local lVisLote := lVisDoc := lVisSerie := lVisCliFor := lVisLoja := lVisData := lVisQuant := lVisNumSeq := lVisNumLote := .T.
@@ -3001,11 +2888,6 @@ Local cNumSeq
 Local cNumLote
 Local nQuant  
 Local dDtValid       
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 IF cFolder = "02"
    dData    := IF(Len(aDetSD5)>0,aDetSD5[oDetSD5:nAT][01],dDataBase)
@@ -3150,19 +3032,9 @@ RestArea(aArea)
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSBF
-Função fAjustSBF
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o saldo da tabela SBF.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSBF(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSBF
 Local aArea     := GetArea()
 Local cEndereco := IF(Len(aDetSBF)>0,aDetSBF[oDetSBF:nAT][01],SPACE(15))
@@ -3170,11 +3042,6 @@ Local cLoteCtl  := IF(Len(aDetSBF)>0,aDetSBF[oDetSBF:nAT][02],SPACE(10))
 Local nQuant    := IF(Len(aDetSBF)>0,aDetSBF[oDetSBF:nAT][03],0)
 Local cDoc      :=  "AJ"+Substr(DTOC(dDataBase),4,2)+Substr(DTOC(dDataBase),7,2)
 Local lVisLote  := lVisDoc := lVisEndereco := lVisQuant := .T.
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 IF cOpcao = "BF_A" //Alterar
    lVisLote  := lVisDoc := lVisEndereco  := .F.
@@ -3206,20 +3073,9 @@ RestArea(aArea)
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSDB
-Função fAjustSDB
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@param cFolder utilizado para identificar o folder
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o movimento na tabela SDB.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSDB(cOpcao,cFolder)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSDB
 Local aArea     := GetArea()
 Local lVisLote := lVisDoc := lVisSerie := lVisCliFor := lVisLoja := lVisLocaliz :=lVisData := lVisQuant := lVisNumSeq := .T.
@@ -3233,11 +3089,6 @@ Local cNumSeq  := Space(06)
 Local cLocaliz := Space(15)
 Local nQuant   := 0
 Local cNumLote 
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 IF cFolder = "03" .AND. Len(aDetSDB) > 0 .AND. aDetSDB[oDetSDB:nAT][01] = "SBK"
    MsgStop("A Origem SBK não permite essa opção !")
@@ -3383,31 +3234,15 @@ RestArea(aArea)
 
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustDAB8
-Função fAjustDAB8
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o movimento na tabela SDA e SB8.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustDAB8(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSDA
 Local aArea    := GetArea()
 Local dData    := IF(Len(aDetDASB8)>0,aDetDASB8[oDetDASB8:nAT][01],dDataBase)
 Local cLoteCtl := IF(Len(aDetDASB8)>0,aDetDASB8[oDetDASB8:nAT][02],SPACE(10))
 Local nQuant   := IF(Len(aDetDASB8)>0,aDetDASB8[oDetDASB8:nAT][04],0)
 Local cDoc     := IF(Len(aDetDASB8)>0,aDetDASB8[oDetDASB8:nAT][07],SPACE(06))
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 DBSelectArea("SB1")
 
@@ -3433,30 +3268,15 @@ RestArea(aArea)
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSDA
-Função fAjustSDA
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o movimento na tabela SDA.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSDA(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSDA
 Local aArea    := GetArea()
 Local dData    := IF(Len(aDetDASDA)>0,aDetDASDA[oDetDASDA:nAT][01],dDataBase)
 Local cLoteCtl := IF(Len(aDetDASDA)>0,aDetDASDA[oDetDASDA:nAT][02],SPACE(10))
 Local nQuant   := IF(Len(aDetDASDA)>0,aDetDASDA[oDetDASDA:nAT][03],0)
 Local cDoc     := IF(Len(aDetDASDA)>0,aDetDASDA[oDetDASDA:nAT][08],SPACE(06))
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 DBSelectArea("SB1")
 
@@ -3482,29 +3302,14 @@ RestArea(aArea)
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSBJ
-Função fAjustSBJ
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o saldo da tabela SBJ.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSBJ(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSBJ
 Local aArea     := GetArea()
 Local cLoteCtl  := IF(Len(aAnaSBJ)>0,aAnaSBJ[oAnaSBJ:nAT][01],Space(10))
 Local cNumLote  := IF(Len(aAnaSBJ)>0,aAnaSBJ[oAnaSBJ:nAT][02],Space(06))
 Local nQuant    := IF(Len(aAnaSBJ)>0,aAnaSBJ[oAnaSBJ:nAT][04],0        )
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 DBSelectArea("SB1")
 
@@ -3527,30 +3332,14 @@ RestArea(aArea)
 
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustSBK
-Função fAjustSBK
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para ajustar o saldo da tabela SBK.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustSBK(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgSBK
 Local aArea     := GetArea()
 Local cEndereco := IF(Len(aAnaSBK)>0,aAnaSBK[oAnaSBK:nAT][01],Space(15))
 Local cLoteCtl  := IF(Len(aAnaSBK)>0,aAnaSBK[oAnaSBK:nAT][02],Space(10))
 Local nQuant    := IF(Len(aAnaSBK)>0,aAnaSBK[oAnaSBK:nAT][03],0        )
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 DBSelectArea("SB1")
 
@@ -3574,40 +3363,10 @@ RestArea(aArea)
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjusta
-Função fAjusta
-@param cOpcao  utilizado para identificar o tipo de alteracao
-@param cLoteCtl numero do lote
-@param cDoc numero do documento
-@param dData data da movimentacao
-@param nQuant quantidade
-@param cEndereco endereco
-@param cNumSeq numero sequencial
-@param cTipoMov tipo de movimento
-@param cNumLote numero do numlote
-@param cSerie numero da serie
-@param cCliFor codigo do cliente/fornecedor
-@param cLoja codigo da loja
-@param dDtValid data de validade
-@param cFolder utilizado para identificar o folder
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para executar os ajustes nas tabelas de saldos e movimentacao de estoque.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjusta(cOpcao,cLoteCtl,cDoc,dData,nQuant,cEndereco,cNumSeq,cTipoMov,cNumLote,cSerie,cCliFor,cLoja,dDtValid,cFolder)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local aArea  := GetArea()
-Local I      := 0
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
-
 Do Case
   Case cOpcao == "SALDO_SB2"  // Saldo do SB2
      DBSelectArea("SB2")
@@ -3628,7 +3387,9 @@ Do Case
         MsUnlock()
         nDASB2 := SB2->B2_QACLASS
      Endif
-  Case cOpcao == "SALDO_SB9"  // Saldo do SB9
+  Case cOpcao == "SALDO_SB9"
+  alert('teste1')  // Saldo do SB9
+  alert(cGroup)
      DBSelectArea("SB9")
      DBSetOrder(1) //B9_FILIAL+B9_COD+B9_LOCAL+DTOS(B9_DATA)
      IF DBSeek(xFilial("SB9")+cProduto+cLocal+DTOS(dUltFech))
@@ -3974,7 +3735,6 @@ Do Case
                       aCols[I,04] <> SD1->D1_SERIE   .OR.;
                       aCols[I,05] <> SD1->D1_FORNECE .OR.;
                       aCols[I,06] <> SD1->D1_LOJA    .OR.;
-                      aCols[I,07] <> SD1->D1_TES     .OR.;
                       aCols[I,09] <> SD1->D1_LOTECTL .OR.;
                       aCols[I,10] <> SD1->D1_NUMLOTE .OR.;
                       aCols[I,12] <> SD1->D1_QUANT   .OR.;
@@ -3985,7 +3745,6 @@ Do Case
                       SD1->D1_SERIE   := aCols[I,04]
                       SD1->D1_FORNECE := aCols[I,05]
                       SD1->D1_LOJA    := aCols[I,06]
-                      SD1->D1_TES     := aCols[I,07]
                       SD1->D1_LOTECTL := aCols[I,09]
                       SD1->D1_NUMLOTE := IF(!lNumLote,aCols[I,10],Space(06))
                       SD1->D1_QUANT   := aCols[I,12]
@@ -4008,7 +3767,6 @@ Do Case
                       aCols[I,04] <> D2_SERIE   .OR.;
                       aCols[I,05] <> D2_CLIENTE .OR.;
                       aCols[I,06] <> D2_LOJA    .OR.;
-                      aCols[I,07] <> D2_TES     .OR.;
                       aCols[I,09] <> D2_LOTECTL .OR.;
                       aCols[I,10] <> D2_NUMLOTE .OR.;
                       aCols[I,11] <> D2_LOCALIZ .OR.;
@@ -4020,7 +3778,6 @@ Do Case
                       SD2->D2_SERIE   := aCols[I,04]
                       SD2->D2_CLIENTE := aCols[I,05]
                       SD2->D2_LOJA    := aCols[I,06]
-                      SD2->D2_TES     := aCols[I,07]
                       SD2->D2_LOTECTL := aCols[I,09]
                       SD2->D2_NUMLOTE := IF(!lNumLote,aCols[I,10],Space(06))
                       SD2->D2_LOCALIZ := aCols[I,11]
@@ -4167,42 +3924,9 @@ RestArea(aArea)
 
 Return                    
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fMovto
-Função fMovto
-@param lSB8 identifica se o movimento e' na tabela SB8
-@param lSD5 identifica se o movimento e' na tabela SD5
-@param cProduto codigo do produto
-@param cLocal codigo do almoxarifado
-@param cLoteCtl numero do lote
-@param cNumLote  numero do numlote
-@param cLoteFor numero do lote do fornecedor
-@param cCliFor codigo do cliente/fornecedor
-@param cLoja codigo da loja 
-@param cTm tipo de movimento
-@param cOrigLan origem do lancamento
-@param cChave chave de controle
-@param cNumSeq numero sequencial
-@param cDoc numero documento
-@param cSerie numero da serie
-@param cOp numero da ordem de producao
-@param nQuant quantidade do movimento
-@param nQuant2UM quantidade do movimento na segunda unidade de medida
-@param dData data do movimento
-@param dDtValid data de validade
-@param lCrialote identifica se deve criar o numero do lote
-@param nPotencia numero da potencia
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para gravar movimento na tabela SD5 e SB8.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fMovto(lSB8,lSD5,cProduto,cLocal,cLoteCtl,cNumLote,cLoteFor,cCliFor,cLoja,cTm,cOrigLan,cChave,cNumSeq,cDoc,cSerie,cOp,nQuant,nQuant2UM,dData,dDtValid,lCrialote,nPotencia)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local nRegistro := 0
 Local aArea    := GetArea()
 Local aAreaSB1 := SB1->(GetArea())
@@ -4290,38 +4014,13 @@ RestArea(aArea)
 
 Return NIL
 
-
-//----------------------------------------------------------
-/*{Protheus.doc} fGravaSBF
-Função fGravaSBF
-@param cTm tipo de movimento
-@param cProduto codigo do produto
-@param cLocal codigo do almoxarifado
-@param cLoteCtl numero do lote
-@param cNumLote  numero do numlote
-@param cNumSeq numero sequencial
-@param cEndereco numero do endereco
-@param nQuant quantidade do movimento
-@param nQuant2UM quantidade do movimento na segunda unidade de medida
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para gravar movimento da tabela SDB e SBF.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fGravaSBF(cTM,cProduto,cLocal,cLoteCtl,cNumLote,cNumSeq,cEndereco,nQuant,nQuant2UM)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local aAreaAnt   := GetArea()
 Local aAreaSBE   := SBE->(GetArea())
 Local nMultiplic := 1
 Local cEstFis    := ''
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
-
 cNumSeq  := IF(cNumSeq  == Nil,Space(20),cNumSeq)
 
 IF !lNumLote
@@ -4384,27 +4083,12 @@ RestArea(aAreaAnt)
 Return Nil
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fAjustD5DB
-Função fAjustD5DB
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para alterar a movimentacao da tabeal SD5 e SDB.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fAjustD5DB(cOpcao)
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgDados
 Local aArea   := GetArea()
 Local cNumSeq := aNumSeq[oNumSeq:nAT][01]
-
-IF MV_PAR02 == 1
-   MsgStop("Parâmetro que pertime manutenção está desativado. Verifique.")
-   Return
-Endif
 
 DBSelectArea("SB1")
 
@@ -4648,7 +4332,7 @@ User Function ValidACols()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local cCampo  := ReadVar()
 Local _Return := .T.
-IF cCampo $ "M->ORIGEM/M->CF"
+IF cCampo $ "M->ORIGEM/M->TES/M->CF"
    MsgStop("Este campo não pode ser alterado.","Atenção")
    _Return := .F.
 ElseIF cCampo == "M->QTDE2UM"
@@ -4674,27 +4358,14 @@ Endif
 Return (_Return)
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fPesquisa
-Função fPesquisa
-@param cOpcao  utilizado para identificar uma alteracao ou exclusao
-@param oBrowse utilizado para passar objetivo oBrowse
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao utilizada para realizar pesquisa nos browsers.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fPesquisa(cOpcao,oBrowse)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Local oDlgPesq
 Local aArea   := GetArea()
 Local cCampos := Space(20)          
 Local cSeek   := Space(20)   
 Local aCampos := {}
-Local I       := 0
 
 For I:= 1 To Len(oBrowse:AHEADERS)
    IF Valtype(oBrowse:AARRAY[1,I]) = "C" .AND. !UPPER(Alltrim(oBrowse:AHEADERS[I])) $ "STATUS/TM/SERIE/LOJA/CLIE.FOR/ORIGEM"
@@ -4718,23 +4389,9 @@ RestArea(aArea)
 
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fPesq
-Função fPesq
-@param cOpcao  utilizado para identificar qual tabela sera pesquisada
-@param cCampos numero do campo
-@param cSeek chave de pesquisa
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao utilizada para realizar pesquisa nos browsers.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fPesq(cOpcao,cCampos,cSeek)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 nAte := Len(Alltrim(cSeek))
 Do Case
    Case cOpcao = "SBJ"
@@ -4781,21 +4438,17 @@ EndCase
 Return (nPos)
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fDigSenha
-Função fDigSenha
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para solicitar a senha para acessar a rotina de analise.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fDigSenha()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Private cSenha   := Space(10)         
-Private cSenhAce := "nada"
+Private cSenhAce := "tudo"
+
+//nao solicitar senha para o admin
+IF !( __CUSERID == '000000' )
+	return .T.
+EndIf
+
 @ 067,020 To 169,312 Dialog Senhadlg Title OemToAnsi("Liberação de Acesso")
 @ 015,005 Say OemToAnsi("Informe a senha para o acesso ?") Size 80,8
 @ 015,089 Get cSenha Size 50,10 Password
@@ -4804,21 +4457,9 @@ Private cSenhAce := "nada"
 Activate Dialog Senhadlg CENTERED
 Return(_lReturn)                     
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fOK
-Função fOK
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para validar a senha digitada
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fOK()
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 If ALLTRIM(cSenha)<> cSenhAce
    MsgStop("Senha não Confere !!!")
    cSenha  := Space(10)
@@ -4830,21 +4471,10 @@ Endif
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fPesqDifLote
-Função fPesqDifLote
-@param cOpcao  utilizado para identificar a pesquisa no proximo/anterior
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para pesquisar no kardex por lote as diferencas entre o saldo e a movimentacao do lote.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fPesqDifLote(cOpcao)
-Local lAchou := .F.   
-Local nPos   := ()    
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Local lAchou := .F.       
 IF cOpcao = "Prox"
    nIni := (oKarLote:nAT + 1)
    For nPos := nIni To Len(aKarLote)
@@ -4870,23 +4500,10 @@ Endif
 
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fPesqDifEnde
-Função fPesqDifEnde
-@param cOpcao  utilizado para identificar a pesquisa no proximo/anterior
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para pesquisar no kardex por endereco as diferencas entre o saldo e a movimentacao do endereco.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fPesqDifEnde(cOpcao)
-
-Local lAchou := .F. 
-Local nPos   := ()      
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Local lAchou := .F.       
 IF cOpcao = "Prox"
    nIni := (oKarEnde:nAT + 1)
    For nPos := nIni To Len(aKarEnde)
@@ -4912,20 +4529,9 @@ Endif
 Return  
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fPesqNumSeq
-Função fPesqNumSeq
-@param cOpcao utilizado para identificar a pesquisa por lote ou endereco
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para pesquisar o NUMSEQ.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fPesqNumSeq(cOpcao)
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Do Case
   Case cOpcao = "Lote"
     IF aKarLote[oKarLote:nAT,01] = "SBJ"
@@ -4958,20 +4564,9 @@ Do Case
 EndCase    
 Return
 
-
-//----------------------------------------------------------
-/*/{Protheus.doc} fPesqKarEnd
-Função fPesqKarEnd
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para pesquisar no kardex por endereço.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fPesqKarEnd()
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cNumSeq := aNumSeq[oNumSeq:nAT,01]
 nSeek   := Ascan(oKarEnde:AHEADERS,"Num.Seq.")
 IF (nPos := Ascan(aKarEnde, { |x| Alltrim(x[nSeek]) == Alltrim(cNumSeq) })) > 0
@@ -4982,22 +4577,9 @@ Endif
 Return
 
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fSaldoAtual
-Função fSaldoAtual
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para chamar a rotina de saldo atual padrao do sistema.
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Static Function fSaldoAtual()
-Local _MV_PAR01 := MV_PAR01
-Local _MV_PAR02 := MV_PAR02
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 DBSelectArea("SX1")
 DBSetOrder(1)      
 nSpace := Len(SX1->X1_GRUPO) - 6
@@ -5024,41 +4606,10 @@ Endif
                              
 MATA300() 
 
-MV_PAR01 := _MV_PAR01
-MV_PAR02 := _MV_PAR02
-
 Processa({||fProcessa()})
 
 Return
 
-//----------------------------------------------------------
-/*/{Protheus.doc} fPermiteAjsute
-Função fPermiteAjsute
-@param Não recebe parâmetros
-@return Não retorna nada
-@author Reinaldo Dias
-@owner Totvs S/A
-@obs Funcao para habilitar/desabilitar o ajusta na base de dados.  
-@history
-04/10/2012 - Acrescimo de cabecalho Protheus.Doc
-/*/
-//----------------------------------------------------------
-Static Function fPermiteAjsute(cPerg)
-Pergunte(cPerg,.T.)               
-Return
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Static Function AjustaSX1(cPerg)
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Local aHelp := {}
-
-Aadd(aHelp,{{"Gera log de analise.       "},{""},{""}})
-Aadd(aHelp,{{"Permite manutencao na base "},{""},{""}})
-
-PutSx1(cPerg, '01', 'Gerar Log Alteração ?','' ,'' , 'mv_ch1', 'N', 1, 0, 1, 'C', '', '', '', '', 'mv_par01','Não' ,'','','','Sim','','','','','','','','','','','', aHelp[1][1],aHelp[1][2],aHelp[1][3])
-PutSx1(cPerg, '02', 'Manutenção na Base  ?','' ,'' , 'mv_ch2', 'N', 1, 0, 1, 'C', '', '', '', '', 'mv_par02','Não' ,'','','','Sim','','','','','','','','','','','', aHelp[2][1],aHelp[2][2],aHelp[2][3])
-
-Return
 /*
 5.2
 Inclusao da alteracao no SDA
@@ -5089,4 +4640,18 @@ Verificacao se quando utilizar o DBgoto é fim de arquivo.
 Validação na inclusao do SBF, SB8, SBJ, SBK, SDB e SD5 para não permitir informar registro em branco.
 18/07/2011
 Correcao de erro nos botoes de algumas pastas que nao estava permitindo clicar.
-*/                           
+*/
+
+
+
+
+
+/*
+#include "protheus.ch"
+User Function TSTAdmin()
+	If FwIsAdmin()
+		ApMsgAlert("Usuário é Administrador")
+	Else	ApMsgAlert("Usuário não é Administrador")
+	EndIf
+
+Return
