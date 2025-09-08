@@ -196,7 +196,7 @@ Static Function fSalvar()
 	nPosDesc  := aScan(aEstru, {|x| "B1_DESC" $ AllTrim(Upper(x[1]))})
 	nPosUM    := aScan(aEstru, {|x| "B1_UM" $ AllTrim(Upper(x[1]))})
 	nPosLocal := aScan(aEstru, {|x| "B1_LOCPAD" $ AllTrim(Upper(x[1]))})
-	nPosConta := aScan(aEstru, {|x| "B1_CONTA " $ AllTrim(Upper(x[1]))})
+	nPosConta := aScan(aEstru, {|x| "B1_CONTA" $ AllTrim(Upper(x[1]))})
 	nPosCtac  := aScan(aEstru, {|x| "B1_XCTAC" $ AllTrim(Upper(x[1]))})
 	nPosCtad  := aScan(aEstru, {|x| "B1_XCTAD" $ AllTrim(Upper(x[1]))})
 
@@ -335,5 +335,3 @@ Static Function fSalvar()
     oDlgPvt:End()
     RestArea(aArea)
 Return
-
-
