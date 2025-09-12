@@ -336,13 +336,14 @@ User Function BRG012()
 	oPrint:Say(nLin, 1200, Transform(_Qtd, "@e 999,999,999.999"), oFont10)
 	//oPrint:Say(nLin, 1700, "Total S/ Impostos" +Transform(_Tot, "@e 999,999,999.99"), oFont10)
 	nLin+=50
-	oPrint:Say(nLin, 1700, "Total" +Transform(_Tot+_TotIpi+_TotDif, "@e 999,999,999.99"), oFont10)
+	oPrint:Say(nLin, 1700, "Total" +Transform(_Tot, "@e 999,999,999.99"), oFont10)
 	nLin+=50
+	/*
 	oPrint:Say(nLin, 080,   ("I M P O S T O S"), oFont10N)
-	nLin+=50
+	nLin+=50*/
 	oPrint:Line(nLin,080,nLin,2320)
 	nLin+=100
-	oPrint:Say(nLin, 0080, ("Valor IPI"), oFont10)
+	/*oPrint:Say(nLin, 0080, ("Valor IPI"), oFont10)
 	oPrint:Say(nLin, 0400, ("Valor ICMS"), oFont10)
 	oPrint:Say(nLin, 0700, ("Valor ISS"), oFont10)
 	oPrint:Say(nLin, 1000, ("Valor Total"), oFont10)
@@ -354,7 +355,7 @@ User Function BRG012()
 	oPrint:Say(nLin, 0750, Transform(_Iss, "@e 999,999,999.99"), oFont10)
 	oPrint:Say(nLin, 1050, Transform((_Tot+_TotIpi), "@e 999,999,999.99"), oFont10)
 	oPrint:Say(nLin, 1350, Transform(_TotDif, "@e 999,999,999.99"), oFont10)   //Difal
-	nLin+=100
+	nLin+=100*/
 	oPrint:Say(nLin, 0150, ("Sujeito a Disponibilidade"), oFont10)
 	nLin+=15
 
