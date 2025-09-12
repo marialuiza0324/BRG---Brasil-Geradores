@@ -126,13 +126,6 @@ Local nLinha
 					_Total := aParc[i,2] //valor da parcela
 					_Parc  := cvaltochar(i) //Nº da parcela
 
-					/*If _Venc == Date() .OR. _Venc < Date() //verifica se a data de vencimento é igual ou menor que a data atual
-
-						Help(, ,"AVISO#0028", ,"A data de vencimento é igual ou menor a data de hoje.",1, 0, , , , , , {"Renegocie com o fornecedor e ajuste a condição de pagamento do pedido."})
-						lRet := .F.
-							Exit
-					Else*/
-
 						aDelet := { { "E2_PREFIXO" , "PRV" , NIL },; //Array de exclusão do título
 						{ "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
 						{ "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
@@ -183,7 +176,6 @@ Local nLinha
 						End Transaction
 
 						lAchou := .F. // zera variável
-					//EndIf
 				Next i
 
 			Next nX
