@@ -42,7 +42,7 @@ Local lRastro := .T.
 local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
 Local nLinha
 
-	If Funname() <> "LOCA001"
+	If Funname() <> "LOCA001" .AND. Funname() <> "COMXCOL"
 			For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
 
 
