@@ -52,7 +52,7 @@ User Function MT120OK()
                 lRetorno := .F. // Bloqueia a confirmação
             EndIf
 
-            If SC7 ->(MsSeek(xFilial("SC7")+SC7->C7_NUM+SC7->C7_ITEM)) //Posiciona no pedido correto
+            If SC7 ->(MsSeek(xFilial("SC7")+CA120NUM+ACOLS[n][1])) //Posiciona no pedido correto
 
                 //coletando informações de usuário 
                 cUserWeb := Posicione("SC1",1,xFilial("SC1")+ACOLS[n][18]+ACOLS[n][15],"C1_XSOLWEB")
