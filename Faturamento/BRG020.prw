@@ -20,239 +20,245 @@ User Function BRG020()
 
 //Private _Nf        := SC5->C5_NOTA 
 //Private _Serie     := SC5->C5_SERIE
-Local _Desc,_End,_Bair,_Cid,_Uf := " "
-Local _aBmp 		:= {}
-Local cFormPg 		:= ""
-Local cNfRem 		:= ""
-Local aNfRem 		:= {}
-Local nValor 		:= 0
-Local nInicio 		:= 1
-Local nFim			:= 0
-Local nCont			:= 0
-Local nFimPalavra 	:= ""
-Local cTexto		:= ""
-Local nMaxLen		:= 95
-Local nPosicao 		:= 0
-Local nLinRodape    := 2300 // Posição fixa para o rodapé (ajustável conforme necessidade)
-Local nEspacoRodape := 400  // Espaço reservado para o rodapé (estimado)
+	Local _Desc,_End,_Bair,_Cid,_Uf := " "
+	Local _aBmp 		:= {}
+	Local cFormPg 		:= ""
+	Local cNfRem 		:= ""
+	Local aNfRem 		:= {}
+	Local nValor 		:= 0
+	Local nInicio 		:= 1
+	Local nFim			:= 0
+	Local nCont			:= 0
+	Local nFimPalavra 	:= ""
+	Local cTexto		:= ""
+	Local nMaxLen		:= 95
+	Local nPosicao 		:= 0
+	Local nLinRodape    := 2300 // Posição fixa para o rodapé (ajustável conforme necessidade)
+	Local nEspacoRodape := 400  // Espaço reservado para o rodapé (estimado)
 
-Private oFont6		:= TFONT():New("ARIAL",7,6,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 6 Normal
-Private oFont6N 	:= TFONT():New("ARIAL",7,6,,.T.,,,,.T.,.F.) ///Fonte 6 Negrito
-Private oFont8		:= TFONT():New("ARIAL",9,8,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 8 Normal
-Private oFont8N 	:= TFONT():New("ARIAL",8,8,,.T.,,,,.T.,.F.) ///Fonte 8 Negrito
-Private oFont9N 	:= TFONT():New("ARIAL",9,9,,.T.,,,,.T.,.F.) ///Fonte 9 Negrito
-Private oFont10    	:= TFONT():New("ARIAL",9,10,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 10 Normal
-Private oFont10S	:= TFONT():New("ARIAL",9,10,.T.,.F.,5,.T.,5,.T.,.T.) ///Fonte 10 Sublinhando
-Private oFont10N 	:= TFONT():New("ARIAL",9,10,,.T.,,,,.T.,.F.) ///Fonte 10 Negrito
-Private oFont12		:= TFONT():New("ARIAL",12,12,,.F.,,,,.T.,.F.) ///Fonte 12 Normal
-Private oFont12NS	:= TFONT():New("ARIAL",12,12,,.T.,,,,.T.,.T.) ///Fonte 12 Negrito e Sublinhado
-Private oFont12N	:= TFONT():New("ARIAL",12,12,,.T.,,,,.T.,.F.) ///Fonte 12 Negrito
-Private oFont14		:= TFONT():New("ARIAL",14,14,,.F.,,,,.T.,.F.) ///Fonte 14 Normal
-Private oFont14NS	:= TFONT():New("ARIAL",14,14,,.T.,,,,.T.,.T.) ///Fonte 14 Negrito e Sublinhado
-Private oFont14N	:= TFONT():New("ARIAL",14,14,,.T.,,,,.T.,.F.) ///Fonte 14 Negrito
-Private oFont16  	:= TFONT():New("ARIAL",16,16,,.F.,,,,.T.,.F.) ///Fonte 16 Normal
-Private oFont16N	:= TFONT():New("ARIAL",16,16,,.T.,,,,.T.,.F.) ///Fonte 16 Negrito
-Private oFont16NS	:= TFONT():New("ARIAL",16,16,,.T.,,,,.T.,.T.) ///Fonte 16 Negrito e Sublinhado
-Private oFont20N	:= TFONT():New("ARIAL",20,20,,.T.,,,,.T.,.F.) ///Fonte 20 Negrito
-Private oFont22N	:= TFONT():New("ARIAL",22,22,,.T.,,,,.T.,.F.) ///Fonte 22 Negrito
+	Private oFont6		:= TFONT():New("ARIAL",7,6,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 6 Normal
+	Private oFont6N 	:= TFONT():New("ARIAL",7,6,,.T.,,,,.T.,.F.) ///Fonte 6 Negrito
+	Private oFont8		:= TFONT():New("ARIAL",9,8,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 8 Normal
+	Private oFont8N 	:= TFONT():New("ARIAL",8,8,,.T.,,,,.T.,.F.) ///Fonte 8 Negrito
+	Private oFont9N 	:= TFONT():New("ARIAL",9,9,,.T.,,,,.T.,.F.) ///Fonte 9 Negrito
+	Private oFont10    	:= TFONT():New("ARIAL",9,10,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 10 Normal
+	Private oFont10S	:= TFONT():New("ARIAL",9,10,.T.,.F.,5,.T.,5,.T.,.T.) ///Fonte 10 Sublinhando
+	Private oFont10N 	:= TFONT():New("ARIAL",9,10,,.T.,,,,.T.,.F.) ///Fonte 10 Negrito
+	Private oFont12		:= TFONT():New("ARIAL",12,12,,.F.,,,,.T.,.F.) ///Fonte 12 Normal
+	Private oFont12NS	:= TFONT():New("ARIAL",12,12,,.T.,,,,.T.,.T.) ///Fonte 12 Negrito e Sublinhado
+	Private oFont12N	:= TFONT():New("ARIAL",12,12,,.T.,,,,.T.,.F.) ///Fonte 12 Negrito
+	Private oFont14		:= TFONT():New("ARIAL",14,14,,.F.,,,,.T.,.F.) ///Fonte 14 Normal
+	Private oFont14NS	:= TFONT():New("ARIAL",14,14,,.T.,,,,.T.,.T.) ///Fonte 14 Negrito e Sublinhado
+	Private oFont14N	:= TFONT():New("ARIAL",14,14,,.T.,,,,.T.,.F.) ///Fonte 14 Negrito
+	Private oFont16  	:= TFONT():New("ARIAL",16,16,,.F.,,,,.T.,.F.) ///Fonte 16 Normal
+	Private oFont16N	:= TFONT():New("ARIAL",16,16,,.T.,,,,.T.,.F.) ///Fonte 16 Negrito
+	Private oFont16NS	:= TFONT():New("ARIAL",16,16,,.T.,,,,.T.,.T.) ///Fonte 16 Negrito e Sublinhado
+	Private oFont20N	:= TFONT():New("ARIAL",20,20,,.T.,,,,.T.,.F.) ///Fonte 20 Negrito
+	Private oFont22N	:= TFONT():New("ARIAL",22,22,,.T.,,,,.T.,.F.) ///Fonte 22 Negrito
 
 //³Variveis para impressão                                              ³
-Private cStartPath
-Private nLin 		:= 50
-Private nLinMax 	:= 3000 // Defina o número máximo de linhas por página
-Private oPrint
-Private _Emp
-Private cPerg 		:= "BRG020"
-Private nRepita // variavel que controla a quantidade de relatorios impressos
-Private nContador // contador do for principal, que imprime o relatorio n vezes
-Private nZ
-Private nJ
-Private cLogoD
-Private _Nf        := SC5->C5_NOTA
-Private _Serie     := SC5->C5_SERIE
-Private _Tot       := 0
-Private _TotIpi    := 0
-Private _TotDif    := 0
-Private _Local     := " "
-Private _LtCtl     := " "
-Private _Prod      := " "
-Private _NumSeq    := " "
-Private _AlqDif    := 0
-Private cLogo      := ''
-Private nDesconto  := 0
-Private _Nun       := SC5->C5_NUM
+	Private cStartPath
+	Private nLin 		:= 50
+	Private nLinMax 	:= 3000 // Defina o número máximo de linhas por página
+	Private oPrint
+	Private _Emp
+	Private cPerg 		:= "BRG020"
+	Private nRepita // variavel que controla a quantidade de relatorios impressos
+	Private nContador // contador do for principal, que imprime o relatorio n vezes
+	Private nZ
+	Private nJ
+	Private cLogoD
+	Private _Nf        := SC5->C5_NOTA
+	Private _Serie     := SC5->C5_SERIE
+	Private _Tot       := 0
+	Private _TotIpi    := 0
+	Private _TotDif    := 0
+	Private _Local     := " "
+	Private _LtCtl     := " "
+	Private _Prod      := " "
+	Private _NumSeq    := " "
+	Private _AlqDif    := 0
+	Private cLogo      := ''
+	Private nDesconto  := 0
+	Private _Nun       := SC5->C5_NUM
+	Private nTotReal   := 0
 
-If SC5->C5_TPDOC <> "F"
-	MSGINFO("Tipo de Documento Incorreto para a impressão. !!! "," Atenção ")
-	Return
-EndIf
-
-If oPrint == Nil
-	oPrint:=FWMSPrinter():New("Fatura",6,.T.,,.T.)
-	oPrint:SetPortrait()
-	oPrint:SetPaperSize(DMPAPER_A4)
-	oPrint:SetMargin(60,60,60,60) // nEsquerda, nSuperior, nDireita, nInferior
-	oPrint:cPathPDF :="C:\TEMP\"
-EndIf
-
-oPrint:StartPage()
-cStartPath := GetPvProfString(GetEnvServer(),"StartPath","ERROR",GetAdv97())
-cStartPath += If(Right(cStartPath, 1) <> "\", "\", "")
-
-cLogo := "\system\danfe"+cEmpAnt+cFilAnt+".bmp"
-
-oPrint:SayBitmap(nLin+010, 0160, cLogo, 350, 300)
-nLin+=100      
-oPrint:Say(nLin,550,SM0->M0_NOMECOM,oFont10)
-nLin+=50 
-oPrint:Say(nLin, 1400,  ("FATURA DE LOCAÇÃO N.º: ")+SC5->C5_NOTA+"/"+SC5->C5_SERIE, oFont16N)
-oPrint:Say(nLin,550,SM0->M0_ENDCOB,oFont10) 
-nLin+=50
-oPrint:Say(nLin,550,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
-nLin+=50
-oPrint:Say(nLin,550,"FONE: " + SM0->M0_TEL ,oFont10)
-nLin+=50
-oPrint:Say(nLin,550,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10) 
-nLin+=100
-
-_Desc     := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_NOME")  
-_End      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_END")
-_Bair     := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_BAIRRO") 
-_Cid      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_MUN") 
-_Uf       := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_EST")
-_Cnpj     := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_CGC")  
-_CEP      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_CEP")
-_TEL      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_TEL")  
-_TpCli    := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_TIPO")
-
-oPrint:Say(nLin, 100,  ("Emissão:"), oFont12)
-oPrint:Say(nLin, 1570,  ("Telefone:"), oFont12)
-oPrint:Say(nLin, 300,  CVALTOCHAR(SC5->C5_EMISSAO), oFont12N)
-oPrint:Say(nLin, 1800, TRANSFORM(_TEL,"@R (99)9999-9999"), oFont12N)
-nLin+=70 		
-oPrint:Say(nLin, 100, ("Cliente:"), oFont12)
-oPrint:Say(nLin, 300,  SC5->C5_CLIENTE+"/"+SC5->C5_LOJACLI +"-"+_Desc, oFont12N)    
-oPrint:Say(nLin, 1570, ("CNPJ:"), oFont12)
-oPrint:Say(nLin, 1800, TRANSFORM(_Cnpj,"@R 99.999.999/9999-99"),oFont12N)
-nLin+=70  
-oPrint:Say(nLin, 100,  ("Endereço:"), oFont12)
-oPrint:Say(nLin, 300,  _End, oFont12N)
-oPrint:Say(nLin, 1570,  ("Cidade:"), oFont12)
-oPrint:Say(nLin, 1800,  alltrim(_Cid)+"/"+_Uf, oFont12N) 
-nLin+=70  
-oPrint:Say(nLin, 100,  ("Cond. Pgto:"), oFont12)
-_Cond := Posicione("SE4",1,xFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI")
-oPrint:Say(nLin, 300,  SC5->C5_CONDPAG+" - "+_Cond, oFont12N)
-oPrint:Say(nLin, 1570,  ("Cep:"), oFont12)
-oPrint:Say(nLin, 1800,  TRANSFORM(_CEP,"@R 99999-999"), oFont12N)    
-nLin+=70  
-oPrint:Say(nLin, 100,  ("Contrato:"), oFont12)
-oPrint:Say(nLin, 300,  SC5->C5_XCONTRA, oFont12N)
-oPrint:Say(nLin, 1570,  ("Ped Compra:"), oFont12)
-oPrint:Say(nLin, 1800, SC5->C5_XPEDCOM, oFont12N) 
-nLin+=70 
-oPrint:Say(nLin, 100,  ("Proposta:"), oFont12)
-oPrint:Say(nLin, 300,  SC5->C5_XPROPOS, oFont12N)
-oPrint:Say(nLin, 1570,  ("Responsável:"), oFont12)
-oPrint:Say(nLin, 1800, SC5->C5_XUSER, oFont12N) 
-nLin+=100 
-oPrint:Say(nLin, 100,  ("Item"), oFont10N)
-oPrint:Say(nLin, 220,  ("Produto"), oFont10N)
-oPrint:Say(nLin, 380,  ("Descrição"), oFont10N)
-oPrint:Say(nLin, 1000, ("Serie"), oFont10N)
-oPrint:Say(nLin, 1200, ("Qtde"), oFont10N)
-oPrint:Say(nLin, 1500, ("Valor Unit."), oFont10N) 
-oPrint:Say(nLin, 2050, ("Total"), oFont10N) 
-nLin+=50
-oPrint:Line(nLin,100,nLin,2200)	
-nLin+=50
-
-dbSelectArea("SC6")
-dbsetorder(1)    
-dbSeek(xFilial("SC6")+_Nun)                                                                                                                                                             
-
-While SC6->(!EOF()) .AND. xFilial("SC6") = SC6->C6_FILIAL .AND. SC6->C6_NUM = _Nun 		
-	
-	// Verifica se há espaço para o item e o rodapé
-	If nLin + 50 + nEspacoRodape <= nLinMax
-		oPrint:Say(nLin, 110, SC6->C6_ITEM, oFont10)			
-		oPrint:Say(nLin, 230, SC6->C6_PRODUTO, oFont10)                                                       
-		oPrint:Say(nLin, 390, SC6->C6_DESCRI, oFont10)
-		oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)
-		oPrint:Say(nLin, 1250, cValToChar(SC6->C6_QTDVEN), oFont10,,,,1)  
-		If !Empty(SC6->C6_VALDESC) 
-			oPrint:Say(nLin, 1550, Transform((SC6->C6_PRCVEN+SC6->C6_VALDESC), "@e 999,999,999.99"), oFont10,,,,1) 
-		Else
-			oPrint:Say(nLin, 1550, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1) 	
-		EndIf
-		oPrint:Say(nLin, 2070, Transform(SC6->C6_VALOR, "@e 999,999,999.99"), oFont10,,,,1)
-		nLin+=50
-
-		If !Empty(SC6->C6_VALDESC) 
-			_Tot  := _Tot + SC6->C6_VALOR
-			nDesconto += SC6->C6_VALDESC 
-		Else
-			_Tot  := _Tot + SC6->C6_VALOR
-		EndIf
-	Else
-		// Finaliza a página e inicia uma nova
-		oPrint:Line(nLin,100,nLin,2200)
-		oPrint:EndPage()
-		oPrint:StartPage()
-		nLin := 50
-		// Reimprime cabeçalho dos itens na nova página
-		oPrint:Say(nLin, 100,  ("Item"), oFont10N)
-		oPrint:Say(nLin, 220,  ("Produto"), oFont10N)
-		oPrint:Say(nLin, 380,  ("Descrição"), oFont10N)
-		oPrint:Say(nLin, 1000, ("Serie"), oFont10N)
-		oPrint:Say(nLin, 1200, ("Qtde"), oFont10N)
-		oPrint:Say(nLin, 1500, ("Valor Unit."), oFont10N) 
-		oPrint:Say(nLin, 2050, ("Total"), oFont10N) 
-		nLin+=50
-		oPrint:Line(nLin,100,nLin,2200)
-		nLin+=50
-		// Imprime o item
-		oPrint:Say(nLin, 110, SC6->C6_ITEM, oFont10)			
-		oPrint:Say(nLin, 230, SC6->C6_PRODUTO, oFont10)                                                       
-		oPrint:Say(nLin, 390, SC6->C6_DESCRI, oFont10)
-		oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)
-		oPrint:Say(nLin, 1250, cValToChar(SC6->C6_QTDVEN), oFont10,,,,1)  
-		If !Empty(SC6->C6_VALDESC) 
-			oPrint:Say(nLin, 1550, Transform((SC6->C6_PRCVEN+SC6->C6_VALDESC), "@e 999,999,999.99"), oFont10,,,,1) 
-		Else
-			oPrint:Say(nLin, 1550, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1) 	
-		EndIf
-		oPrint:Say(nLin, 2070, Transform(SC6->C6_VALOR, "@e 999,999,999.99"), oFont10,,,,1)
-		nLin+=50
-
-		If !Empty(SC6->C6_VALDESC) 
-			_Tot  := _Tot + SC6->C6_VALOR
-			nDesconto += SC6->C6_VALDESC 
-		Else
-			_Tot  := _Tot + SC6->C6_VALOR
-		EndIf
+	If SC5->C5_TPDOC <> "F"
+		MSGINFO("Tipo de Documento Incorreto para a impressão. !!! "," Atenção ")
+		Return
 	EndIf
-	SC6->(dbSkip())
-EndDo
+
+	If oPrint == Nil
+		oPrint:=FWMSPrinter():New("Fatura",6,.T.,,.T.)
+		oPrint:SetPortrait()
+		oPrint:SetPaperSize(DMPAPER_A4)
+		oPrint:SetMargin(60,60,60,60) // nEsquerda, nSuperior, nDireita, nInferior
+		oPrint:cPathPDF :="C:\TEMP\"
+	EndIf
+
+	oPrint:StartPage()
+	cStartPath := GetPvProfString(GetEnvServer(),"StartPath","ERROR",GetAdv97())
+	cStartPath += If(Right(cStartPath, 1) <> "\", "\", "")
+
+	cLogo := "\system\danfe"+cEmpAnt+cFilAnt+".bmp"
+
+	oPrint:SayBitmap(nLin+010, 0160, cLogo, 350, 300)
+	nLin+=100
+	oPrint:Say(nLin,550,SM0->M0_NOMECOM,oFont10)
+	nLin+=50
+	oPrint:Say(nLin, 1400,  ("FATURA DE LOCAÇÃO N.º: ")+SC5->C5_NOTA+"/"+SC5->C5_SERIE, oFont16N)
+	oPrint:Say(nLin,550,SM0->M0_ENDCOB,oFont10)
+	nLin+=50
+	oPrint:Say(nLin,550,AllTrim(SM0->M0_BAIRCOB) + " - " + AllTrim(SM0->M0_CIDCOB) + " - "+SM0->M0_ESTCOB+" - CEP "+Transform(SM0->M0_CEPCOB,"@R 99999-999"),oFont10)
+	nLin+=50
+	oPrint:Say(nLin,550,"FONE: " + SM0->M0_TEL ,oFont10)
+	nLin+=50
+	oPrint:Say(nLin,550,"CNPJ: " + Transform(SM0->M0_CGC,"@R 99.999.999/9999-99")+ "   " +"IE:"+ SM0->M0_INSC,oFont10)
+	nLin+=100
+
+	_Desc     := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_NOME")
+	_End      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_END")
+	_Bair     := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_BAIRRO")
+	_Cid      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_MUN")
+	_Uf       := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_EST")
+	_Cnpj     := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_CGC")
+	_CEP      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_CEP")
+	_TEL      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_TEL")
+	_TpCli    := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_TIPO")
+
+	oPrint:Say(nLin, 100,  ("Emissão:"), oFont12)
+	oPrint:Say(nLin, 1570,  ("Telefone:"), oFont12)
+	oPrint:Say(nLin, 300,  CVALTOCHAR(SC5->C5_EMISSAO), oFont12N)
+	oPrint:Say(nLin, 1800, TRANSFORM(_TEL,"@R (99)9999-9999"), oFont12N)
+	nLin+=70
+	oPrint:Say(nLin, 100, ("Cliente:"), oFont12)
+	oPrint:Say(nLin, 300,  SC5->C5_CLIENTE+"/"+SC5->C5_LOJACLI +"-"+_Desc, oFont12N)
+	oPrint:Say(nLin, 1570, ("CNPJ:"), oFont12)
+	oPrint:Say(nLin, 1800, TRANSFORM(_Cnpj,"@R 99.999.999/9999-99"),oFont12N)
+	nLin+=70
+	oPrint:Say(nLin, 100,  ("Endereço:"), oFont12)
+	oPrint:Say(nLin, 300,  _End, oFont12N)
+	oPrint:Say(nLin, 1570,  ("Cidade:"), oFont12)
+	oPrint:Say(nLin, 1800,  alltrim(_Cid)+"/"+_Uf, oFont12N)
+	nLin+=70
+	oPrint:Say(nLin, 100,  ("Cond. Pgto:"), oFont12)
+	_Cond := Posicione("SE4",1,xFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI")
+	oPrint:Say(nLin, 300,  SC5->C5_CONDPAG+" - "+_Cond, oFont12N)
+	oPrint:Say(nLin, 1570,  ("Cep:"), oFont12)
+	oPrint:Say(nLin, 1800,  TRANSFORM(_CEP,"@R 99999-999"), oFont12N)
+	nLin+=70
+	oPrint:Say(nLin, 100,  ("Contrato:"), oFont12)
+	oPrint:Say(nLin, 300,  SC5->C5_XCONTRA, oFont12N)
+	oPrint:Say(nLin, 1570,  ("Ped Compra:"), oFont12)
+	oPrint:Say(nLin, 1800, SC5->C5_XPEDCOM, oFont12N)
+	nLin+=70
+	oPrint:Say(nLin, 100,  ("Proposta:"), oFont12)
+	oPrint:Say(nLin, 300,  SC5->C5_XPROPOS, oFont12N)
+	oPrint:Say(nLin, 1570,  ("Responsável:"), oFont12)
+	oPrint:Say(nLin, 1800, SC5->C5_XUSER, oFont12N)
+	nLin+=100
+	oPrint:Say(nLin, 100,  ("Item"), oFont10N)
+	oPrint:Say(nLin, 220,  ("Produto"), oFont10N)
+	oPrint:Say(nLin, 380,  ("Descrição"), oFont10N)
+	oPrint:Say(nLin, 1000, ("Serie"), oFont10N)
+	oPrint:Say(nLin, 1200, ("Qtde"), oFont10N)
+	oPrint:Say(nLin, 1500, ("Valor Unit."), oFont10N)
+	oPrint:Say(nLin, 1800, ("Desconto"), oFont10N)
+	oPrint:Say(nLin, 2050, ("Total"), oFont10N)
+	nLin+=50
+	oPrint:Line(nLin,100,nLin,2200)
+	nLin+=50
+
+	dbSelectArea("SC6")
+	dbsetorder(1)
+	dbSeek(xFilial("SC6")+_Nun)
+
+	While SC6->(!EOF()) .AND. xFilial("SC6") = SC6->C6_FILIAL .AND. SC6->C6_NUM = _Nun
+
+		nTotReal:= SC6->C6_PRCVEN+SC6->C6_VALDESC
+
+		_Tot  := _Tot + SC6->C6_VALOR
+		nDesconto += SC6->C6_VALDESC
+
+		// Verifica se há espaço para o item e o rodapé
+		If nLin + 50 + nEspacoRodape <= nLinMax
+			oPrint:Say(nLin, 110, SC6->C6_ITEM, oFont10)
+			oPrint:Say(nLin, 230, SC6->C6_PRODUTO, oFont10)
+			oPrint:Say(nLin, 390, SC6->C6_DESCRI, oFont10)
+			oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)
+			oPrint:Say(nLin, 1250, cValToChar(SC6->C6_QTDVEN), oFont10,,,,1)
+			oPrint:Say(nLin, 1550, Transform(nTotReal, "@e 999,999,999.99"), oFont10,,,,1)
+			oPrint:Say(nLin, 1850, Transform(SC6->C6_VALDESC, "@e 999,999,999.99"), oFont10,,,,1)
+			
+			If !Empty(SC6->C6_VALDESC)
+				oPrint:Say(nLin, 2070, Transform(nTotReal-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
+			Else
+				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1)
+			EndIf
+			nLin+=50
+
+		Else
+			   nTotReal:= SC6->C6_PRCVEN+SC6->C6_VALDESC
+
+				nDesconto += SC6->C6_VALDESC
+
+				_Tot  := _Tot + SC6->C6_VALOR
+
+			// Finaliza a página e inicia uma nova
+			oPrint:Line(nLin,100,nLin,2200)
+			oPrint:EndPage()
+			oPrint:StartPage()
+			nLin := 50
+			// Reimprime cabeçalho dos itens na nova página
+			oPrint:Say(nLin, 100,  ("Item"), oFont10N)
+			oPrint:Say(nLin, 220,  ("Produto"), oFont10N)
+			oPrint:Say(nLin, 380,  ("Descrição"), oFont10N)
+			oPrint:Say(nLin, 1000, ("Serie"), oFont10N)
+			oPrint:Say(nLin, 1200, ("Qtde"), oFont10N)
+			oPrint:Say(nLin, 1500, ("Valor Unit."), oFont10N)
+			oPrint:Say(nLin, 1800, ("Desconto"), oFont10N)
+			oPrint:Say(nLin, 2100, ("Total"), oFont10N)
+			nLin+=50
+			oPrint:Line(nLin,100,nLin,2200)
+			nLin+=50
+			// Imprime o item
+			oPrint:Say(nLin, 110, SC6->C6_ITEM, oFont10)
+			oPrint:Say(nLin, 230, SC6->C6_PRODUTO, oFont10)
+			oPrint:Say(nLin, 390, SC6->C6_DESCRI, oFont10)
+			oPrint:Say(nLin, 1010, SC6->C6_XSEREQU, oFont10)
+			oPrint:Say(nLin, 1250, cValToChar(SC6->C6_QTDVEN), oFont10,,,,1)
+			oPrint:Say(nLin, 1550, Transform(nTotReal, "@e 999,999,999.99"), oFont10,,,,1)
+			oPrint:Say(nLin, 1850, Transform(SC6->C6_VALDESC, "@e 999,999,999.99"), oFont10,,,,1)
+			
+			If !Empty(SC6->C6_VALDESC)
+				oPrint:Say(nLin, 2070, Transform(nTotReal-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
+			Else
+				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1)
+			EndIf
+			nLin+=50
+
+		EndIf
+		SC6->(dbSkip())
+	EndDo
 
 // Após o loop, desenha linha de separação
-oPrint:Line(nLin,100,nLin,2200)
+	oPrint:Line(nLin,100,nLin,2200)
 
 // Ajusta nLin para o rodapé, se houver espaço suficiente
-If nLin + nEspacoRodape > nLinMax
-	oPrint:EndPage()
-	oPrint:StartPage()
-	nLin := nLinRodape
-Else
-	nLin := nLinRodape
-EndIf
+	If nLin + nEspacoRodape > nLinMax
+		oPrint:EndPage()
+		oPrint:StartPage()
+		nLin := nLinRodape
+	Else
+		nLin := nLinRodape
+	EndIf
 
 // Imprime o rodapé
-PrintRodape()
+	PrintRodape()
 
-oPrint:EndPage()
-MS_FLUSH()
-oPrint:Preview()
+	oPrint:EndPage()
+	MS_FLUSH()
+	oPrint:Preview()
 Return()
 
 // Função auxiliar para imprimir o rodapé
@@ -321,9 +327,10 @@ Static Function PrintRodape()
 	dbSeek(xFilial("SCV") + _Nun)
 	cFormPg := SCV->CV_DESCFOR
 	oPrint:Say(nLin, 110, "Forma de Pagamento: " + cFormPg, oFont12N)
-	oPrint:Say(nLin, 1800, "Total Da Fatura R$: " + Transform(_Tot, "@e 999,999,999.99"), oFont12N)
+	oPrint:Say(nLin, 1800, "Total S/ Desconto R$: " + Transform(_Tot+nDesconto, "@e 999,999,999.99"), oFont12N)
 	nLin += 30 // Espaçamento reduzido
 	oPrint:Say(nLin, 110, "Vencimento: " + CVALTOCHAR(STOD(RETVENC())), oFont12N)
+	oPrint:Say(nLin, 1800, "Total C/ Desconto R$: " + Transform(_Tot, "@e 999,999,999.99"), oFont12N)
 Return
 
 Static Function RetVenc()
