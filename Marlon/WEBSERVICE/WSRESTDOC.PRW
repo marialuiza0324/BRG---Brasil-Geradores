@@ -145,8 +145,8 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOC
          Next nI
 		
         If Len(aPvlDocS) > 0
-                cFunBkp := FunName()
-                SetFunName("MATA461")
+               // cFunBkp := FunName()
+               // SetFunName("MATA461")
                 cDocument := MaPvlNfs(;
                     aPvlDocS,;  // 01 - aPvlNfs      - Array com os itens a serem gerados
                     cSerie,;    // 02 - cSerieNFS   - Serie da Nota Fiscal
@@ -167,7 +167,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOC
                     Date(),;    // 17 - dDataMoe     - Data da cotação para conversão dos valores da Moeda do Pedido de Venda para a Moeda Forte
                     .F.;        // 18 - lJunta       - Aglutina Pedido Iguais
                 )
-                SetFunName(cFunBkp)
+                //SetFunName(cFunBkp)
                  
                 If Empty(cDocument)
                     lAbortar := .T.
