@@ -88,7 +88,7 @@ User Function M460FIM()
 	Local cQry  := ''
 	Local cMsg := ""
 
-	If Funname() <> "FSFAT004" .AND. Funname() <> "MATA461" .AND. FunName() <> "RPC"
+	If Funname() <> "FSFAT004" /*.AND. Funname() <> "MATA461"*/ .AND. FunName() <> "RPC"
 
 				If !Empty(SC5->C5_MENNOTA) //verifica se o campo de mensagem da nota está vazio no PV
 
