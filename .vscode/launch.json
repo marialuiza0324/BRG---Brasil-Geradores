@@ -2,6 +2,13 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Launch Chrome",
+			"request": "launch",
+			"type": "chrome",
+			"url": "http://localhost:8080",
+			"webRoot": "${workspaceFolder}"
+		},
+		{
 			"name": "Attach to Chrome",
 			"port": 9222,
 			"request": "attach",
@@ -58,6 +65,16 @@
 			"enableTableSync": true,
 			"smartclientUrl": "http://geradores.datasetsolucoes.com.br:58178/webapp",
 			"enableMultiThread": true
+		},
+		{
+			"type": "totvs_language_web_debug",
+			"request": "launch",
+			"name": "Debug DESENV1",
+			"program": "${command:AskForProgramName}",
+			"cwb": "${workspaceFolder}",
+			"isMultiSession": true,
+			"enableTableSync": true,
+			"smartclientUrl": "http://geradores.datasetsolucoes.com.br:54035/webapp"
 		}
 	],
 	"lastPrograms": [
