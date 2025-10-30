@@ -83,6 +83,9 @@
 		},
 		{
 			"label": "]"
+		},
+		{
+			"label": ","
 		}
 	],
 	"lastProgramExecuted": "SIGAMDI",
