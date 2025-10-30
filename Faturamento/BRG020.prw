@@ -193,7 +193,7 @@ User Function BRG020()
 			If !Empty(SC6->C6_VALDESC)
 				oPrint:Say(nLin, 2070, Transform(nTotReal-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
 			Else
-				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1)
+				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN*SC6->C6_QTDVEN, "@e 999,999,999.99"), oFont10,,,,1)
 			EndIf
 			nLin+=50
 
@@ -233,7 +233,7 @@ User Function BRG020()
 			If !Empty(SC6->C6_VALDESC)
 				oPrint:Say(nLin, 2070, Transform(nTotReal-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
 			Else
-				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN, "@e 999,999,999.99"), oFont10,,,,1)
+				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN*SC6->C6_QTDVEN, "@e 999,999,999.99"), oFont10,,,,1)
 			EndIf
 			nLin+=50
 
