@@ -4096,14 +4096,8 @@ If cTipo == "1"
 	
 					dbSelectArea(cAliasSD2)
 					dbSkip()
-			    EndDo 
+			    EndDo
 	
-				/*/-----------------------------------------------------------------------
-					Destruir os objetos e arrays da classe TSSTCIntegration após o término do loop.
-					@since 11/02/2025
-					@version 12.1.2410
-				/*///-----------------------------------------------------------------------
-				DestroyTCI(@oNfTciIntg)
 
 				//Tratamento para incluir a mensagem em informacoes adicionais do Suframa
 				If !Empty(aDest[15])
@@ -6811,25 +6805,17 @@ Else
 									+ nIcmDifPE
 					EndIf
 				EndIf
-
+				
 				lSomaPISST	  := .F.
                 lSomaCOFINSST := .F.
 
-				aadd(aTotalItem, {(cAliasSD1)->D1_ITEM, (aTotal[02] + aTotal[03]) - nAcumula})
+				aadd(aTotalItem, {(cAliasSD1)->D1_ITEM, (aTotal[2] + aTotal[3]) - nAcumula})
 				nAcumula += aTotalItem[len(aTotalItem), 2]
 				
 				dbSelectArea(cAliasSD1)
 				dbSkip()
 		    EndDo
 
-			/*
-			//-------------------------------------------------------------------------------
-			  Destruir os objetos e arrays da classe TSSTCIntegration após o término do loop.
-			  @since 11/02/2025
-    		  @version 12.1.2410
-			//-------------------------------------------------------------------------------
-			*/
-			DestroyTCI(@oNfTciIntg)
 
 			cIndPres := retIndPres( cTipo, aNota )
 			cIntermediador := ""
@@ -7033,10 +7019,12 @@ If !Empty(aNota)
 	cString += NfeLocalEntrega(aEntrega)
 	aTotICMSST := {0,0,0}
 								
-	//Instacia classe responsável por gerar o XML dos tributos da reforma tributária
-	if findClass('totvs.protheus.backoffice.fiscal.integration.taxinformation')
+	//Prioriza a classe de geração de XML da estrutura do TSS
+	if oNfTciIntg != nil .and. findClass('totvs.protheus.backoffice.tss.engine.xml.taxinformation')
+		oXmlRefTri := totvs.protheus.backoffice.tss.engine.xml.taxinformation():New()
+	elseif findClass('totvs.protheus.backoffice.fiscal.integration.taxinformation')
 		oXmlRefTri := totvs.protheus.backoffice.fiscal.integration.taxinformation():New()
-	endif	
+	endif
 								
 	For nX := 1 To Len(aProd)
 		If nLenaIpi > 0
@@ -7061,16 +7049,19 @@ If !Empty(aNota)
 							lIcmDevol		,@nVicmsDeson	,@nVIcmDif		,cMunPres	,aAgrPis[nX]	,aAgrCofins[nX]	,nIcmsDif		,aICMUFDest[nX]	,@nvFCPUFDest	,@nvICMSUFDest	,;
 							@nvICMSUFRemet	,cAmbiente 		,aIPIDevol[nX]	,@nvBCUFDest,aItemVinc[nX]	,@npFCPUFDest	,@npICMSUFDest	,@npICMSInter	,@npICMSIntP	,aLote[nX]		,;
 							@cMensDifal		,@aTotICMSST 	,len(aProd)		,nX			,@nValDifer		,cIndPres		,lExpCDL		,@aMonof02		,@aMonof15		,@lMonof53		,;
-							@lMonof61		,aICMSMono[nX]	,aBenef[nX]		,aCredPresum[nX]            ,aDeson[nX]		,aEntrega		, nTotalItem	,cNFe)
+							@lMonof61		,aICMSMono[nX]	,aBenef[nX]		,aCredPresum[nX]            ,aDeson[nX]		,aEntrega		, nTotalItem	,cNFe			,oNfTciIntg	)
 	Next nX
-  	cString += NfeTotal(aTotal,aRetido,aICMS,aICMSST,lIcmDevol,cVerAmb,aISSQN,nVicmsDeson,aNota,nVIcmDif,aAgrPis,aAgrCofins,nValLeite )
+
+	DestroyTCI(@oNfTciIntg)
+	
+	cString += NfeTotal(aTotal,aRetido,aICMS,aICMSST,lIcmDevol,cVerAmb,aISSQN,nVicmsDeson,aNota,nVIcmDif,aAgrPis,aAgrCofins,nValLeite )
 	cString += NfeTransp(cModFrete,aTransp,aImp,aVeiculo,aReboque,aEspVol,cVerAmb,aReboqu2,cMunDest)
 
 	//Elimina da memória a instancia da classe.
 	if oXmlRefTri != nil
 		oXmlRefTri:destroy()
 		oXmlRefTri := nil
-	endif	
+	endif
 	
 	If cVeramb == "3.10"
 		cString += NfeCob(aDupl)
@@ -7815,7 +7806,7 @@ Static Function NfeItem(aProd		, aICMS			, aICMSST	, aIPI			, aPIS	   		, aPISST
 						lIcmDevol	, nVicmsDeson	, nVIcmDif	, cMunPres		, aAgrPis  		, aAgrCofins , nIcmsDif		, aICMUFDest	, nvFCPUFDest	, nvICMSUFDest	,;
 						nvICMSUFRemet, cAmbiente	, aIPIDevol	, nvBCUFDest	, aItemVinc		, npFCPUFDest, npICMSUFDest	, npICMSInter	, npICMSIntP	, aLote			,;
 						cMensDifal	, aTotICMSST	, nTotProd	, nItProd		, nValDifer		, cIndPres	 , lExpCDL		, aMonof02		, aMonof15		, lMonof53		,;
-						lMonof61	, aICMSMono 	, aBenef	, aCredPresum	,lDeduzDeson	, aEntrega	 , nTotalItem	, cNFe)
+						lMonof61	, aICMSMono 	, aBenef	, aCredPresum	,lDeduzDeson	, aEntrega	 , nTotalItem	, cNFe			, oNfTciIntg )
 
 Local cString 		:= ""
 Local cMVCODREG		:= AllTrim(SuperGetMV("MV_CODREG", ," "))
@@ -9447,10 +9438,10 @@ EndIf
 
 if oXmlRefTri != nil 
 	// Imposto Seletivo
-	cString += oXmlRefTri:GetXmlIs(cDocItemId)
+	cString += oXmlRefTri:GetXmlIs(cDocItemId, oNfTciIntg)
 
 	//Imposto sobre bens e serviço e/ou contributos sobre bens e serviços
-	cString += oXmlRefTri:GetXmlIbsCbs(cDocItemId)
+	cString += oXmlRefTri:GetXmlIbsCbs(cDocItemId, oNfTciIntg)
 endif
 
 If lMvPisCofD  .And. aDest[9] == 'PR'  // Lei Est. PR 17.127/12 informar todos os impostos na Danfe
@@ -13663,12 +13654,11 @@ Static Function TssTCInteg( nEntSai, cAliasSD, lVldExc, oNfTciIntg, aTrib )
         
     EndIf
 
-	If lVldExc .AND. oNfTciIntg == NIL
-		oNfTciIntg := totvs.protheus.backoffice.tss.engine.tributaveis.TSSTCIntegration():New()
-	EndIf
-
     If lVldExc .AND. Len(aIdTribs) > 0
-        oNfTciIntg:SetInfoNfs(aIdTribs)
+        if oNfTciIntg == NIL
+			oNfTciIntg := totvs.protheus.backoffice.tss.engine.tributaveis.TSSTCIntegration():New()
+		endif	
+		oNfTciIntg:SetInfoNfs(aIdTribs)
     EndIf
 
 	RestArea(aAreaASD)
