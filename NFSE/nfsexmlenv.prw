@@ -329,7 +329,7 @@ user function nfseXMLEnv( cTipo, dDtEmiss, cSerie, cNota, cClieFor, cLoja, cMotC
 				aadd(aDest,SA1->A1_TPESSOA)
 				aadd(aDest,SF2->F2_DOC)
 				aadd(aDest,SF2->F2_SERIE)
-				aadd(aDest,Iif(SA1->(FieldPos("A1_OUTRMUN"))> 0 ,SA1->A1_OUTRMUN,""))	//25							
+				aadd(aDest,Iif(SA1->(FieldPos("A1_OUTRMUN"))> 0 ,allTrim(SA1->A1_OUTRMUN),""))	//25							
 				aadd(aDest,Iif(SA1->(FieldPos("A1_PFISICA"))> 0 ,SA1->A1_PFISICA,""))	//26
 							
 				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
@@ -1774,7 +1774,9 @@ static function ident( aNota, aProd, aTotal, aDest, aISSQN, aAIDF, dDateCom, aCS
 		cString	+= "<serierps>" + allTrim( aNota[1] ) + "</serierps>"
 		cString	+= "<numerorps>" + allTrim( aNota[2] ) + "</numerorps>"
 	Else
-		cString	+= "<serierps>" + allTrim( aNota[1] ) + "</serierps>"
+		//Ajuste para emissão de NF se serviço - 30/10/2025 - Maria Luiza
+		cString	+= "<serierps>" + allTrim(str(val( aNota[1] ))) + "</serierps>"
+		//Fim do ajuste - 30/10/2025 - Maria Luiza
 		cString	+= "<numerorps>" + allTrim( str( val( aNota[2] ) ) ) + "</numerorps>"
 	EndIf
 	cString	+= "<tipo>1</tipo>" // Chumbado pois tanto ABRASF como DSFNET, utilizam esta tag como tipo RPS (1)
@@ -2403,16 +2405,16 @@ Static Function tomador( aDest )
 		cString	+= "<bairro>" + allTrim( aDest[6] ) + "</bairro>"
 		
 		If if( type( "oSigamatX" ) == "U",SM0->M0_CODMUN,oSigamatX:M0_CODMUN ) $ "5208707" .And. !empty( allTrim( aDest[25] ) )
-			cCodTom := aDest[25] // SA1->A1_OUTRMUN
+			cCodTom:= Alltrim(aDest[25]) // SA1->A1_OUTRMUN
 		Else
-			cCodTom := aDest[07] // SA1->A1_COD_MUN
+			cCodTom:= Alltrim(aDest[07]) // SA1->A1_COD_MUN
 		EndIf
-		If Len( cCodTom ) <= 5 .And. (!(cCodTom $ '99999').Or. (cCodTom $ '99999' .And. if( type( "oSigamatX" ) == "U",SM0->M0_CODMUN,oSigamatX:M0_CODMUN ) $ '3550308|3552205|4205407|3300704|3156700|4115200|4208203|4204202|3205309'))
-			cCodTom := UfIBGEUni(aDest[09]) + cCodTom
+		If Len(cCodTom) <= 5 .And. (!(cCodTom $ '99999').Or. (cCodTom $ '99999' .And. if( type( "oSigamatX" ) == "U",SM0->M0_CODMUN,oSigamatX:M0_CODMUN ) $ '3550308|3552205|4205407|3300704|3156700|4115200|4208203|4204202|3205309'))
+			cCodTom:= UfIBGEUni(aDest[09]) + cCodTom
 		EndIf
 		
 		if !empty( allTrim( aDest[7] ) )
-			cString	+= "<codmunibge>" + cCodTom + "</codmunibge>"
+			cString	+= "<codmunibge>" + cCodTom+ "</codmunibge>"
 		endif
 		if !empty( allTrim( cMunPSIAFI) )
 			cString	+= "<codmunsiafi>" + allTrim( cMunPSIAFI) + "</codmunsiafi>"
@@ -2718,11 +2720,20 @@ static function servicos( aProd, aISSQN, aRetido, cNatOper, lNFeDesc, cDiscrNFSe
 		cString	+= "<servico>"
 		If cCodMun $ "3507605"
 			cString	+= "<codigo>" + substr(allTrim( aProd[nX][24] ),1,3)+ allTrim( aProd[nX][24] ) + "</codigo>"
+		//Ajuste na máscara do campo, para emissão de NF de serviço - 30/10/2025 - Maria Luiza
+		ElseIf cCodMun $ "5208707"
+			cString += "<codigo>" + TransForm(alltrim(aProd[nX][24]), "@R 99.99") + "</codigo>"
+		//Fim do ajuste - 30/10/2025 - Maria Luiza
 		Else
 			cString	+= "<codigo>" + allTrim( aProd[nX][24] ) + "</codigo>"
 		EndIf
 		If cCodMun $ "3106200" .And. cTpPessoa == "EP" .And. cF4Agreg == "D"
 			cString += '<aliquota>0.00</aliquota>'	  
+		/*Enviar alíquota zerada quando a prestação de serviço for dentro do próprio município de Goiânia-GO
+		   30/10/2025 - Maria Luiza*/	
+		ElseIf cCodMun $ "5208707"
+			cString += '<aliquota>0.00</aliquota>'
+		//Fim do ajuste - 30/10/2025 - Maria Luiza
 		elseIf cCodMun $ "4115200"
 			cString	+= "<aliquota>" + allTrim( iif( !empty( convType( nAliqISs ) ), AllTrim(Str(nAliqISs)), AllTrim(Str(aISSRet[3])) ) ) + "</aliquota>"
 		ElseIf cCodMun $ "3170107|4304606|4303103|2301000" .and. aISSQN[1][02] > 0
