@@ -83,7 +83,7 @@ Static Function fMSNewGe1(aParcelas)
 
 	Local aFields	 	:= fRetColumn(1)
 	Local cFieldsSQL 	:= fRetColumn(2)
-	Local aCamposSX3 	:= u_fConvSX3(cFieldsSQL)
+	Local aCamposSX3 	:= u_fConvSX3("SE2",cFieldsSQL)
 	Local aHeaderEx 	:= aClone(fLoadStr(aFields,aCamposSX3))
 	Local aColsEx 		:= aClone(fCrgGrd(aParcelas))
 	Local aAlterFields 	:= fRetColumn(1)
