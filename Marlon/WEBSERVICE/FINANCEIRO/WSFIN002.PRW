@@ -121,7 +121,7 @@ WSMETHOD PUT UPDATE WSSERVICE WSFIN002
 
 
 	//Valida se os campos obrigatórios foram informados
-	If Empty(cPrefixo) .Or. Empty(cNumTit) .Or. Empty(cTipoTit) .Or. Empty(cFornece) .Or. Empty(cLoja) .Or. Empty(cParcela)
+	If Empty(cPrefixo) .Or. Empty(cNumTit) .Or. Empty(cTipoTit) .Or. Empty(cFornece) .Or. Empty(cLoja) //.Or. Empty(cParcela)
 		Self:SetStatus(500)
 		jResponse['errorId']  := 'UPD006'
 		jResponse['error']    := 'Campos obrigatórios não informados'
