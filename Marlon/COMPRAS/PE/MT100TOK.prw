@@ -46,23 +46,32 @@ User Function MT100TOK()
     local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
     local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
     Local nProduto       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_COD"})
+    Local nTes           := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_TES"})
     Local nDiasMin := 3
     Local dVencMin := Date() + nDiasMin
     Local cProduto       := " "
+    Local cFilDoc  := SupergetMv("MV_FILDOCE", , ) // Parâmetro que controla filiais que irão sofrer o bloqueio de vencimento mínimo
+    Local cTesDupl := ""
 
-    If Funname() <> "LOCA001" /*.AND. Funname() <> "MATA461"*/ .AND. FunName() <> "RPC"
-        If SF1->F1_TIPO <> "D" //só entra na validação caso não esteja selecionada a opção de retornar NF
+ If Funname() <> "LOCA001" .AND. Funname() <> "MATA116" .AND. FunName() <> "RPC"
+
+    If cFilAnt $ cFilDoc //verifica se a filial do documento está na lista do parâmetro 
+
+        cTesDupl := Posicione("SF4",1,xFilial("SF4")+acols[n][nTes],"F4_DUPLIC") //posiciona na SF4 para verificar se a TES gera duplicata
+
+        If !Empty(cTesDupl) .AND. Alltrim(cTesDupl) == "S" //só entra na validação caso a TES gere duplicata
             cProduto := ACOLS[n][nProduto] //pega o produto da linha atual do array
 
             If Alltrim(cProduto) == 'S0000018'
                 dVencMin := Date() + 2
                 // Se o vencimento mínimo cair no sábado ou domingo, ajusta para segunda-feira
                 If Dow(dVencMin) == 7 // Sábado
-                    dVencMin := dVencMin + 3
-                ElseIf Dow(dVencMin) == 1 // Domingo
                     dVencMin := dVencMin + 2
+                ElseIf Dow(dVencMin) == 1 // Domingo
+                    dVencMin := dVencMin + 1
                 EndIf
             Else
+                dVencMin := Date() + 4
                 If Dow(Date()) == 5 // Quinta-feira
                     // Se o vencimento mínimo cair no sábado ou domingo, ajusta para segunda-feira
                     If Dow(dVencMin) == 7 // Sábado
@@ -75,7 +84,7 @@ User Function MT100TOK()
 
             // Validação de vencimento: se DNEWVENC estiver vazio, valida DEMISOLD; senão, valida apenas DNEWVENC
             If Empty(DNEWVENC)
-                If DEMISOLD <= dVencMin .OR. DATE() >= dVencMin
+                If DDEMISSAO <= dVencMin .OR. DATE() >= dVencMin
                     If cProduto <> 'S0000018'
                         Help(, ,"AVISO#0028", ,"A data de vencimento do título é inválida. O vencimento mínimo permitido é " + DToC(Lastday(dVencMin,3)) + ".",1, 0, , , , , , {"Renegocie com o fornecedor e ajuste a data de vencimento do título."})
                         lRet := .F.
@@ -86,8 +95,7 @@ User Function MT100TOK()
                         Return lRet
                     EndIf
                 EndIf
-            Else
-                If DNEWVENC < dVencMin .OR. DATE() >= dVencMin
+            ElseIf DNEWVENC < dVencMin .OR. DATE() >= dVencMin
                     If cProduto <> 'S0000018'
                         Help(, ,"AVISO#0028", ,"A data de vencimento do título é inválida. O vencimento mínimo permitido é " + DToC(Lastday(dVencMin,3)) + ".",1, 0, , , , , , {"Renegocie com o fornecedor e ajuste a data de vencimento do título."})
                         lRet := .F.
@@ -97,9 +105,9 @@ User Function MT100TOK()
                         lRet := .F.
                         Return lRet
                     EndIf
-                EndIf
             EndIf
         Endif
+    EndIf
 
         cCentroCusto := ACOLS[n][nCentroC] 
         cRateio := ACOLS[n][nRateio] 
@@ -319,12 +327,12 @@ User Function MT100TOK()
             EndIf
         Next nX
 
-        SB1->(DbCloseArea())
-        FwRestArea(aArea)
+            SB1->(DbCloseArea())
+            FwRestArea(aArea)
 
-        If lMsg = .T. //se estiver tudo ok, exibe mensagem de sucesso
-            FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
-        EndIf 
+            If lMsg = .T. //se estiver tudo ok, exibe mensagem de sucesso
+                FWAlertInfo("Título financeiro excluído com sucesso.","Atenção!!!")
+            EndIf 
     EndIf
 
 Return lRet 
