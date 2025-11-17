@@ -81,12 +81,12 @@ Private nColIt13 	:= nMaxCol 			//DT ENTREGA
 		Return
 	EndIf
 
-	If !lPedOk
+	/*If !lPedOk
 		cMsgAlert := "Pedido não pode ser impresso." + Chr(13)+Chr(10)
 		cMsgAlert += "Somente pedidos liberados e pendentes de entrega podem ser impressos !"
 		MsgAlert(cMsgAlert, "PEDCOMGRAF :: Validação")
 		Return
-	EndIf
+	EndIf*/
 	RestArea(aAreaSC7)	//Restaura area da SC7
 	// (FIM) LEANDROM 12/12/2017 Valida se pedido de compras não bloqueado ou se já foi atendido)
 
@@ -325,7 +325,7 @@ Private cNumPedido
 		cChave := QRY->(C7_FILIAL + C7_NUM)
 		While !QRY->(eof())
 			If lCabec
-				cObsCab := ''//AllTrim(QRY->C7_XOBSCAB)
+				cObsCab := AllTrim(QRY->C7_OBS)
 
 				//Cabeçalho do pedido
 				ImpCabec(@nLinSup, @nLinInf)
@@ -554,7 +554,7 @@ Private cNumPedido
 			endif
 
 			//Verifica tamanho do campo CC
-			cCentrC := Alltrim(QRY->C7_CC) + " - "+ AllTrim(Posicione("CTT",1,xFilial("CTT")+ QRY->C7_CC,"CTT_DESC01")) //CTT_DESC01)
+			cCentrC := Alltrim(QRY->C7_CC) //+ " - "+ AllTrim(Posicione("CTT",1,xFilial("CTT")+ QRY->C7_CC,"CTT_DESC01")) //CTT_DESC01)
 			nDiv2:= Len(cCentrC)/17
 			nInteiro2 := Int(nDiv2)
 			nDecimais2 := nDiv2 - nInteiro2
@@ -676,14 +676,14 @@ Private cNumPedido
 			*/
 			//oPrn:SayAlign(nLinSup+42, nColIt10+5, cCentrC , oFont10	,nColIt11-nColIt10,nLinInf-nLinSup,0,0,0)//cCentroC
 
-			cSolicit := ""
+			/*cSolicit := ""
 			If !Empty(QRY->C7_NUMSC)
 				cSolicit := Posicione("SC1",1,xFilial("SC1") + QRY->C7_NUMSC, "C1_SOLICIT")
-			EndIf
+			EndIf*/
 
 			aDescric := {}
 			aAdd(aDescric, QRY->C7_NUMSC)
-			aAdd(aDescric, cSolicit)
+			//aAdd(aDescric, cSolicit)
 
 			oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
 			For nI := 1 To Len(aDescric)
@@ -789,12 +789,12 @@ Local cSemLogo	:= cSystem + "logo\semlogo.BMP"
 	oPrn:Say(nLinSup, nCol1+0170, cTelefone,oFont11)
 
 	oPrn:Say(nLinSup, nCol1+0500, "EMAIL: ",oFont11N)
-	cEmailXML :=SuperGetMv("MV_XMAILNF", .T., "totvs@totvs.com.br")// Posicione("SA1", 3, XFILIAL("SA1") + SM0->M0_CGC, "A1_EMAIL")
+	cEmailXML :=SuperGetMv("MV_XMAILNF", .T., Posicione("SA1", 3, XFILIAL("SA1") + SM0->M0_CGC, "A1_EMAIL"))// Posicione("SA1", 3, XFILIAL("SA1") + SM0->M0_CGC, "A1_EMAIL")
 	oPrn:Say(nLinSup, nCol1+0620, cEmailXML, oFont11)
 
-	oPrn:Say(nLinSup, nCol1+1100, "CEP: ",oFont11N)
+	oPrn:Say(nLinSup, nCol1+1120, "CEP: ",oFont11N)
 	cCep := TransForm(SM0->M0_CEPCOB ,'@R 99.999-999')
-	oPrn:Say(nLinSup, nCol1+1200, AllTrim(cCep),oFont11)
+	oPrn:Say(nLinSup, nCol1+1220, AllTrim(cCep),oFont11)
 
 Return
 
