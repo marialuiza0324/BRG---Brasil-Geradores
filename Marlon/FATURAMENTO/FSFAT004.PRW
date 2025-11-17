@@ -20,7 +20,7 @@ User Function FSFAT004()
  
 Local cPathPostDoc := ""
 Local oRestPostDoc
-Local cUrlDoc := "https://n8n.brggeradores.com.br"
+Local cUrlDoc := "http://172.49.49.6:25007"
 Local aHeaderPostDoc := {}
 Local cBody := ""
 Local cRespPostDoc := ""   
@@ -74,9 +74,9 @@ Private lMsHelpAuto := .T.
                   cRespPostDoc := oRestPostDoc:GetResult() // Obtém a resposta do servidor
                   FWAlertSuccess("Informações enviadas com sucesso.", "Sucesso!")
                Else
-			      Help(, ,"AVISO#0021", ,"As informações não foram enviadas.",1, 0, , , , , , {"Verifique se a Nota foi autorizada ou contate o administrador do sistema."})
-                  ConOut("FSFAT004: Falha ao enviar POST: " + oRestPostDoc:GetLastError()) // Exibe mensagem de erro
-                  Return .F.
+               FwAlertwarning("As informações não foram enviadas. Verifique se a Nota foi autorizada ou contate o administrador do sistema.", "Atenção!")
+               ConOut("FSFAT004: Falha ao enviar POST: " + oRestPostDoc:GetLastError()) // Exibe mensagem de erro
+               Return .F.
                EndIf
 
 Return 
