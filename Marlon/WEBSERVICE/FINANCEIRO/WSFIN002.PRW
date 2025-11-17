@@ -106,7 +106,7 @@ WSMETHOD PUT UPDATE WSSERVICE WSFIN002
 	EndIf
 
 	//Obtém os campos do JSON
-	cPrefixo := jJson:GetJsonObject('prefixo')
+	cPrefixo := Padr(jJson:GetJsonObject('prefixo'),tamsx3('E2_PREFIXO')[1])
 	cNumTit  := jJson:GetJsonObject('num')
 	cTipoTit := jJson:GetJsonObject('tipo')
 	cFornece := jJson:GetJsonObject('fornece')
@@ -121,7 +121,7 @@ WSMETHOD PUT UPDATE WSSERVICE WSFIN002
 
 
 	//Valida se os campos obrigatórios foram informados
-	If Empty(cPrefixo) .Or. Empty(cNumTit) .Or. Empty(cTipoTit) .Or. Empty(cFornece) .Or. Empty(cLoja) //.Or. Empty(cParcela)
+	If Empty(cPrefixo) .Or. Empty(cNumTit) .Or. Empty(cTipoTit) .Or. Empty(cFornece) .Or. Empty(cLoja) 
 		Self:SetStatus(500)
 		jResponse['errorId']  := 'UPD006'
 		jResponse['error']    := 'Campos obrigatórios não informados'
@@ -148,7 +148,7 @@ WSMETHOD PUT UPDATE WSSERVICE WSFIN002
 		Self:SetStatus(500)
 		jResponse['errorId']  := 'UPD013'
 		jResponse['error']    := 'Título já baixado'
-		jResponse['solution'] := 'O título ' + cNumTit + ' já possui uma data de baixa (' + DToC(sToD(SE2->E2_BAIXA)) + ')'
+		jResponse['solution'] := 'O título ' + cNumTit + ' já possui uma data de baixa (' + DToC(dBaixa) + ')'
 		Self:SetResponse(EncodeUTF8(jResponse:toJSON()))
 		Return .F.
 	EndIf
