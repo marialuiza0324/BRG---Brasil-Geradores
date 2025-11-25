@@ -175,7 +175,7 @@ User Function BRG020()
 
 	While SC6->(!EOF()) .AND. xFilial("SC6") = SC6->C6_FILIAL .AND. SC6->C6_NUM = _Nun
 
-		nTotReal:= SC6->C6_PRCVEN+SC6->C6_VALDESC
+		nTotReal:= SC6->C6_PRCVEN
 
 		_Tot  := _Tot + SC6->C6_VALOR
 		nDesconto += SC6->C6_VALDESC
@@ -190,15 +190,15 @@ User Function BRG020()
 			oPrint:Say(nLin, 1550, Transform(nTotReal, "@e 999,999,999.99"), oFont10,,,,1)
 			oPrint:Say(nLin, 1850, Transform(SC6->C6_VALDESC, "@e 999,999,999.99"), oFont10,,,,1)
 			
-			If !Empty(SC6->C6_VALDESC)
-				oPrint:Say(nLin, 2070, Transform(nTotReal-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
-			Else
+			//If !Empty(SC6->C6_VALDESC)
+				//oPrint:Say(nLin, 2070, Transform(SC6->C6_QTDVEN-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
+			//Else
 				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN*SC6->C6_QTDVEN, "@e 999,999,999.99"), oFont10,,,,1)
-			EndIf
+			//EndIf
 			nLin+=50
 
 		Else
-			   nTotReal:= SC6->C6_PRCVEN+SC6->C6_VALDESC
+			   nTotReal:= SC6->C6_PRCVEN
 
 				nDesconto += SC6->C6_VALDESC
 
@@ -230,11 +230,11 @@ User Function BRG020()
 			oPrint:Say(nLin, 1550, Transform(nTotReal, "@e 999,999,999.99"), oFont10,,,,1)
 			oPrint:Say(nLin, 1850, Transform(SC6->C6_VALDESC, "@e 999,999,999.99"), oFont10,,,,1)
 			
-			If !Empty(SC6->C6_VALDESC)
-				oPrint:Say(nLin, 2070, Transform(nTotReal-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
-			Else
+			//If !Empty(SC6->C6_VALDESC)
+				//oPrint:Say(nLin, 2070, Transform(_Tot-nDesconto, "@e 999,999,999.99"), oFont10,,,,1)
+			//Else
 				oPrint:Say(nLin, 2070, Transform(SC6->C6_PRCVEN*SC6->C6_QTDVEN, "@e 999,999,999.99"), oFont10,,,,1)
-			EndIf
+			//EndIf
 			nLin+=50
 
 		EndIf
