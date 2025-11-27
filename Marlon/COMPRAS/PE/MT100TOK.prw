@@ -47,19 +47,21 @@ User Function MT100TOK()
     local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
     Local nProduto       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_COD"})
     Local nTes           := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_TES"})
-    Local nDiasMin := 3
+    Local nDiasMin := 4
     Local dVencMin := Date() + nDiasMin
     Local cProduto       := " "
     Local cFilDoc  := SupergetMv("MV_FILDOCE", , ) // Parâmetro que controla filiais que irão sofrer o bloqueio de vencimento mínimo
     Local cTesDupl := ""
+    local cAdiant  := ""
 
  If Funname() <> "LOCA001" .AND. Funname() <> "MATA116" .AND. FunName() <> "RPC"
 
-    If cFilAnt $ cFilDoc //verifica se a filial do documento está na lista do parâmetro 
+ If cFilAnt $ cFilDoc //verifica se a filial do documento está na lista do parâmetro 
 
         cTesDupl := Posicione("SF4",1,xFilial("SF4")+acols[n][nTes],"F4_DUPLIC") //posiciona na SF4 para verificar se a TES gera duplicata
+        cAdiant  := Posicione("SE4",1,xFilial("SE4")+CCONDICAO,"E4_CTRADT") //posiciona na SB1 para verificar se o produto é adiantamento
 
-        If !Empty(cTesDupl) .AND. Alltrim(cTesDupl) == "S" //só entra na validação caso a TES gere duplicata
+        If !Empty(cTesDupl) .AND. Alltrim(cTesDupl) == "S" .AND. cAdiant == "2" //só entra na validação caso a TES gere duplicata
             cProduto := ACOLS[n][nProduto] //pega o produto da linha atual do array
 
             If Alltrim(cProduto) == 'S0000018'
