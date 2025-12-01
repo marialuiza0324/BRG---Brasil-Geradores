@@ -1,5 +1,4 @@
-#Include "RwMake.CH"
-#include 'protheus.ch'
+
 #include 'TOPCONN.CH'
 #Include "TOTVS.ch"
 
@@ -24,6 +23,7 @@ Static nPosArmazem  := 10 //Coluna J no Excel
     /*/
 
 User Function FSEST004()
+
 	Local aArea     := GetArea()
 	Private cArqOri := ""
 
@@ -175,8 +175,6 @@ Static Function fImporta()
                         ConfirmSX8()
                     EndIf
                
-            
-
             // Gera o log ao final do processamento
             //Se tiver log, mostra ele
             If ! Empty(cLog)
