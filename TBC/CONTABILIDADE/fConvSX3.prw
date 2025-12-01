@@ -13,6 +13,7 @@ u_fConvSX3("SA1","('A1_COD',A1_LOJA)")*/
 User Function fConvSX3(cTabela,cCampos)
 
 	Local cQry := ""
+	Local aRet := {}
 	Default cTabela := ""
 	Default cCampos := ""
 
@@ -37,7 +38,7 @@ User Function fConvSX3(cTabela,cCampos)
 
 	if !Empty(AllTrim(cTabela))
 
-		cQry += " AND X3_ARQUIVO = '"+AllTrim(cTabela)+"'	" + cEol
+		cQry += " AND X3_ARQUIVO IN ('"+(AllTrim(cTabela))+"')	" + cEol
 
 	endif
 
@@ -53,14 +54,32 @@ User Function fConvSX3(cTabela,cCampos)
 
 		TRB->(DbCloseArea())
 
+
 	endif
 
 	TcQuery cQry New Alias "TRB"
+		// Monta o array com os dados
+			TRB->(DbGoTop())
+			While !TRB->(Eof())
+				aAdd(aRet, {;
+					AllTrim(TRB->TITULO),;     // 1
+					TRB->CAMPO,;               // 2
+					TRB->PICTURE,;             // 3
+					TRB->TAMANHO,;             // 4
+					TRB->XDECIMAL,;            // 5
+					TRB->XVALID,;              // 6
+					TRB->USADO,;               // 7
+					TRB->TIPO,;                // 8
+					TRB->F3,;                  // 9
+					TRB->CONTEXT,;             //10
+					TRB->CBOX,;                //11
+					TRB->NIVEL   })            //12
+				TRB->(DbSkip())
+			EndDo
 
-	TRB->(DbSelectArea("TRB"))
-	TRB->(DbGoTop())
+			TRB->(DbCloseArea())
 
-Return(!TRB->(Eof()))
+Return aRet
 
 User Function ULogMsg(cMsg)
 
