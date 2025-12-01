@@ -1,4 +1,3 @@
-
 #include 'TOPCONN.CH'
 #Include "TOTVS.ch"
 
@@ -25,10 +24,21 @@ Static nPosArmazem  := 10 //Coluna J no Excel
 User Function FSEST004()
 
 	Local aArea     := GetArea()
+    Local cDirIni := GetTempPath()
+    Local lSalvar := .F.
+    Local cTipArq := "Todas extensões (*.*) | Arquivos texto (*.txt) | Arquivos com separações (*.csv)"
+    Local cTitulo := "Seleção de Arquivos para Processamento"
 	Private cArqOri := ""
 
 	//Mostra o Prompt para selecionar arquivos
-	cArqOri := tFileDialog("CSV files (*.csv) ", 'Seleção de Arquivos', , , .F., )
+     cArqOri := tFileDialog(;
+            cTipArq,;  // Filtragem de tipos de arquivos que serão selecionados
+            cTitulo,;  // Título da Janela para seleção dos arquivos
+            ,;         // Compatibilidade
+            cDirIni,;  // Diretório inicial da busca de arquivos
+            lSalvar,;  // Se for .T., será uma Save Dialog, senão será Open Dialog
+            ;          // Se não passar parâmetro, irá pegar apenas 1 arquivo; Se for informado GETF_MULTISELECT será possível pegar mais de 1 arquivo; Se for informado GETF_RETDIRECTORY será possível selecionar o diretório
+        )
 
 	//Se tiver o arquivo de origem
 	If ! Empty(cArqOri)
