@@ -49,7 +49,7 @@ User Function MT241TOK()
 	If cFilAnt == "0101"
 		If _Tm $ cOpTm .AND. !EMPTY(_op)
 			DbSelectArea("SD3")
-			DbSetOrder(18)
+			DbSetOrder(19)
 			If !dbSeek(xFilial("SD3")+_op+_cod+_lote)  //Criar o Indice 18
 				Help(, ,"AVISO#0018", ,"Produto e/ou Lote não encontrado na Ordem De Produção:" + cvaltochar(_op)+"",1, 0, , , , , , ;
 					{"A TM: " +cOpTm+ " exige que as devoluções sejam realizadas apenas para itens que foram baixados através da OP:" + cvaltochar(_op)+ ""})
