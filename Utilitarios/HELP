@@ -197,3 +197,9 @@ Solução : Corrija as pendências para prosseguir cpom o apontamento.
 
 Problema : As informações não foram enviadas.
 Solução : Verifique se a Nota foi autorizada ou contate o administrador do sistema.
+
+
+"AVISO#0033"
+
+Problema : Campo Observação vazio.
+Solução : Requisição de Matéria-Prima para centro de custo requer justificativa no campo Observação.
