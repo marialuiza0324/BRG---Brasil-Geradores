@@ -161,10 +161,6 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
                   cFilDest := "1001" // Agrogera
                EndIf
 
-               //Troca a filial para a nova
-                  u_zAltFil( , cFilDest)
-
-       
 		//Adiciona os dados do ExecAuto
 		aAdd(aCabec, {'F1_FILIAL',   cFilDest,   Nil})
 		aAdd(aCabec, {'F1_TIPO',   oCabecalho:GetJsonObject('tipo'),   Nil})
@@ -243,77 +239,3 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
     //Define o retorno
     Self:SetResponse(EncodeUTF8(jResponse:toJSON()))
 Return lRet
-
-//Variáveis que existirão mesmo após sair do prw
-Static cEmpBkp := ""
-Static cFilBkp := ""
-  
-/*/{Protheus.doc} User Function zAltFil
-Função que realiza a troca de filial para processos específicos
-@type  Function
-@author Atilio
-@since 08/09/2022
-@param cEmpNov, Caractere, Código da empresa nova em cEmpAnt
-@param cFilNov, Caractere, Código da filial nova em cFilAnt
-@param lVolta, Lógico, Define se irá voltar o backup da empresa e filial original
-@example
-    //Alterando a empresa e filial
-    u_zAltFil("01", "0101")
-  
-    //Voltando o backup da empresa e filial
-    u_zAltFil( , , .T.)
-@obs As variáveis cEmpAnt, cFilAnt e cNumEmp são públicas na thread do Protheus, cuidado ao manipular elas
-/*/
-
-User Function zAltFil(cEmpNov, cFilNov, lVolta)
-
-	Local aArea := FWGetArea()
-	Default cEmpNov := "01"
-	Default cFilNov := cFilDest
-	Default lVolta  := .F.
-
-	//Se for para voltar o backup
-	If lVolta
-		//Se tiver empresa e filial de backup
-		If ! Empty(cEmpBkp) .And. ! Empty(cFilBkp)
-			cEmpAnt := cEmpBkp
-			cFilAnt := cFilBkp
-			cNumEmp := cEmpAnt + cFilAnt
-
-			//Agora zera os backups
-			cEmpBkp := ""
-			cFilBkp := ""
-		EndIf
-
-		//Se não, será feito a troca para a filial
-	Else
-		//Se não tiver backup da empresa, realiza
-		If Empty(cEmpBkp)
-			cEmpBkp := cEmpAnt
-		EndIf
-
-		//Se não tiver backup da filial, realiza
-		If Empty(cFilBkp)
-			cFilBkp := cFilAnt
-		EndIf
-
-		//Se os parâmetros vieram vazios, coloca conteúdo default para não dar problema na troca
-		If Empty(cEmpNov)
-			cEmpNov := cEmpAnt
-		EndIf
-		If Empty(cFilNov)
-			cFilNov := cFilAnt
-		EndIf
-
-		//Realiza a troca de filial para as novas
-		cEmpAnt := cEmpNov
-		cFilAnt := cFilNov
-		cNumEmp := cEmpAnt + cFilAnt
-	EndIf
-
-	//Realiza a troca da empresa e filial
-	OpenFile(cNumEmp)
-
-	FWRestArea(aArea)
-Return
-

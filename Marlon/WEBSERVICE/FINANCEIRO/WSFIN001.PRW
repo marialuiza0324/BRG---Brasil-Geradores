@@ -15,6 +15,7 @@ WSRESTFUL WSFIN001 DESCRIPTION 'Serviço rest para manipulação do título a pagar'
 
 	WSDATA prefixo  AS STRING
 	WSDATA num      AS STRING
+	WSDATA numfat   AS STRING
 	WSDATA parcela  AS STRING
 	WSDATA tipo     AS STRING
 	WSDATA naturez  AS STRING
@@ -22,6 +23,8 @@ WSRESTFUL WSFIN001 DESCRIPTION 'Serviço rest para manipulação do título a pagar'
 	WSDATA loja     AS STRING
 	WSDATA lojafat  AS STRING
 	WSDATA emissao  AS DATE
+	WSDATA vencto   AS DATE
+	WSDATA vencrea  AS DATE
 	WSDATA valor    AS NUMERIC
 	WSDATA nomforn  AS STRING
 
@@ -42,6 +45,7 @@ Cria um novo registro na tabela
     {
         "prefixo": "conteudo",
         "num": "conteudo",
+		"numfat": "conteudo",	
         "parcela": "conteudo",
         "tipo": "conteudo",
         "naturez": "conteudo",
@@ -49,6 +53,8 @@ Cria um novo registro na tabela
         "loja": "conteudo",
 		"lojafat": "conteudo",
         "emissao": "conteudo",
+		"vencto": "conteudo",
+		"vencrea": "conteudo",
         "valor": "conteudo",
 		"nomforn": "conteudo"
     }
@@ -75,6 +81,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 	Local nTamTipo := TamSx3("E2_TIPO")[1]
 	Local cPrefixo := ""
 	Local cNum    := ""
+	Local cNumFat := ""
 	Local cParcela := ""
 	Local cTipo    := ""
 	Local cNaturez := ""
@@ -82,6 +89,8 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 	Local cLoja    := ""
 	Local cLojaFat := ""
 	Local dEmissao
+	Local dVencto  
+	Local dVencrea 
 	Local nValor   := 0
 	Local cNomForn := ""
 	Private lMsErroAuto     := .F.
@@ -112,6 +121,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 		//Adiciona os dados do ExecAuto
 		cPrefixo := jJson:GetJsonObject('prefixo')
 		cNum     := jJson:GetJsonObject('num')
+		cNumFat  := jJson:GetJsonObject('numfat')
 		cParcela := jJson:GetJsonObject('parcela')
 		cTipo    := jJson:GetJsonObject('tipo')
 		cNaturez := jJson:GetJsonObject('naturez')
@@ -120,6 +130,10 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 		cLojaFat := jJson:GetJsonObject('lojafat')
 		dEmissao := StrTran(jJson:GetJsonObject('emissao'), '-', '')
 		dEmissao := Stod(dEmissao)
+		dVencto  := StrTran(jJson:GetJsonObject('vencto'), '-', '')
+		dVencto  := Stod(dVencto)
+		dVencrea := StrTran(jJson:GetJsonObject('vencrea'), '-', '')
+		dVencrea := Stod(dVencrea)
 		nValor   := jJson:GetJsonObject('valor')
 		cNomForn := jJson:GetJsonObject('nomforn')
 
@@ -153,7 +167,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 			//[13] - ARRAY com os titulos da fatura - Geradores
 			//[14] - Valor de decrescimo
 			//[15] - Valor de acrescimo
-			aFatPag := { "FAT", PADR("FT",nTamTipo), PADR(cNum,nTamTit), cNaturez, dEmissao, dEmissao, PADR(cFornece,nTamForn), PADR(cLoja,nTamLoja), cFornece, cLojaFat, "001", 01, aTits ,0 ,0 }
+			aFatPag := { "FAT", PADR("FT",nTamTipo), PADR(cNumFat,nTamTit), cNaturez, dEmissao, dEmissao, PADR(cFornece,nTamForn), PADR(cLoja,nTamLoja), cFornece, cLojaFat, "001", 01, aTits ,0 ,0 }
 
 			MsExecAuto( { |x,y| FINA290(x,y)}, 3, aFatPag )
 
@@ -180,9 +194,11 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 
 				//Senão, define o retorno
 			Else
-				If SE2->(MsSeek(FwXFilial()+"FAT"+cNum))
+				If SE2->(MsSeek(FwXFilial()+"FAT"+cNumFat))
 					Reclock("SE2",.F.)
 					SE2->E2_NOMFOR := cNomForn
+					SE2->E2_VENCTO := dVencto
+					SE2->E2_VENCREA:= dVencrea
 					SE2->(MsUnLock())
 				EndIf
 				jResponse['note']  := 'Registro incluido com sucesso'

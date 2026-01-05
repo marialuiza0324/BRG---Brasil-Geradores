@@ -30,7 +30,7 @@ User Function NOMESC5()
 	DbSetOrder(1)
 	dbSeek(xFilial("SA1")+M->C5_CLIENTE)
 
-	If Funname() <> "LOCA001" .AND. Funname() <> "FSFAT004" /*.AND. Funname() <> "MATA461"*/ .AND. FunName() <> "RPC"
+	If Funname() <> "LOCA001" .AND. Funname() <> "FSFAT004" .AND. Funname() <> "LOCA048" .AND. FunName() <> "RPC"
 
 		IF SA1->A1_CONTRIB == '2'
 			cContrib := '<b style="color:red">NÃO CONTRIBUINTE!!!</b>'
