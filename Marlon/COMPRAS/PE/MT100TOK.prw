@@ -54,7 +54,7 @@ User Function MT100TOK()
     Local cTesDupl := ""
     local cAdiant  := ""
 
- If Funname() <> "LOCA001" .AND. Funname() <> "MATA116" .AND. FunName() <> "RPC"
+ If Funname() <> "LOCA001" .AND. Funname() <> "MATA116" .AND. FunName() <> "RPC" .AND. Funname() <> "SPEDNFE"
 
  If cFilAnt $ cFilDoc //verifica se a filial do documento está na lista do parâmetro 
 
