@@ -54,6 +54,12 @@ User Function MT241TOK()
 				Help(, ,"AVISO#0018", ,"Produto e/ou Lote não encontrado na Ordem De Produção:" + cvaltochar(_op)+"",1, 0, , , , , , ;
 					{"A TM: " +cOpTm+ " exige que as devoluções sejam realizadas apenas para itens que foram baixados através da OP:" + cvaltochar(_op)+ ""})
 				_lok := .F.
+			ElseIf !Empty(_lote)
+				If dbSeek(xFilial("SD3")+_op+_cod+_lote) .AND. SD3->D3_TM = '050'
+					Help(, ,"AVISO#0035", ,"Lote : " + cvaltochar(Alltrim(_lote))+ " já foi devolvido",1, 0, , , , , , ;
+						{"Validar se já existe devolução do lote : " + cvaltochar(Alltrim(_lote)) + " utilizando a(s) TM(s) : " + cvaltochar(cOpTm)+ " para esta OP: " + cvaltochar(_op)+ ""})
+					_lok := .F.
+				EndIf
 			EndIf
 		EndiF
 	EndiF
