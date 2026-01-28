@@ -203,3 +203,16 @@ Solução : Verifique se a Nota foi autorizada ou contate o administrador do sis
 
 Problema : Campo Observação vazio.
 Solução : Requisição de Matéria-Prima para centro de custo requer justificativa no campo Observação.
+
+
+"AVISO#0034"
+
+Problema : Campo Observação não tem informação suficiente.
+Solução : O campo Observação deve conter no mínimo 15 caracteres.
+
+
+
+"AVISO#0035"
+
+Problema : Campo obrigatório vazio.
+Solução : Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido. 
