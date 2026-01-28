@@ -60,6 +60,7 @@ User function Termo()
 	Private nSaldoDisponivel := 0
 	Private cLogo
 	Private cRequis 
+	Private cEnderec 
 
 	ValidPerg1()
 	pergunte(cPerg,.T.)    // sem tela de pergunta
@@ -94,9 +95,9 @@ User function Termo()
 	_cQry += "SELECT  CP_FILIAL , CP_NUM, CP_ITEM, CP_NUMOS, CP_PRODUTO, CP_DESCRI, CP_XENDERE, CP_UM, CP_QUANT, CP_OP, CP_LOCAL, CP_LOTE, CP_OBS, CP_EMISSAO, CP_SOLICIT "
 	_cQry += "FROM " + retsqlname("SCP")+" SCP "
 	_cQry += "WHERE SCP.D_E_L_E_T_ <> '*' "
-	_cQry += "AND CP_FILIAL = '" +xFilial("SCP") + "'
+	_cQry += "AND CP_FILIAL = '" +cFilAnt+ "'
 	_cQry += "AND CP_NUM BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' "
-	_cQry += "ORDER BY CP_FILIAL,CP_NUM, CP_SOLICIT, CP_PRODUTO  "
+	_cQry += "ORDER BY CP_FILIAL,CP_NUM,CP_ITEM, CP_SOLICIT, CP_PRODUTO  "
 
 	_cQry := ChangeQuery(_cQry)
 	TcQuery _cQry New Alias "TMP"
@@ -146,7 +147,8 @@ User function Termo()
 			oPrint:Say(nLin, 1460, TMP->CP_LOCAL , oFont8N)
 			oPrint:Say(nLin, 1600, Transform(TMP->CP_QUANT, "@e 999,999,999.999"), oFont8N)   //VER
 			oPrint:Say(nLin, 1860, TMP->CP_UM , oFont8N)
-			oPrint:Say(nLin, 2060, TMP->CP_XENDERE, oFont8N)
+			cEnderec := Posicione("SBF",2,FWxFilial('SBF')+ TMP->CP_PRODUTO + TMP->CP_LOCAL,'BF_LOCALIZ')
+			oPrint:Say(nLin, 2060, cEnderec, oFont8N)
 			oPrint:Say(nLin, 2230, TMP->CP_OP, oFont8N)
 			oPrint:Say(nLin, 2450, TMP->CP_LOTE, oFont8N)
 			oPrint:Say(nLin, 2650, CVALTOCHAR(STOD(TMP->CP_EMISSAO)), oFont8N)
