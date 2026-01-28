@@ -33,7 +33,7 @@ User Function FSCOM006()
 	If cUser $ cCadProd
 
 		//Mostra o Prompt para selecionar arquivos
-		cArqOri := tFileDialog( "CSV files (*.csv) ", 'Seleção de Arquivos', , , .F., )
+		cArqOri := cGetFile('Arquivos CSV|*.csv','Seleção de Arquivos',0,'C:\',.T.,,.F.)
 
 		//Se tiver o arquivo de origem
 		If ! Empty(cArqOri)
@@ -76,7 +76,6 @@ Static Function fImporta()
     Local nOpcAuto
     Local nTotLinhas := 0
     Local cLinAtu    := ""
-    Local nLinhaAtu  := 0
     Local aLinha     := {}
     Local oArquivo
     Local aLinhas
@@ -93,6 +92,7 @@ Static Function fImporta()
     Private cQuery := " "
     Private QAux, nSeq, cRetorno, _cTMS
 	Private _nTam, _nTamGrupo  := 0
+    Private nLinhaAtu  := 0
       
     //Se a pasta de log não existir, cria ela
     If ! ExistDir(cDirLog)
@@ -185,10 +185,9 @@ Static Function fImporta()
 
                         QAux->(dbCloseArea())
 
-
-
                         Begin Transaction 
-
+                                
+                                lMsErroAuto := .F.
                                 MSExecAuto({|x, y| MATA010(x, y)}, aLinha, nOpcAuto)
                         
                                 //Se houve erro, mostra a mensagem
@@ -197,10 +196,10 @@ Static Function fImporta()
                                         cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cRetorno)+ "        NÃO PROCESSADO " + CRLF
                                         DisarmTransaction()
                                         lLogError := .T.
+                                        lMsErroAuto := .F.
                                     //Se deu tudo certo, efetiva a numeração
                                     Else
-                                    cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cRetorno)+ "         PROCESSADO COM SUCESSO " + CRLF
-                                        ConfirmSX8()
+                                    fReplicaProdutoCSV(cRetorno, cGrupo)
                                     EndIf
 
                         End Transaction
@@ -225,5 +224,117 @@ Static Function fImporta()
         MsgStop("Arquivo não pode ser aberto!", "Atenção")
     EndIf
   
+    RestArea(aArea)
+Return
+
+/*------------------------------------------------------------------------------
+| Func.: fReplicaProdutoCSV
+| Desc.: Replica o produto recém-incluído (via CSV) para as filiais definidas
+|        no parâmetro MV_FILREPL, sem tela de edição
+------------------------------------------------------------------------------*/
+Static Function fReplicaProdutoCSV(cRetorno, cGrupo)
+
+    Local cFilParam   := SuperGetMV("MV_FILREPL", ,"")
+    Local aFiliais    := StrTokArr(cFilParam, ",")
+    Local cFilOrigem  := FWxFilial("SB1")   // filial corrente
+    Local nX
+    Local aAreaB1     := SB1->(GetArea())
+    Local lAchouGrupo := .F.
+
+    // Verifica se o grupo está marcado para replicação
+    DbSelectArea("SBM")
+    SBM->(DbSetOrder(1))  // FILIAL + GRUPO
+    If SBM->(MsSeek(FWxFilial("SBM") + cGrupo))
+        If SBM->BM_XREPLIC == "1"
+            lAchouGrupo := .T.
+        EndIf
+    EndIf
+    SBM->(DbCloseArea())
+
+    If !lAchouGrupo
+        RestArea(aAreaB1)
+        Return
+    EndIf
+
+    // Posiciona no produto que acabou de ser incluído
+    DbSelectArea("SB1")
+    SB1->(DbSetOrder(1))  // FILIAL + CODIGO
+    If SB1->(DbSeek(cFilOrigem + cRetorno))
+        
+        ProcRegua(Len(aFiliais))
+        
+        For nX := 1 To Len(aFiliais)
+            IncProc("Replicando " + cRetorno + " Filial " + aFiliais[nX])
+            
+            If aFiliais[nX] == Left(cFilOrigem, Len(aFiliais[nX]))  // mesma filial
+                Loop
+            EndIf
+            
+            fReplicaDiretaCSV(aFiliais[nX], cRetorno)
+        Next nX
+    EndIf
+
+    RestArea(aAreaB1)
+Return
+
+
+/*------------------------------------------------------------------------------
+| Func.: fReplicaDiretaCSV
+| Desc.: Copia o registro SB1 da filial origem para a filial destino
+------------------------------------------------------------------------------*/
+Static Function fReplicaDiretaCSV(cFilDestino, cRetorno)
+
+    Local aArea    := GetArea()
+    Local aEstru   := SB1->(DbStruct())
+    Local aConteudo:= {}
+    Local nPosFil  := aScan(aEstru, {|x| AllTrim(Upper(x[1])) == "B1_FILIAL" })
+    Local nPosCod  := aScan(aEstru, {|x| AllTrim(Upper(x[1])) == "B1_COD" })
+    Local cCampoFil:= If(nPosFil > 0, aEstru[nPosFil][1], "B1_FILIAL")
+    Local cQuery   := ""
+    Local lExiste  := .F.
+    Local nRecno   := 0
+    Local nI
+
+    // Verifica se já existe na filial destino
+    cQuery := "SELECT R_E_C_N_O_ "
+    cQuery += "  FROM " + RetSqlName("SB1")
+    cQuery += " WHERE " + cCampoFil + " = '" + cFilDestino + "'"
+    cQuery += "   AND B1_COD = '" + cRetorno + "'"
+    cQuery += "   AND D_E_L_E_T_ = ' '"
+    TCQuery cQuery NEW Alias "QRYEXIST"
+
+    lExiste := !QRYEXIST->(EoF())
+    nRecno  := If(lExiste, QRYEXIST->R_E_C_N_O_, 0)
+    QRYEXIST->(DbCloseArea())
+
+    // Monta array com conteúdo, alterando apenas filial
+    aConteudo := {}
+    For nI := 1 To Len(aEstru)
+        If nI == nPosFil
+            aAdd(aConteudo, cFilDestino)
+        ElseIf nI == nPosCod
+            aAdd(aConteudo, cRetorno)  // mantém o mesmo código
+        Else
+            aAdd(aConteudo, SB1->&(aEstru[nI][1]))
+        EndIf
+    Next nI
+
+    // Grava / Atualiza
+    If lExiste
+        SB1->(DbGoTo(nRecno))
+        RecLock("SB1", .F.)
+    Else
+        RecLock("SB1", .T.)
+    EndIf
+
+    For nI := 1 To Len(aEstru)
+        SB1->&(aEstru[nI][1]) := aConteudo[nI]
+    Next nI
+
+    cLog += "Linha " + cValToChar(nLinhaAtu) + " Produto "+Alltrim(cRetorno)+ "         PROCESSADO COM SUCESSO " + CRLF
+    ConfirmSX8()
+
+    SB1->(MsUnlock())
+
     RestArea(aArea)
 Return

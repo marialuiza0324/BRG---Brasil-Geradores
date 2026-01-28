@@ -36,39 +36,42 @@ User Function MT010INC()
 	Private aFilial := {}
 	Private aEditedData := {}
 
-	DbSelectArea("SBM")
-	SBM->(DbSetOrder(1))
+	If Funname() <> "FSCOM006"
+	
+		DbSelectArea("SBM")
+		SBM->(DbSetOrder(1))
 
-	If SBM->(MsSeek(FWxFilial("SBM") + SB1->B1_GRUPO))
-		If SBM->BM_XREPLIC = "1"
-			aFilial := StrTokArr(cFil, ",")
+		If SBM->(MsSeek(FWxFilial("SBM") + SB1->B1_GRUPO))
+			If SBM->BM_XREPLIC = "1"
+				aFilial := StrTokArr(cFil, ",")
 
-			If SBM->BM_XREPLIC = "1" // Verifica se grupo se enquadra na réplica do produto
+				If SBM->BM_XREPLIC = "1" // Verifica se grupo se enquadra na réplica do produto
 
-				aFilial:= StrTokArr(cFil, ",") //Transforma conteúdo do parâmetro em array
+					aFilial:= StrTokArr(cFil, ",") //Transforma conteúdo do parâmetro em array
 
-				cTabelaAux := 'SB1'
-				cChaveAux  := 'B1_COD'
-				cFilAtuAux := FWCodEmp()
-				cCodAtuAux := SB1->B1_COD
-				cCodNovAux := SB1->B1_COD
-				For nX := 1 to Len(aFilial)
-					cFilNovAux := aFilial[nX]
-					If cFilNovAux <> FWCodEmp()
-						Processa({|| fCopia()}, 'Replicando Registro...')
-						aAdd(aFiliaisCopiadas, cFilNovAux)
-						Exit // Sai do loop após chamar fCopia(), pois a tela será exibida e o usuário ajustará os dados
-					EndIf
-				Next
-				FwAlertInfo("Cópia concluída.", "Atenção")
+					cTabelaAux := 'SB1'
+					cChaveAux  := 'B1_COD'
+					cFilAtuAux := FWCodEmp()
+					cCodAtuAux := SB1->B1_COD
+					cCodNovAux := SB1->B1_COD
+					For nX := 1 to Len(aFilial)
+						cFilNovAux := aFilial[nX]
+						If cFilNovAux <> FWCodEmp()
+							Processa({|| fCopia()}, 'Replicando Registro...')
+							aAdd(aFiliaisCopiadas, cFilNovAux)
+							Exit // Sai do loop após chamar fCopia(), pois a tela será exibida e o usuário ajustará os dados
+						EndIf
+					Next
+					FwAlertInfo("Cópia concluída.", "Atenção")
 
+				EndIf
 			EndIf
 		EndIf
-	EndIf
 
-	SBM->(DbCloseArea())
-	RestArea(aAreaB1)
-	RestArea(aArea)
+		SBM->(DbCloseArea())
+		RestArea(aAreaB1)
+		RestArea(aArea)
+	EndIf
 Return
 
 
@@ -126,7 +129,7 @@ Static Function fCopia()
 				IIf(!Empty(SB1->B1_XCTAC), SB1->B1_XCTAC, ""),;
 				IIf(!Empty(SB1->B1_XCTAD), SB1->B1_XCTAD, ""),;
 				.F.;
-			})
+				})
 		EndIf
 	Next
 
