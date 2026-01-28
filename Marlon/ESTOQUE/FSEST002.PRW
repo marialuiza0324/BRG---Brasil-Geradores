@@ -30,7 +30,7 @@ User Function FSEST002()
 	Private cArqOri := ""
 
 	//Mostra o Prompt para selecionar arquivos
-	cArqOri := tFileDialog( "CSV files (*.csv) ", 'Seleção de Arquivos', , , .F., )
+	cArqOri := cGetFile('Arquivos CSV|*.csv','Seleção de Arquivos',0,'C:\',.T.,,.F.)//tFileDialog( "CSV files (*.csv) ", 'Seleção de Arquivos', , , .F., )
 
 	//Se tiver o arquivo de origem
 	If ! Empty(cArqOri)
