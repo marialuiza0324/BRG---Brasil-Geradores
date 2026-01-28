@@ -29,7 +29,7 @@ USER FUNCTION MT410TOK()
 	Local cEmp := FwCodEmp()
 	local nTes        := AScan(aHeader, {|x| Alltrim(x[2]) == "C6_TES"})
 	local nArmazem    := AScan(aHeader, {|x| Alltrim(x[2]) == "C6_LOCAL"})
-
+	Local cArmLoc 	  := SupergetMv("MV_ARMLOC", , ) //Parâmetro que controla os armazéns que serão LIBERADOS para usuário de locação
 
 	If Funname() <> "LOCA001"
 		If nOpc == 1
@@ -64,57 +64,62 @@ USER FUNCTION MT410TOK()
 
 		ElseIf nOpc == 3
 
-		/*Validação criada para quando for feita cópia do pedido de venda, validar o RESPONSÁVEL 
-			pelo pedido 28/05/2025 Solicitante - Brenda #GLPI 9692*/
+			/*Validação criada para quando for feita cópia do pedido de venda, validar o RESPONSÁVEL 
+				pelo pedido 28/05/2025 Solicitante - Brenda #GLPI 9692*/
 
-		M->C5_XUSER := cNome
+			M->C5_XUSER := cNome
 
-		/*Validação criada para quando for feita cópia do pedido de venda, validar a TES
-		28/05/2025 Solicitante - Brenda #GLPI 9694*/
-		
-		// Loop para validar as TES dos itens do pedido de venda
-		For nI := 1 To Len(aCols)
-			If cUser_Id $ cUser
-				// Verifica se a TES do item não está liberada para o usuário de locação nas filiais 0501 ou 1001
-				If !(aCols[nI][nTes] $ cTesLoc) .AND. cEmp $ cEmpLoc
-					Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
-					lRet := .F.
-					Exit
-				ElseIf !(aCols[nI][nTes] $ cTesLoc) .AND. cEmp $ cEmpLoc 
-					Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
-					lRet := .F.
-					Exit
-				EndIf
-			EndIf
-		Next
-
-		// Validação para restringir o armazém conforme filial para usuário de locação
-		// 28/06/2024 - Solicitante - Brenda #GLPI 9732
-		/*
-			Verifica se o usuário atual possui permissão para movimentar itens no armazém selecionado, de acordo com a filial.
-
-			- Para a filial "0501", somente é permitido movimentar itens no armazém "99".
-			- Para a filial "0101", somente é permitido movimentar itens no armazém "11".
-			- Caso o usuário tente movimentar em um armazém diferente do permitido para a filial correspondente, é exibida uma mensagem de aviso (Help) informando a restrição e sugerindo o armazém correto.
-			- Se a restrição for violada, a variável lRet é definida como .F. e o loop é interrompido.
-			- O controle é feito para cada item da lista aCols, verificando o armazém associado ao item (posição 17 do array).*/
-		
-		If cUser_Id $ cUser
+			/*Validação criada para quando for feita cópia do pedido de venda, validar a TES
+			28/05/2025 Solicitante - Brenda #GLPI 9694*/
+			
+			// Loop para validar as TES dos itens do pedido de venda
 			For nI := 1 To Len(aCols)
-					If cFilAnt == "0501" .AND. aCols[nI][nArmazem] <> "99"
-						Help(, ,"AVISO#0025", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 99"})
+				If cUser_Id $ cUser
+					// Verifica se a TES do item não está liberada para o usuário de locação nas filiais 0501 ou 1001
+					If !(aCols[nI][nTes] $ cTesLoc) .AND. cEmp $ cEmpLoc
+						Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
 						lRet := .F.
 						Exit
-					ElseIf cFilAnt == "0101" .AND. aCols[nI][nArmazem] <> "11" .AND. aCols[nI][nArmazem] <> "10"
-						Help(, ,"AVISO#0026", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o armazém: 10 ou 11"})
+					ElseIf !(aCols[nI][nTes] $ cTesLoc) .AND. cEmp $ cEmpLoc 
+						Help(, ,"AVISO#0001", ,"Usuário " +cUserName+ " não tem permissão para utilizar TES selecionada",1, 0, , , , , , {"Para esta filial, utilize a(s) TES : " +cTesLoc})
 						lRet := .F.
 						Exit
 					EndIf
+				EndIf
 			Next
-		EndIf
 
+			// Validação para restringir o armazém conforme filial para usuário de locação
+			// 28/06/2024 - Solicitante - Brenda #GLPI 9732
+			/*
+				Verifica se o usuário atual possui permissão para movimentar itens no armazém selecionado, de acordo com a filial.
+
+				- Para a filial "0501", somente é permitido movimentar itens no armazém "99".
+				- Para a filial "0101", somente é permitido movimentar itens no armazém "11".
+				- Caso o usuário tente movimentar em um armazém diferente do permitido para a filial correspondente, é exibida uma mensagem de aviso (Help) informando a restrição e sugerindo o armazém correto.
+				- Se a restrição for violada, a variável lRet é definida como .F. e o loop é interrompido.
+				- O controle é feito para cada item da lista aCols, verificando o armazém associado ao item (posição 17 do array).*/
+			
+			If cUser_Id $ cUser
+				For nI := 1 To Len(aCols)
+						If cFilAnt == "0501" .AND. !(aCols[nI][nArmazem] $ cArmLoc)
+							Help(, ,"AVISO#0025", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o(s) armazém(ns): " + cArmLoc + ""})
+							lRet := .F.
+							Exit
+						ElseIf cFilAnt == "0101" .AND. !(aCols[nI][nArmazem] $ cArmLoc)
+							Help(, ,"AVISO#0026", ,"Usuário " +cUserName+ " não tem permissão para movimentar no armazém selecionado",1, 0, , , , , , {"Para filial " +cFilAnt+ ", utilize o(s) armazém(ns): " + cArmLoc + ""})
+							lRet := .F.
+							Exit
+						EndIf
+				Next
+			EndIf
+
+			IF Empty(M->C5_VEND1)
+				Help(, ,"AVISO#0035", ,"Campo obrigatório vazio.",1, 0, , , , , , {"Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido."})
+				lRet := .F.
+			EndIf
+
+		EndIf
 	EndIf
-EndIf
 
 Return lRet
 
