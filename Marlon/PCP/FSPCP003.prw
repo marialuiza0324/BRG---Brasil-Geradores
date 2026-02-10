@@ -55,6 +55,7 @@ Static Function fImporta()
 	Local aLogErro   := {}
 	Local nLinhaErro := 0
 	Local nI, nJ
+	Local cMsBlql    := ""
 	//Variáveis do ExecAuto
 	Private aCab         := {}
 	Private aItem         := {}
@@ -144,6 +145,13 @@ Static Function fImporta()
 			aAdd(aLinhaItem, {"G1_PERDA" , 0                          , Nil})
 
 			aAdd(aItem, aLinhaItem)
+
+			cMsBlql := Posicione("SB1",1,xFilial("SB1")+aPais[nI][2][nJ][1],"B1_MSBLQL") //Verifica se o produto esta bloqueado
+
+			If cMsBlql == "1"
+				cLog += '- Não foi possível importar estrutura do produto: ' + cPaiAtual + CRLF
+				cLog += '- Produto bloqueado: ' + aPais[nI][2][nJ][1] + CRLF
+			EndIf
 		Next
 
 		lMsErroAuto := .F.
@@ -157,18 +165,26 @@ Static Function fImporta()
 				cTextoErro += aLogErro[nLinhaErro] + CRLF
 			Next
 			cNomeErro := 'erro_SG1_' + cPaiAtual + '_' + DTOS(Date()) + '_' + StrTran(Time(),':','-') + '.txt'
-			If !ExistDir(cPastaErro); MakeDir(cPastaErro); EndIf
-				MemoWrite(cPastaErro + cNomeErro, cTextoErro)
-				cLog += '- ERRO ao importar estrutura do produto: ' + cPaiAtual + CRLF
-			Else
-				cLog += '- Sucesso na importação da estrutura do produto : ' + cPaiAtual + ' (' + cValToChar(Len(aItem)) + ' componentes)' + CRLF
+			If !ExistDir(cPastaErro)
+				MakeDir(cPastaErro)
 			EndIf
-		Next
+			MemoWrite(cPastaErro + cNomeErro, cTextoErro)
+			DbSelectArea("SG1")
+			SG1->(DbSetOrder(1))
+			If SG1->(MsSeek(xFilial("SG1")+cPaiAtual)) //Verifica se o componente existe
+				cLog += '- Não foi possível importar, já existe estrutura cadastrada para esse produto: ' + cPaiAtual + CRLF
+			EndIf
+
+			SG1->(DbCloseArea())
+		Else
+			cLog += '- Sucesso na importação da estrutura do produto : ' + cPaiAtual + ' (' + cValToChar(Len(aItem)) + ' componentes)' + CRLF
+		EndIf
+	Next
 
 //Se tiver log, mostra ele
-If ! Empty(cLog)
-	MemoWrite(cDirTmp + cArqLog, cLog)
-	ShellExecute('OPEN', cArqLog, '', cDirTmp, 1)
-EndIf
+	If ! Empty(cLog)
+		MemoWrite(cDirTmp + cArqLog, cLog)
+		ShellExecute('OPEN', cArqLog, '', cDirTmp, 1)
+	EndIf
 
 Return
