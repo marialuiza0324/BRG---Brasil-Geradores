@@ -175,13 +175,14 @@ User Function BRG020()
 
 	While SC6->(!EOF()) .AND. xFilial("SC6") = SC6->C6_FILIAL .AND. SC6->C6_NUM = _Nun
 
-		nTotReal:= SC6->C6_PRCVEN
-
-		_Tot  := _Tot + SC6->C6_VALOR
-		nDesconto += SC6->C6_VALDESC
-
 		// Verifica se há espaço para o item e o rodapé
 		If nLin + 50 + nEspacoRodape <= nLinMax
+
+			nTotReal:= SC6->C6_PRCVEN
+
+			_Tot  := _Tot + SC6->C6_VALOR
+			nDesconto += SC6->C6_VALDESC
+
 			oPrint:Say(nLin, 110, SC6->C6_ITEM, oFont10)
 			oPrint:Say(nLin, 230, SC6->C6_PRODUTO, oFont10)
 			oPrint:Say(nLin, 390, SC6->C6_DESCRI, oFont10)
