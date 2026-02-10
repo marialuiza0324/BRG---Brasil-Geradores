@@ -2,6 +2,8 @@
 #INCLUDE "COLORS.CH"
 #INCLUDE "TBICONN.CH"
 
+Static oQryFltDoc 	:= NIL as object
+
 /*/
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -105,6 +107,7 @@ Local cField		:= ""
 Local cUfCE1 		:= ""
 Local cDescServ		:= ""
 Local cParcela		:= ""
+Local cTipoNot		:= MVNOTAFIS
 
 Local lQuery    	:= .F.
 Local lCalSol		:= .F.
@@ -126,10 +129,15 @@ Local cEmail	    := allTrim( getMV( "MV_EMAILPT",, " " ) )
 Local lNfeServ		:= GetNewPar("MV_NFESERV","1") == "1"	//-- Descr do servico 1-pedido vendas+SX5 ou 2-somente SX5
 local lRetNFTS		:= GetNewPar( "MV_RETNFTS", .F. )		// Considerar titulos pagos no mes de geracao do arquivo
 Local lAglutina		:= allTrim( getNewPar( "MV_ITEMAGL","N" ) ) == "S"
+Local cQuery		:= ""
 
 Local oWSNfe 
 
 Private aUF     	:= {}
+Private lVldExc  	:= FindClass("totvs.protheus.backoffice.tss.engine.tributaveis.TSSTCIntegration")
+Private lConfTrib	:= .F.
+Private oNfTciIntg  := NIL as object
+Private oISSCfg    	as Json
 
 DEFAULT cCodMun 	:= PARAMIXB[1]
 DEFAULT cTipo   	:= PARAMIXB[2] 
@@ -189,6 +197,8 @@ If cTipo == "3" //Titulo contas à pagar - NFTS
 			aadd(aNota,cTipo)
 			aadd(aNota,SE2->E2_TIPO)
 			aadd(aNota,"1")
+			aadd(aNota,cClieFor) //Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
+			aadd(aNota,cLoja)	//Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
 		    
 	   		FIM->( DbSetOrder( 1 ) )
 	   		FIM->( DbSeek( xFilial( "FIM" ) + SE2->E2_CODISS ) )
@@ -225,7 +235,9 @@ If cTipo == "3" //Titulo contas à pagar - NFTS
 								0,; //30
 								0,; //31
 								FIM->FIM_CDTRIB,;//"2301",; //32 - Codigo de Tributação Municipio - B1_TRIBMUN
-								"",;//Codigop fiscal de prestacao de servico							
+								"",;//Codigop fiscal de prestacao de servico //33
+								"",; //34 - Valor Total do serviço.
+								"",; //35 - Codigo para SubItem nfst SP					
 								}) 
 				
 				aTotal[01] := 0
@@ -278,11 +290,13 @@ If cTipo == "3" //Titulo contas à pagar - NFTS
 				aadd(aPrest,SA2->A2_INSCRM) 
 				aadd(aPrest,SA2->A2_CODSIAF)
 				aadd(aPrest,SA2->A2_NATUREZ)            
-				If SA2->A2_PAIS = "105"
+				If SA2->A2_PAIS == "105"
 					aadd(aPrest,"BRASIL")
 				ELSE
 					aadd(aPrest,"EXTERIOR")
 				ENDIF
+				aadd(aPrest,SA2->A2_SIMPNAC) 
+				aadd(aPrest,iif(SA2->(FieldPos("A2_TPJ")) > 0,SA2->A2_TPJ,""))	
 										            			
 				//Carrega dados do Tomador
 				aadd(aDest,AllTrim(SM0->M0_CGC))
@@ -298,11 +312,7 @@ If cTipo == "3" //Titulo contas à pagar - NFTS
 				aadd(aDest,"1058")
 				aadd(aDest,"BRASIL")               
 				//Informacoes de telefone
-				aTelDest:= FisGetTel(SM0->M0_TEL)
-			    cFoneDest := IIF(aTelDest[1] > 0,ConvType(aTelDest[1],3),"") // Código do Pais
-			    cFoneDest += IIF(aTelDest[2] > 0,ConvType(aTelDest[2],3),"") // Código da Área
-			    cFoneDest += IIF(aTelDest[3] > 0,ConvType(aTelDest[3],9),"") // Código do Telefone			
-				aadd(aDest,cFoneDest)
+				aadd(aDest, SM0->M0_TEL)
 				aadd(aDest,VldIE(SM0->M0_INSC))
 				aadd(aDest,"")//SM0->M0_SUFRAMA
 				aadd(aDest,"")          
@@ -367,6 +377,8 @@ ElseIf cTipo == "1"
 		If SF2->(FieldPos("F2_SERSUBS")) > 0 
 			aadd(aNota,SerieNfId("SF2",2,"F2_SERSUBS"))	
 		Endif
+		aadd(aNota,cClieFor) //Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
+		aadd(aNota,cLoja)	//Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
 				
 		//Posiciona cliente ou fornecedor
 		If !SF2->F2_TIPO $ "DB" 
@@ -413,7 +425,7 @@ ElseIf cTipo == "1"
 			aadd(aDest,SA1->A1_INSCRM) 
 			aadd(aDest,SA1->A1_CODSIAF)
 			aadd(aDest,SA1->A1_NATUREZ)            
-			If SA1->A1_PAIS = "105"
+			If SA1->A1_PAIS == "105"
 				aadd(aDest,"BRASIL")
 			ELSE
 				aadd(aDest,"EXTERIOR")
@@ -435,11 +447,7 @@ ElseIf cTipo == "1"
 			aadd(aPrest,"1058")
 			aadd(aPrest,"BRASIL")               
 			//Informacoes de telefone
-			aTelDest:= FisGetTel(SM0->M0_TEL)
-		    cFoneDest := IIF(aTelDest[1] > 0,ConvType(aTelDest[1],3),"") // Código do Pais
-		    cFoneDest += IIF(aTelDest[2] > 0,ConvType(aTelDest[2],3),"") // Código da Área
-		    cFoneDest += IIF(aTelDest[3] > 0,ConvType(aTelDest[3],9),"") // Código do Telefone			
-			aadd(aPrest,cFoneDest)
+			aadd(aDest, SM0->M0_TEL)
 			aadd(aPrest,VldIE(SM0->M0_INSC))
 			aadd(aPrest,"")//SM0->M0_SUFRAMA
 			aadd(aPrest,cEmail)          
@@ -501,7 +509,7 @@ ElseIf cTipo == "1"
 			aadd(aDest,SA2->A2_INSCRM) 
 			aadd(aDest,SA2->A2_CODSIAF)
 			aadd(aDest,SA2->A2_NATUREZ)			
-	   		If SA2->A2_PAIS = "105"
+	   		If SA2->A2_PAIS == "105"
 				aadd(aDest,"BRASIL")
 			ELSE
 				aadd(aDest,"EXTERIOR")
@@ -603,7 +611,7 @@ ElseIf cTipo == "1"
 			While !Eof() .And. xFilial("SE1") == (cAliasSE1)->E1_FILIAL .And.;
 				SF2->F2_PREFIXO == (cAliasSE1)->E1_PREFIXO .And.;
 				SF2->F2_DOC == (cAliasSE1)->E1_NUM
-				If 	(cAliasSE1)->E1_TIPO = MVNOTAFIS .OR. ((cAliasSE1)->E1_ORIGEM = 'LOJA701' .AND. (cAliasSE1)->E1_TIPO $ cWhere)
+				If 	(cAliasSE1)->E1_TIPO == MVNOTAFIS .OR. ((cAliasSE1)->E1_ORIGEM == 'LOJA701' .AND. (cAliasSE1)->E1_TIPO $ cWhere)
 				
 					aadd(aDupl,{(cAliasSE1)->E1_PREFIXO+(cAliasSE1)->E1_NUM+(cAliasSE1)->E1_PARCELA,(cAliasSE1)->E1_VENCORI,(cAliasSE1)->E1_VALOR,(cAliasSE1)->E1_PARCELA})
 				
@@ -1045,7 +1053,7 @@ ElseIf cTipo == "1"
 						Else
 							    aTail(aISSQN) := {CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,cMunISS,AllTrim((cAliasSD2)->D2_CODISS)}
 								nAliq := CD2->CD2_ALIQ
-							EndIf	
+						EndIf	
 				EndCase
 				dbSelectArea("CD2")
 				dbSkip()
@@ -1062,16 +1070,6 @@ ElseIf cTipo == "1"
 					nPosF	:=	IIf(nPosF<=0,len(cMVSUBTRIB),nPosF)
 					aAdd (aIEST, SubStr (cMVSUBTRIB, nPosI, nPosF))	//01 - IE_ST
 				EndIf
-			EndIf
-			IF Empty(aPis[Len(aPis)]) .And. SF4->F4_CSTPIS=="06"
-				aadd(aPisAlqZ,{SF4->F4_CSTPIS})
-			Else
-				aadd(aPisAlqZ,{})
-			EndIf
-			IF Empty(aCOFINS[Len(aCOFINS)]) .And. SF4->F4_CSTCOF=="06"
-				aadd(aCofAlqZ,{SF4->F4_CSTCOF})
-			Else 
-				aadd(aCofAlqZ,{})
 			EndIf				
 							
 			dbSelectArea(cAliasSD2)
@@ -1086,13 +1084,15 @@ ElseIf cTipo == "1"
 		If ( !Empty(cMotCanc) )  		
 			aadd(aNota,Substr(cSerie,1,3))
 			aadd(aNota,IIF(Len(cNota)==6,"000","")+cNota)
-			aadd(aNota,dDtEmiss)
+			aadd(aNota,IIF(ValType(dDtEmiss) == 'C', Stod(dDtEmiss), dDtEmiss))
 			aadd(aNota,cTipo)
 			aadd(aNota,"")
 			aadd(aNota,"1")	
+			aadd(aNota,cClieFor) //Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.	
+			aadd(aNota,cLoja)	//Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
 			
 			cString := '<RPS Id="rps:'+AllTrim(Str(Val(aNota[02])))+'">'
-			cString += NFSECab(cCodMun,aNota,lRetIss,cParcela)
+			cString += NFSECab(cCodMun,aNota,lRetIss,cParcela,cTipoNot,cCodCli,cLojCli)
 			cString += '<MotCancelamento>'+cMotCanc+'</MotCancelamento>'
 			cString += '</RPS>' 							
 		EndIf
@@ -1112,6 +1112,8 @@ Else
 		aadd(aNota,cTipo)
 		aadd(aNota,SF1->F1_TIPO)
 		aadd(aNota,"1")
+		aadd(aNota,cClieFor) //Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
+		aadd(aNota,cLoja)	//Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
 		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 		//³Posiciona cliente ou fornecedor                                         ³
 		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
@@ -1149,7 +1151,7 @@ Else
 			aadd(aPrest,SA2->A2_INSCRM) 
 			aadd(aPrest,SA2->A2_CODSIAF)
 			aadd(aPrest,SA2->A2_NATUREZ)            
-			If SA2->A2_PAIS = "105"
+			If SA2->A2_PAIS == "105"
 				aadd(aPrest,"BRASIL")
 			ELSE
 				aadd(aPrest,"EXTERIOR")
@@ -1171,14 +1173,14 @@ Else
 			aadd(aDest,"1058")
 			aadd(aDest,"BRASIL")               
 			//Informacoes de telefone
-			aTelDest:= FisGetTel(SM0->M0_TEL)
-		    cFoneDest := IIF(aTelDest[1] > 0,ConvType(aTelDest[1],3),"") // Código do Pais
-		    cFoneDest += IIF(aTelDest[2] > 0,ConvType(aTelDest[2],3),"") // Código da Área
-		    cFoneDest += IIF(aTelDest[3] > 0,ConvType(aTelDest[3],9),"") // Código do Telefone			
-			aadd(aDest,cFoneDest)
+			aadd(aDest, SM0->M0_TEL)
 			aadd(aDest,VldIE(SM0->M0_INSC))
 			aadd(aDest,"")//SM0->M0_SUFRAMA
-			aadd(aDest,"")          
+			If !Empty(cEmail)
+				aadd(aDest,cEmail)
+			Else
+				aadd(aDest,"") 
+			EndIf             
 			aadd(aDest,SM0->M0_INSCM) 
 			aadd(aDest,"")
 			aadd(aDest,"")            
@@ -1265,7 +1267,7 @@ Else
 			While !Eof() .And. xFilial("SE2") == (cAliasSE2)->E2_FILIAL .And.;
 				SF1->F1_PREFIXO == (cAliasSE2)->E2_PREFIXO .And.;
 				SF1->F1_DOC == (cAliasSE2)->E2_NUM
-				If 	(cAliasSE2)->E2_TIPO = MVNOTAFIS .OR. ((cAliasSE2)->E2_ORIGEM = 'LOJA701' .AND. (cAliasSE2)->E2_TIPO $ cWhere)
+				If 	(cAliasSE2)->E2_TIPO == MVNOTAFIS .OR. ((cAliasSE2)->E2_ORIGEM == 'LOJA701' .AND. (cAliasSE2)->E2_TIPO $ cWhere)
 				
 					aadd(aDupl,{(cAliasSE2)->E2_PREFIXO+(cAliasSE2)->E2_NUM+(cAliasSE2)->E2_PARCELA,(cAliasSE2)->E2_VENCORI,(cAliasSE2)->E2_VALOR})
 				
@@ -1307,7 +1309,7 @@ Else
 		/*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 		Validação para  NFTS de entrada UF RJ, (Registro Tipo 20 Obrigatorio, relacionada a Cidade e UF Prestação de Serviço)
 		ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿*/
-		If (cCodMun == "3304557")
+		If (cCodMun $ "3304557-3555802-3509502")
 			aEndPrest :=  GetPresEnd(aDest, cTipo)
 		EndIf
 		
@@ -1315,7 +1317,6 @@ Else
 		//³Expressão para incluir campos na pesquisa de itens da nota ³
 		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ		
 
-		cField := "%"
 		// Codigo Obra e ART NFTS
 		dbSelectArea("SD1")
 		dbSetOrder(1)
@@ -1325,39 +1326,35 @@ Else
 				cArtObra	:= aMVNFSOBRA[2] 
 			  
 				If SD1->(FieldPos(cCodObra)) <> 0 .AND. SD1->(FieldPos(cArtObra)) <> 0
-					cField += ","+cCodObra+","+cArtObra 
+					cField += cCodObra + "," + cArtObra + ","
 				EndIf
 			endif
 		EndIf
-		CField += "%"
 	
 		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 		//³Pesquisa itens de nota                                                  ³
 		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ	
 		dbSelectArea("SD1")
 		dbSetOrder(3)	
-		#IFDEF TOP
-			lQuery  := .T.
-			cAliasSD1 := GetNextAlias()
-			BeginSql Alias cAliasSD1
-				SELECT D1_FILIAL,D1_SERIE,D1_DOC,D1_FORNECE,D1_LOJA,D1_COD,D1_TES,D1_NFORI,D1_SERIORI,D1_ITEMORI,D1_TIPO,D1_ITEM,D1_CF,					
-					D1_QUANT,D1_TOTAL,D1_DESC,D1_VALFRE,D1_SEGURO,D1_PEDIDO,D1_ITEMPV,D1_DESPESA,D1_VALISS,D1_VUNIT,
-					D1_CLASFIS,D1_CODISS,D1_ALIQISS,D1_BASEISS,D1_VALIMP1,D1_VALIMP2,D1_VALIMP3,D1_VALIMP4,D1_VALIMP5,D1_BASEIRR,D1_VALIRR %Exp:cField%  
-															                                                                                                                   										
-				FROM %Table:SD1% SD1
-				WHERE
-				SD1.D1_FILIAL = %xFilial:SD1% AND
-				SD1.D1_SERIE = %Exp:SF1->F1_SERIE% AND 
-				SD1.D1_DOC = %Exp:SF1->F1_DOC% AND 
-				SD1.D1_FORNECE = %Exp:SF1->F1_FORNECEE% AND 
-				SD1.D1_LOJA = %Exp:SF1->F1_LOJA% AND 
-				SD1.%NotDel%
-				ORDER BY %Order:SD1%
-			EndSql
-				
-		#ELSE
-			DbSeek(xFilial("SD1")+SF1->F1_DOC+SF1->F1_SERIE+SF1->F1_FORNECEE+SF1->F1_LOJA)
-		#ENDIF
+		lQuery  := .T.
+		If oQryFltDoc == Nil	
+			cQuery += "SELECT D1_FILIAL,D1_SERIE,D1_DOC,D1_FORNECE,D1_LOJA,D1_COD,D1_TES,D1_NFORI,D1_SERIORI,D1_ITEMORI,D1_TIPO,D1_ITEM,D1_CF, "
+			cQuery += "D1_QUANT,D1_TOTAL,D1_DESC,D1_VALFRE,D1_SEGURO,D1_PEDIDO,D1_ITEMPV,D1_DESPESA,D1_VALISS,D1_VUNIT, " + cField
+			cQuery += "D1_CLASFIS,D1_CODISS,D1_ALIQISS,D1_BASEISS,D1_VALIMP1,D1_VALIMP2,D1_VALIMP3,D1_VALIMP4,D1_VALIMP5,D1_BASEIRR,D1_VALIRR, D1_IDTRIB FROM "
+			cQuery += RetSqlName('SD1') + " SD1 "
+			cQuery += "WHERE SD1.D1_FILIAL= ? AND SD1.D1_SERIE = ? AND SD1.D1_DOC = ? AND SD1.D1_FORNECE = ? AND SD1.D1_LOJA = ? AND SD1.D_E_L_E_T_ = ? "
+			cQuery += "ORDER BY  D1_FILIAL,D1_EMISSAO,D1_DOC,D1_SERIE,D1_FORNECE,D1_LOJA"
+
+			oQryFltDoc	:= FwExecStatement():New(ChangeQuery(cQuery))
+		EndIf	
+
+		oQryFltDoc:SetString(1, xFilial("SD1"))
+		oQryFltDoc:SetString(2,SF1->F1_SERIE)
+		oQryFltDoc:SetString(3,SF1->F1_DOC)
+		oQryFltDoc:SetString(4,SF1->F1_FORNECE)
+		oQryFltDoc:SetString(5,SF1->F1_LOJA)
+		oQryFltDoc:SetString(6,Space(1))
+		cAliasSD1	:= oQryFltDoc:OpenAlias()
 		
 		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 		//³Posiciona na Construção Cilvil                                          ³
@@ -1368,11 +1365,26 @@ Else
 				aadd(aConstr,(&(cArtObra)))	
 		EndIf
 						
-		While !Eof() .And. xFilial("SD1") == (cAliasSD1)->D1_FILIAL .And.;
+		/*/ Configurador de Tributos
+			Função TssTCInteg responsavel pela Integracao TSS com Configurador de Tributos, adequação para atender a
+			Reforma Tributária. Classifica o tipo de tributacao do item da nota fiscal, de acordo com a configuracao da Classe TSSTCIIntegration
+			@since 28/01/2025
+			@version 12.1.2410
+		/*///-----------------------------------------------------------------------
+		TssTCInteg(cAliasSD1, lVldExc, @oNfTciIntg)
+						
+		While !(cAliasSD1)->(Eof()) .And. xFilial("SD1") == (cAliasSD1)->D1_FILIAL .And.;
 			SF1->F1_SERIE == (cAliasSD1)->D1_SERIE .And.;
 			SF1->F1_DOC == (cAliasSD1)->D1_DOC
 
 			nCont++
+			lConfTrib := .F. 
+			oISSCfg   := NIL
+
+			If ( !Empty( (cAliasSD1)->D1_IDTRIB ) .And. !oNfTciIntg == Nil )
+				lConfTrib := oNfTciIntg:GetNFConfigTributos((cAliasSD1)->D1_IDTRIB)
+				oISSCfg   := oNfTciIntg:GetTax( (cAliasSD1)->D1_IDTRIB, "ISS")
+			EndIf
 
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Verifica a natureza da operacao                                         ³
@@ -1466,7 +1478,7 @@ Else
 			dbSetOrder(4)
 			DbSeek(xFilial("SF3")+SF1->F1_FORNECEE+SF1->F1_LOJA+SF1->F1_DOC+SF1->F1_SERIE)								
 			
-			if TCCanOpen(RetSqlName("CE1")) .and. SM0->M0_CODMUN  == "3550308
+			if TCCanOpen(RetSqlName("CE1")) .and. SM0->M0_CODMUN  == "3550308"
 				dbSelectArea("CE1")
 				CE1->(DbSetOrder(1))  // CE1_FILIAL+CE1_CODISS+CE1_ESTISS
 				
@@ -1559,7 +1571,8 @@ Else
 								(cAliasSD1)->D1_VALIMP5,; //31
 								RetFldProd(SB1->B1_COD,"B1_TRIBMUN"),; //32
 								If(SF4->(FieldPos("F4_CFPS")) > 0,SF4->F4_CFPS,""),;//Codigop fiscal de prestacao de servico	
-								IIF(!(cAliasSD1)->D1_TIPO$"IP",(cAliasSD1)->D1_TOTAL,0),;//34 - Valor Total do serviço.						
+								IIF(!(cAliasSD1)->D1_TIPO$"IP",(cAliasSD1)->D1_TOTAL,0),;//34 - Valor Total do serviço.
+								Iif(!Empty(sb5->B5_ECSUBT) .and. Len(Alltrim(sb5->B5_ECSUBT))<6,Alltrim(sb5->B5_ECSUBT),"");//35 - Codigo para SubItem nfst SP
 								}) 
 			endIf
 			
@@ -1627,7 +1640,7 @@ Else
 					Case AllTrim(CD2->CD2_IMP) == "CF3" .And. (cAliasSD1)->D1_VALISS==0
 						aTail(aCOFINSST) := {CD2->CD2_CST,CD2->CD2_BC,CD2->CD2_ALIQ,CD2->CD2_VLTRIB,CD2->CD2_QTRIB,CD2->CD2_PAUTA}
 					Case AllTrim(CD2->CD2_IMP) == "ISS"
-								If Empty(aISS)
+						If Empty(aISS)
 							aISS := {0,0,0,0,0}
 						EndIf
 						aISS[01] += (cAliasSD1)->D1_TOTAL+(cAliasSD1)->D1_DESC
@@ -1641,22 +1654,21 @@ Else
 			EndDo
 			aTotal[01] += (cAliasSD1)->D1_DESPESA
 			aTotal[02] += (cAliasSD1)->D1_TOTAL	
-			aTotal[03] := SF4->F4_ISSST			
-						
-			IF Empty(aPis[Len(aPis)]) .And. SF4->F4_CSTPIS=="06"
-				aadd(aPisAlqZ,{SF4->F4_CSTPIS})
+			If ( lConfTrib .And. oISSCfg <> NIL  .Or. SF4->( FieldPos("F4_ISSST") == 0 ))
+				aTotal[03] :=  Alltrim(SF4->F4_NATOPNF)
 			Else
-				aadd(aPisAlqZ,{})
-			EndIf
-			IF Empty(aCOFINS[Len(aCOFINS)]) .And. SF4->F4_CSTCOF=="06"
-				aadd(aCofAlqZ,{SF4->F4_CSTCOF})
-			Else 
-				aadd(aCofAlqZ,{})
-			EndIf				
+				aTotal[03] := SF4->F4_ISSST			
+			EndIf			
 							
 			dbSelectArea(cAliasSD1)
 			dbSkip()
 	    EndDo
+		/*/-----------------------------------------------------------------------
+			Destruir os objetos e arrays da classe TSSTCIntegration após o término do loop.
+			@since 11/02/2025
+			@version 12.1.2410
+		/*///-----------------------------------------------------------------------
+		DestroyTCI(@oNfTciIntg)
 	    
     	If nBaseIrrf > 0 .And. nValIrrf > 0
 			aadd(aRetido,{"IRRF",0,nValIrrf,SED->ED_PERCIRF})
@@ -1679,9 +1691,11 @@ Else
 			aadd(aNota,cTipo)
 			aadd(aNota,"")
 			aadd(aNota,"1")	
+			aadd(aNota,cClieFor) //Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.	
+			aadd(aNota,cLoja)	//Complemento para quem utiliza títulos com base na E2_BAIXA como data de competência.
 			
 			cString := '<RPS Id="rps:'+AllTrim(Str(Val(aNota[02])))+'">'
-			cString += NFSECab(cCodMun,aNota,lRetIss,cParcela)
+			cString += NFSECab(cCodMun,aNota,lRetIss,cParcela,cTipoNot,cCodCli,cLojCli)
 			cString += '<MotCancelamento>'+cMotCanc+'</MotCancelamento>'
 			cString += '</RPS>' 							
 		EndIf        
@@ -1732,7 +1746,7 @@ Endif
 If !Empty(aNota) .And. Empty(cMotCanc)
 	cString := '<RPS Id="rps:'+AllTrim(Str(Val(aNota[02])))+'">'
 	cString += NFSEAssina(cCodMun,aNota,aProd,aTotal,aDest,aDeduz)
-	cString += NFSECab(cCodMun,aNota,lRetIss,cParcela)
+	cString += NFSECab(cCodMun,aNota,lRetIss,cParcela,cTipoNot,cCodCli,cLojCli)
 	cString += NFSEDest(cCodMun,aDest,cMunPrest)
 	cString += NFSEConstr(cCodmun,aConstr)
 	cString += NFSEPrest(cCodMun,aPrest)
@@ -1740,6 +1754,7 @@ If !Empty(aNota) .And. Empty(cMotCanc)
 	cString += NFSEItem(cCodMun,aProd,aICMS,aICMSST,aIPI,aPIS,aPISST,aCOFINS,aCOFINSST,aISSQN,aCST,aMed,aArma,aveicProd,aDI,aAdi,aExp,aPisAlqZ,aCofAlqZ,aPrest,aDest,aNota,aTotal,aRetido,cMensCli,cMensFis,cMunPrest,cDescMunP,aDeduz,cMotCanc,lNfeServ,aValIssTit)
 	cString += NFSEFat(cCodMun,aDupl)
 	cString += NFSETransp(cCodMun)
+	cString	+= ImpIbsCbsIs( aNota, cClieFor, cLoja )
 	cString += '</RPS>' 
 EndIf	
 
@@ -1775,9 +1790,9 @@ Do Case
 		cAssinatura += "K "
     Case aTotal[3] $ "6"
 		cAssinatura += "K "
-    Case aTotal[3] $ "7"
+    case aTotal[3] $ "7" .Or. aTotal[3] == "58" .Or. aTotal[3] == "68" .Or. aTotal[3] == "78"
 		cAssinatura += "N "
-    Case aTotal[3] $ "8"
+    case aTotal[3] $ "8" .Or. aTotal[3] == "13"
 		cAssinatura += "M "		
 	OtherWise
 		cAssinatura += "T "
@@ -1796,17 +1811,21 @@ cAssinatura := '<Assinatura>'+cAssinatura+'</Assinatura>'
 Return(cAssinatura)             
 
 //Cabeçalho
-Static Function NfseCab(cCodMun,aNota,lRetIss,cParcela)
+Static Function NfseCab(cCodMun,aNota,lRetIss,cParcela,cTipoNot,cCodFor,cLojFor)
 
 Local cString 		:= ""
 Local cTipDoc 		:= ""
 Local dDataComp		:= CTOD("  /  /    ")
 Local aMVTitNFT		:= &(GetNewPar("MV_TITNFTS","{}"))
 Local lNTFS			:= .F.
+
+DEFAULT cTipoNot := ""
+DEFAULT cCodFor := ""
+DEFAULT cLojFor := ""
                                        
 If Alltrim(SM0->M0_CODMUN) $ "2607208-3305505" //IPOJUCA-PE # SAQUAREMA-RJ
 	cString += '<TipoRPS>1</TipoRPS>'
-ElseIf Alltrim(SM0->M0_CODMUN) $ "3550308-3304557-3303906-2927408-3525300" .And. aNota[04] == "0" .or. aNota[04] == "3" // NFTS: São Paulo, Rio de Janeiro, Petrópolis e Salvador
+ElseIf Alltrim(SM0->M0_CODMUN) $ "3550308-3304557-3303906-2927408-3525300-3555802-5300108-1302603-3548500-3509502" .And. aNota[04] == "0" .or. aNota[04] == "3" // NFTS: São Paulo, Rio de Janeiro, Petrópolis e Salvador 
 	cString += '<TipoRPS>4</TipoRPS>'
 	lNTFS := .T.
 Else
@@ -1817,7 +1836,7 @@ cString += '<NumeroRPS>'+AllTrim(Str(Val(aNota[02])))+AllTrim(cParcela)+'</Numer
 cString += '<DataEmissaoRPS>'+Substr(Dtos(aNota[03]),1,4)+"-"+  Substr(Dtos(aNota[03]),5,2)+"-"+ Substr(Dtos(aNota[03]),7,2)+'T'+Time()+'</DataEmissaoRPS>'
 
 If lRetIss .And. lNTFS
-	dDataComp := DateTitIss(aNota[01],aNota[02],cParcela)
+	dDataComp := DateTitIss(aNota[01],aNota[02],cParcela,cCodMun,cTipoNot,cCodFor,cLojFor)
 	If !Empty(dDataComp)
 		cString += '<DataCompetencia>'+Substr(Dtos(dDataComp),1,4)+"-"+  Substr(Dtos(dDataComp),5,2)+"-"+ Substr(Dtos(dDataComp),7,2)+'T'+Time()+'</DataCompetencia>'
 	EndIf
@@ -1841,7 +1860,7 @@ cString += '<SeriePrestacao>99</SeriePrestacao>'
 if aNota[4] == "0"
 	cString += '<TipoDocumento>02</TipoDocumento>'
 else
- 	if aScan(aMVTitNFT,{|x| x[1] == aNota[5]}) == 1
+ 	if aScan(aMVTitNFT,{|x| x[1] == ALLTRIM(aNota[5])}) == 1 
    		cString += '<TipoDocumento>01</TipoDocumento>'
    	else
 		cString += '<TipoDocumento>03</TipoDocumento>'   	
@@ -1876,6 +1895,8 @@ ElseIf Alltrim(SM0->M0_CODMUN) == "4205407"	 //Florianopolis
 	cString += '<CidadeTomador>'+Iif( Empty(cMunPrest) .Or. Len(AllTrim(cMunPrest)) < 6, UFCodIBGE2(aDest[09]) +aDest[07] ,cMunPrest )+'</CidadeTomador>'
 ElseIf Alltrim(SM0->M0_CODMUN) == "4299599" // Teixeira de Freitas -BA
 	cString += '<CidadeTomador>'+aDest[07]+'</CidadeTomador>'
+ElseIf Alltrim(SM0->M0_CODMUN) $ "3555802-1302603-3548500" // Urania - SP e Manaus - AM
+	cString += '<CidadeTomador>'+aDest[07]+'</CidadeTomador>'
 Else
 	cString += '<CidadeTomador>'+StrZero(Val(aDest[18]),10)+'</CidadeTomador>'
 EndIf
@@ -1890,10 +1911,12 @@ If cCodMun <> "3168705"
 	Endif
 EndIf
 cString += '<UfTomador>'+AllTrim(aDest[09])+'</UfTomador>'
-If cCodMun <> "4205407"
-	cString += '<PaisTomador>'+AllTrim(aDest[20])+'</PaisTomador>'
+
+
+If cCodMun $ "4205407-3548500"
+	cString += '<PaisTomador>'+AllTrim(aDest[11])+'</PaisTomador>'	
 Else
-	cString += '<PaisTomador>'+AllTrim(aDest[11])+'</PaisTomador>'
+	cString += '<PaisTomador>'+AllTrim(aDest[20])+'</PaisTomador>'
 EndIf                                            
 
 Return(cString) 
@@ -1975,7 +1998,7 @@ DEFAULT lNfeServ 	:= .F.
 DEFAULT aValIssTit	:= {}
 
 cString := ''
-If Alltrim(SM0->M0_CODMUN) == "2607208" //IPOJUCA - PE
+If Alltrim(SM0->M0_CODMUN) $ "2607208-3555802" //IPOJUCA - PE
 	cString += '<CodigoAtividade>'+AllTrim(aProd[1][32])+'</CodigoAtividade>'                                                        
 Else
 	cString += '<CodigoAtividade>'+AllTrim(aProd[1][19])+'</CodigoAtividade>'                                                        
@@ -1988,7 +2011,7 @@ ElseIf Alltrim(SM0->M0_CODMUN) $ "4299599-3507605" //Teixeira de freitas # Braga
   	cString += '<MunicipioPrestacao>'+ Iif( Empty(cMunPrest),aDest[18],cMunPrest) +'</MunicipioPrestacao>'
 ElseIf Alltrim(SM0->M0_CODMUN) $ "3305505-3152501".Or. GetMunSiaf(SM0->M0_CODMUN)[1][2] == "009" //Saquarema-RJ # Pouso Alegre
 	cString += '<MunicipioPrestacao>'+Iif( Empty(cMunPrest), UFCodIBGE2(aDest[09]) +aDest[07] ,cMunPrest )+'</MunicipioPrestacao>'
-ElseIf AllTrim(SM0->M0_CODMUN) $ Fisa022Cod("201")+"-"+Fisa022Cod("202") .And. AllTrim(SM0->M0_CODMUN) $ GetMunNFT()
+ElseIf AllTrim(SM0->M0_CODMUN) $ Fisa022Cod("201")+"-"+Fisa022Cod("202") + "3555802-1302603-3548500" .And. AllTrim(SM0->M0_CODMUN) $ GetMunNFT()
 	cString += '<MunicipioPrestacao>'+IIF( Empty(cMunPrest), AllTrim(SM0->M0_CODMUN), cMunPrest )+'</MunicipioPrestacao>'
 Else	
 	cString += '<MunicipioPrestacao>'+StrZero(Val( Iif( Empty(cMunPrest), aDest[18] ,cMunPrest ) ),10)+'</MunicipioPrestacao>'
@@ -2004,7 +2027,7 @@ Do Case
 		cString += '<Operacao>A</Operacao>'
 EndCase
  
-If !Alltrim(SM0->M0_CODMUN) $ "3305505-3152501"
+If !Alltrim(SM0->M0_CODMUN) $ "3305505-3152501-1302603"
 	Do Case
 		Case aTotal[3] $ "2"
 			cString += '<Tributacao>E</Tributacao>'
@@ -2016,9 +2039,9 @@ If !Alltrim(SM0->M0_CODMUN) $ "3305505-3152501"
 			cString += '<Tributacao>K</Tributacao>'
 	    Case aTotal[3] $ "6"
 			cString += '<Tributacao>K</Tributacao>'
-	    Case aTotal[3] $ "7"
+	    case aTotal[3] $ "7" .Or. aTotal[3] == "58" .Or. aTotal[3] == "68" .Or. aTotal[3] == "78"
 			cString += '<Tributacao>N</Tributacao>'
-	    Case aTotal[3] $ "8"
+	    case aTotal[3] $ "8" .Or. aTotal[3] == "13"
 			cString += '<Tributacao>M</Tributacao>'
 		OtherWise
 			cString += '<Tributacao>T</Tributacao>'
@@ -2028,7 +2051,7 @@ Else
 	cString += '<Tributacao>'+  Iif(Empty(cTributa), "1", cTributa)+'</Tributacao>'
 EndIf
 	
-If Alltrim(SM0->M0_CODMUN) $ "3168705-3305505-3550308-3304557-2927408" // Timoteo-MG # Saquarema-RJ # Sao Paulo-SP # Rio de Janeiro-RJ
+If Alltrim(SM0->M0_CODMUN) $ "3168705-3305505-3550308-3304557-2927408-3555802" // Timoteo-MG # Saquarema-RJ # Sao Paulo-SP # Rio de Janeiro-RJ
 	if SM0->M0_CODMUN $ "3550308-3304557" .And. len(aPrest)> 21
 		
 		//Para NFTS deve pegar a informação do Fornecedor(Prestador do Serviço)
@@ -2057,8 +2080,26 @@ If Alltrim(SM0->M0_CODMUN) $ "3168705-3305505-3550308-3304557-2927408" // Timote
 
 	elseif !Empty(cMVREGIESP)
 		cString += '<RegimeEspecialTributacao>'+cMVREGIESP+'</RegimeEspecialTributacao>'
+	
+	elseif SM0->M0_CODMUN $ "3555802" .And. len(aPrest)> 21
+		
+		//Para NFTS deve pegar a informação do Fornecedor(Prestador do Serviço)
+		//faz o De-para do campo A2_TPJ com lauyot TSS.
+		If aPrest[22] == "1" //Micro Empresa - ME
+			cString += '<RegimeEspecialTributacao>1</RegimeEspecialTributacao>'
+		elseif aPrest[22] == "2" //Empresa de Pequeno Porte - EPP 
+			cString += '<RegimeEspecialTributacao>6</RegimeEspecialTributacao>'
+		elseif aPrest[22] == "3" //Micro Empresa Individual - MEI
+			cString += '<RegimeEspecialTributacao>5</RegimeEspecialTributacao>'
+		elseif aPrest[21] == "1" .And. SM0->M0_CODMUN $ "3550308"//Empresa de Pequeno Porte - EPP 
+			cString += '<RegimeEspecialTributacao>6</RegimeEspecialTributacao>'
+		else//Normal
+			cString += '<RegimeEspecialTributacao>0</RegimeEspecialTributacao>'
+		endif
+
+
 	EndIf	
-	if Alltrim(SM0->M0_CODMUN) $ "3304557-3550308"
+	if Alltrim(SM0->M0_CODMUN) $ "3304557-3550308-3555802"
 		if len(aPrest)> 20 
 			cString += '<OptanteSimplesNacional>'+aPrest[21]+'</OptanteSimplesNacional>'
 		else
@@ -2118,11 +2159,16 @@ If nScan > 0
 EndIf
 
 cString += '<DescricaoRPS>'+cMensCli+Space(1)+cMensFis+'</DescricaoRPS>'
-cString += '<DDDTomador>'+AllTrim(Str(Val(SubsTr(aDest[13],1,3))))+'</DDDTomador>'
-cString += '<TelefoneTomador>'+AllTrim(Str(Val(SubsTr(aDest[13],4,15))))+'</TelefoneTomador>'
+
+//Retorna ddd + Telefone do Tomador, gerando as respectivas Tag's <DDDTomador> e <TelefoneTomador>
+cString += getDDDTel(aDest[13], 2)
 cString += '<MotCancelamento>'+cMotCanc+'</MotCancelamento>'    
 //Inserida a mesma informação da tag <DescricaoRPS>, pois alguns municipios utiilizam a TAG Observacao, para levar a informacao.
-cString += '<Observacao>'+cMensCli+Space(1)+cMensFis+'</Observacao>'
+If !Empty(cMensCli) .Or. !Empty(cMensFis)
+	cString += '<Observacao>'+cMensCli+Space(1)+cMensFis+'</Observacao>'
+else
+	cString += '<Observacao>'+ConvType(aProd[1][04],254)+'</Observacao>'
+EndIf		
 
 //Outras retenções, sera colocado o valor 0 (zero), pois atualmente nao existe valor de Outras retencoes 
 If Len(aRetido)>0     
@@ -2152,7 +2198,7 @@ If cCodMun == "5002704" .And. cString $ '<Tributacao>J</Tributacao>'
 	cString += '<CpfCnpjIntermediario>'+'00000000000191'+'</CpfCnpjIntermediario>'
 EndIf
  
-atel:= FisGetTel(aDest[13])
+atel:= IIF(GetAPOInfo("MATA950.prx")[4] >= Ctod("29/10/2020"), FisGetTel(aDest[13],,,.T.),FisGetTel( aDest[13] ))
 
 //ITAJUBA
 
@@ -2195,9 +2241,9 @@ For Nx := 1 to Len(aProd)
 	Else
 		cXml += '<ItemListaServico>'+AllTrim(aProd[Nx][19])+'</ItemListaServico>'	
 	EndIf
-	If Alltrim(SM0->M0_CODMUN) $ "2607208-3550308-3304557-3303906-3525300" //IPOJUCA - PE # Sao Paulo - SP  # Rio de Janeiro - RJ
+	If Alltrim(SM0->M0_CODMUN) $ "2607208-3550308-3304557-3303906-3525300-3555802" //IPOJUCA - PE # Sao Paulo - SP  # Rio de Janeiro - RJ
 		cXml += '<ISSRetido>'+AllTrim(aProd[Nx][20])+'</ISSRetido>'
-	ElseIf Alltrim(SM0->M0_CODMUN) $ "3168705-3305505-3152501"  // Timoteo-MG # Saquarema-RJ # Pouso Alegre
+	ElseIf Alltrim(SM0->M0_CODMUN) $ "3168705-3305505-3152501-1302603-3548500"  // Timoteo-MG # Saquarema-RJ # Pouso Alegre
 		cXml += '<ISSRetido>'+Iif(!Empty(aIssRet[2]),"1","2")+'</ISSRetido>' 
 	Else
 		cXml += '<ISSRetido>0</ISSRetido>'  //Alterar
@@ -2240,6 +2286,9 @@ For Nx := 1 to Len(aProd)
 	Else
 		cXml += '<IdCNAE>'+Alltrim(aProd[Nx][32])+'</IdCNAE>'
 	EndIf
+	if !Empty(aProd[nX][35]) .and. cCodMun $ "3550308" // Codigo de SubItem para nfsts Sao Paulo quando preenchido na B5->B5_ECSUBT
+		cXml += '<SubItem>' + AllTrim(aProd[nX][35]) + '</SubItem>'
+	Endif 
 	cXml += '</Item>'
 Next
 
@@ -2251,7 +2300,7 @@ If Len(aDeduz) > 0
 		cdeduz += '<DeducaoPor>'+Iif(aDeduz[nx][1]=="1","Percentual","Valor")+'</DeducaoPor>'
 		cdeduz += '<TipoDeducao>'+Iif(aDeduz[nx][2]=="1","Despesas com Materiais","Despesas com Sub-empreitada")+'</TipoDeducao>'
 		cdeduz += '<CPFCNPJReferencia>'+Posicione("SA2",1,xFilial("SA2")+aDeduz[nx][3]+aDeduz[nx][4],"A2_CGC")+'</CPFCNPJReferencia>'
-		cdeduz += '<NumeroNFReferencia>'+aDeduz[nx][6]+'</NumeroNFReferencia>
+		cdeduz += '<NumeroNFReferencia>'+aDeduz[nx][6]+'</NumeroNFReferencia>'
 		cdeduz += '<ValorTotalReferencia>'+AllTrim(ConvType(aDeduz[nx][7],15,2))+'</ValorTotalReferencia>'
 		cdeduz += '<PercentualDeduzir>'+Iif(aDeduz[nx][1]=="1",AllTrim(ConvType(aDeduz[nx][8],15,2)),"0.00")+'</PercentualDeduzir>'
 		cdeduz += '<ValorDeduzir>'+Iif(aDeduz[nx][1]=="2",AllTrim(ConvType(aDeduz[nx][8],15,2)),"0.00")+'</ValorDeduzir>'
@@ -2280,23 +2329,24 @@ Local cImPrestador	:= aPrest[17]
 cImPrestador := StrTran(cImPrestador,"-","")
 cImPrestador := StrTran(cImPrestador,"/","")
 
-If !Alltrim(SM0->M0_CODMUN) $ "3305505-4205407-3303906-3550308"
+If !Alltrim(SM0->M0_CODMUN) $ "3305505-4205407-3303906-3550308-5300108"
 	cString += '<InscricaoMunicipalPrestador>'+StrZero(val(cImPrestador),8)+'</InscricaoMunicipalPrestador>'
 Else
     cString += '<InscricaoMunicipalPrestador>'+cImPrestador+'</InscricaoMunicipalPrestador>'
 EndIf
 cString += '<CpfCnpjPrestador>'+Alltrim(aPrest[1])+'</CpfCnpjPrestador>'
 cString += '<RazaoSocialPrestador>'+aPrest[2]+'</RazaoSocialPrestador>'                         
-cString += '<DDDPrestador>'+AllTrim(Str(FisGetTel(aPrest[13])[2],3))+'</DDDPrestador>'
-cString += '<TelefonePrestador>'+AllTrim(Str(FisGetTel(aPrest[13])[3],15))+'</TelefonePrestador>'
+
+//Retorna ddd + Telefone do Prestador, gerando as respectivas Tag's <DDDPrestador> e <TelefonePrestador>
+cString += getDDDTel(aPrest[13], 1)
 cString += '<TipoLogradouroPrestador>Rua</TipoLogradouroPrestador>'
 cString += '<LogradouroPrestador>'+aPrest[03]+'</LogradouroPrestador>'
 cString += '<NumeroEnderecoPrestador>'+aPrest[04]+'</NumeroEnderecoPrestador>'
 cString += '<ComplementoEnderecoPrestador>'+aPrest[05]+'</ComplementoEnderecoPrestador>'
 cString += '<BairroPrestador>'+aPrest[06]+'</BairroPrestador>'
 cString += '<CidadePrestadorDescricao>'+aPrest[08]+'</CidadePrestadorDescricao>'
-If Alltrim(SM0->M0_CODMUN) $ Fisa022Cod("202") .And. Alltrim(SM0->M0_CODMUN) $ GetMunNFT()
-	cString += '<CidadePrestador>'+UFCodIBGE2(aPrest[09])+aPrest[07]+'</CidadePrestador>
+If Alltrim(SM0->M0_CODMUN) $ Fisa022Cod("202") + "3555802-1302603-3548500-3509502" .And. Alltrim(SM0->M0_CODMUN) $ GetMunNFT()
+	cString += '<CidadePrestador>'+UFCodIBGE2(aPrest[09])+aPrest[07]+'</CidadePrestador>'
 Else
 	cString += '<CidadePrestador>'+aPrest[07]+'</CidadePrestador>'
 EndIf
@@ -2311,7 +2361,7 @@ Static Function NFSEMunPre(cCodMun,aEndPrest,cTipo)
 
 Local cString  	:= ""
 
-If (cTipo == "1") .or. (cTipo == "0" .And. cCodMun $ "3304557")
+If (cTipo == "1") .or. (cTipo == "0" .And. cCodMun $ "3304557-3555802")
 	If !Empty(aEndPrest[5]) 
 		cString += '<EnderecoPrestacao>'+aEndPrest[1]+'</EnderecoPrestacao>'
 		cString += '<NumeroPrestacao>'+aEndPrest[2]+'</NumeroPrestacao>'
@@ -2647,22 +2697,35 @@ Função para buscar o titulo de iss retido e retornar a data
 @since 17/06/2015
 /*/
 //-------------------------------------------------------------------
-Static Function DateTitIss(cSerie,cNota,cParcela)
+Static Function DateTitIss(cSerie,cNota,cParcela,cCodMun,cTipoNot,cCodFor,cLojFor)
 
 Local dRet	:= CTOD("  /  /    ")
 
+DEFAULT cTipoNot := ""
+DEFAULT cCodFor := ""
+DEFAULT cLojFor := ""
+
 dbSelectArea("SE2")
 dbSetOrder(1)	//E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA
-dbSeek(xFilial("SE2")+PadR(cSerie,TamSx3("E2_PREFIXO")[1])+PadR(cNota,TamSx3("E2_NUM")[1]))
-While !SE2->(Eof()) .And. SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM) == xFilial("SE2")+PadR(cSerie,TamSx3("E2_PREFIXO")[1])+PadR(cNota,TamSx3("E2_NUM")[1])
-	If cParcela == AllTrim(E2_PARCELA) .And. SE2->E2_ISS > 0
-		dRet := SE2->E2_VENCREA
-	EndIf
-
-	If AllTrim(Upper(SE2->E2_TIPO)) == "ISS"
-		dRet := SE2->E2_VENCREA
+dbSeek(xFilial("SE2")+PadR(cSerie,TamSx3("E2_PREFIXO")[1])+PadR(cNota,TamSx3("E2_NUM")[1])+PadR(cParcela,TamSx3("E2_PARCELA")[1])+PadR(cTipoNot,TamSx3("E2_TIPO")[1])+PadR(cCodFor,TamSx3("E2_FORNECE")[1])+PadR(cLojFor,TamSx3("E2_LOJA")[1]))
+While !SE2->(Eof()) .And. SE2->(E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA) == xFilial("SE2")+PadR(cSerie,TamSx3("E2_PREFIXO")[1])+PadR(cNota,TamSx3("E2_NUM")[1])+PadR(cParcela,TamSx3("E2_PARCELA")[1])+PadR(cTipoNot,TamSx3("E2_TIPO")[1])+PadR(cCodFor,TamSx3("E2_FORNECE")[1])+PadR(cLojFor,TamSx3("E2_LOJA")[1])
+	If AllTrim(Upper(SE2->E2_TIPO)) == "NF" .And. SE2->E2_ISS > 0 .And. cCodMun $ "3304557" // Adequando conforme o Parecer ISS/RJ - Declaração de Serviços Tomados: https://tdn.totvs.com/pages/releaseview.action?pageId=563428210
+		If !Empty(SE2->E2_BAIXA)
+			dRet := SE2->E2_BAIXA
+		Else	
+			dRet := SE2->E2_VENCREA
+		EndIf	
 		Exit
-	EndIf
+	Else
+		If cParcela == AllTrim(E2_PARCELA) .And. SE2->E2_ISS > 0
+			dRet := SE2->E2_VENCREA
+		EndIf
+
+		If AllTrim(Upper(SE2->E2_TIPO)) == "ISS" .And. !cCodMun $ "3304557"
+			dRet := SE2->E2_VENCREA
+			Exit
+		EndIf
+	EndIF
 
 	SE2->(dbSkip())
 EndDo
@@ -2741,3 +2804,147 @@ Static Function ValidArray(aDados)
     endif
 
 return lContinua
+
+//-----------------------------------------------------------------------
+/*/{Protheus.doc} getDDDTel
+Função para pegar partes do DDD e Telefone de uma única String.
+
+@author Felipe Duarte Luna
+@since 25.03.2021
+
+@param	cTelefone	String do Telefone, para extração do DDD e Telefone
+@param	nPresTom	Numerico que identifica se é Prestador ou Tomador,
+para montar as respectivas TAG's de DDD e Telefone. 1 = Prestador e 2 = Tomador.
+
+@return	cString		Retorna as Tag's DDD + Telefone preenchida respectivamente.
+/*/
+//-----------------------------------------------------------------------
+static function getDDDTel( cTelefone, nPresTom )
+	
+	Local lVldExc  	  := GetAPOInfo("MATA950.prx")[4] >= Ctod("29/10/2020") 
+	Local cString     := ""
+	Private aRetGetTel  := {}
+		
+	Default cTelefone := "" 
+	Default nPresTom  := 1
+	
+	aRetGetTel := IIF(lVldExc, FisGetTel( cTelefone,,,.T. ), FisGetTel( cTelefone ) )
+	
+	// Para obter a correção do 0800, é preciso atualizar o Fonte MATA950.prx que visto que foi realizado a alteração para contemplação a partir do dia 29/10/2020 (ISSUE DSERFIS1-22424)
+	If( Type ("aRetGetTel[03]") == "N")
+		IF nPresTom == 1
+			cString += '<DDDPrestador>'+ allTrim( str( aRetGetTel[2], 3 ) ) + '</DDDPrestador>'
+			cString += '<TelefonePrestador>'+ allTrim( str( aRetGetTel[3], 15 ) ) +'</TelefonePrestador>'
+		Else
+			cString += '<DDDTomador>'+ allTrim( str( aRetGetTel[2], 3 ) ) +'</DDDTomador>'
+			cString += '<TelefoneTomador>'+ allTrim( str( aRetGetTel[3], 15 ) ) +'</TelefoneTomador>'
+		EndIf	
+	ElseIF ( Type("aRetGetTel[03]") == "C" )
+		If nPresTom == 1
+			cString += '<DDDPrestador>'+ IIF(aRetGetTel[2] == "", '0', substr(aRetGetTel[2], 1, 3)) +'</DDDPrestador>'
+			cString += '<TelefonePrestador>'+ IIF(aRetGetTel[3] == "", '0', substr(aRetGetTel[3], 1, 15)) +'</TelefonePrestador>'
+		Else
+			cString += '<DDDTomador>'+ IIF(aRetGetTel[2] == "", '0', substr(aRetGetTel[2], 1, 3)) +'</DDDTomador>'
+			cString += '<TelefoneTomador>'+ IIF(aRetGetTel[3] == "", '0', substr(aRetGetTel[3], 1, 15)) +'</TelefoneTomador>'	
+		EndIF
+	EndIF
+	
+return cString 
+
+//-----------------------------------------------------------------------
+/*/{Protheus.doc}  Method TssTCInteg
+
+	Função responsável por integrar o TSS com o Configurador de Tributos, classificando
+	o tipo de tributação do item da nota fiscal, de acordo com a configuração.
+
+	@param cAliasSD2  Alias da tabela SD2.
+	@param lVldExc    Booleano que indica se a classe TSSTCIIntegration existe.
+	@param oNfTciIntg Objeto que irá receber a referencia da classe TSSTCIIntegration.
+	@return void
+	
+	@author Felipe Duarte Luna
+	@since 11.02.2025
+	@version 12.1.2410
+/*///-----------------------------------------------------------------------
+Static Function TssTCInteg(cAliasSD1, lVldExc, oNfTciIntg)
+    Local 	aIdTribs		:= {}
+	Local 	recnoSD1		:= 0
+
+	Default oNfTciIntg 		:= nil
+
+    If lVldExc
+        recnoSD1 := (cAliasSD1)->(Recno())
+        While !(cAliasSD1)->(Eof())
+            If !Empty((cAliasSD1)->D1_IDTRIB)
+                aAdd(aIdTribs, (cAliasSD1)->D1_IDTRIB)
+            EndIf
+            (cAliasSD1)->(dbSkip())
+        EndDo
+        (cAliasSD1)->(DbGoTop())
+        (cAliasSD1)->(DbGoTo(recnoSD1))
+    EndIf
+
+    If Len(aIdTribs) > 0
+        oNfTciIntg := totvs.protheus.backoffice.tss.engine.tributaveis.TSSTCIntegration():New()
+        oNfTciIntg:SetInfoNfs(aIdTribs)
+    EndIf
+
+Return
+
+//-----------------------------------------------------------------------
+/*/{Protheus.doc}  Method DestroyTCI
+	Função para destruir o objeto TSSTCIIntegration.
+
+	@author Felipe Duarte Luna
+	@since 11.02.2025
+	@version 12.1.2410
+	@return void
+/*///-----------------------------------------------------------------------
+Static Function DestroyTCI(oNfTciIntg)
+    If ValType(oNfTciIntg) == 'O'
+        oNfTciIntg:Destroy()
+        oNfTciIntg := Nil
+    EndIf
+Return
+
+//-----------------------------------------------------------------------
+/*/{Protheus.doc}  Function ImpIbsCbsIs
+	Função para gerar o XML do IBS/CBS.
+
+	@author Antonio Marfil
+	@since 07.10.2025
+	@version 12.1.2410
+	@return void
+/*///-----------------------------------------------------------------------
+Static Function ImpIbsCbsIs( aNota, cClieFor, cLoja )
+    Local cXmlIBSCBS    	:= ""
+	Local cXmlIs    		:= ""
+	Local cXml	  			:= ""
+	Local cXmlTotal			:= ""
+	Local cDocumentItemId 	:= ""
+
+    Default cClieFor    := ""
+    Default cLoja       := ""
+    Default aNota       := {}
+
+    Private oXmlRefTri := Nil
+	cDocumentItemId := GetAdvFVal('SD1','D1_IDTRIB', SF1->(F1_FILIAL + F1_DOC + F1_SERIE + F1_FORNECE + F1_LOJA), 1  )
+	//cDocumentItemId := GetAdvFVal('SD1','D1_IDTRIB', SF1->(F1_FILIAL + F1_DOC + F1_SERIE + F1_CLIENTE + F1_LOJA), 3  )
+	DbSelectArea("SD1")
+	DbSetOrder(3)
+	If MsSeek(xFilial("SD1")+DToS(aNota[3])+aNota[2]+aNota[1]+cClieFor+cLoja)
+		if !Empty(cDocumentItemId) .And. findClass('totvs.protheus.backoffice.fiscal.integration.taxinformation')
+			
+			oXmlRefTri := totvs.protheus.backoffice.fiscal.integration.taxinformation():New()
+			cXmlIBSCBS := oXmlRefTri:getXmlIBSCBS(AllTrim(SD1->D1_IDTRIB))
+			cXmlIs := oXmlRefTri:getXmlIS(AllTrim(SD1->D1_IDTRIB))
+			cXmlTotal := oXmlRefTri:getXmlTotalIbsCbsIs(AllTrim(SD1->D1_IDTRIB))
+			cXml := cXmlIs + cXmlIBSCBS + cXmlTotal
+			
+		endif	
+	EndIf
+
+	FreeObj(oXmlRefTri)
+    oXmlRefTri := Nil
+
+Return cXml

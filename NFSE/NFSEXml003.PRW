@@ -1408,8 +1408,9 @@ cString += '<AliquotaIR>'+ConvType(aIrrfXml[2],15,4)+'</AliquotaIR>'
 cString += '<AliquotaCSLL>'+ConvType(aCSLLXml[2],15,4)+'</AliquotaCSLL>'
 */
 cString += '<DescricaoRPS>'+cMensCli+Space(1)+cMensFis+'</DescricaoRPS>'
-cString += '<DDDPrestador>'+AllTrim(Str(FisGetTel(SM0->M0_TEL)[2],3))+'</DDDPrestador>'
-cString += '<TelefonePrestador>'+AllTrim(Str(FisGetTel(SM0->M0_TEL)[3],15))+'</TelefonePrestador>'
+
+//Retorna ddd + Telefone do Prestador, gerando as respectivas Tag's <DDDPrestador> e <TelefonePrestador>
+cString += getDDDTel(SM0->M0_TEL)
 cString += '<DDDTomador>'+AllTrim(Str(Val(SubsTr(aDest[13],1,3))))+'</DDDTomador>'
 cString += '<TelefoneTomador>'+AllTrim(Str(Val(SubsTr(aDest[13],4,15))))+'</TelefoneTomador>'
 cString += '<MotCancelamento></MotCancelamento>'
@@ -1423,7 +1424,7 @@ If cCodMun == "5002704" .And. cString $ '<Tributacao>J</Tributacao>'
 	cString += '<CpfCnpjIntermediario>'+'00000000000191'+'</CpfCnpjIntermediario>'
 EndIf
  
-atel:= FisGetTel(aDest[13])
+atel:= IIF(GetAPOInfo("MATA950.prx")[4] >= Ctod("29/10/2020"), FisGetTel(aDest[13],,,.T.),FisGetTel( aDest[13] ))
 
 //ITAJUBA
 
@@ -1621,3 +1622,36 @@ Static Function MyGetEnd(cEndereco,cAlias)
 	EndIf
 	
 Return aRet
+
+//-----------------------------------------------------------------------
+/*/{Protheus.doc} getDDDTel
+Função para pegar partes do DDD e Telefone de uma única String.
+
+@author Felipe Duarte Luna
+@since 26.03.2021
+
+@param	cTelefone	String do Telefone, para extração do DDD e Telefone
+
+@return	cString		Retorna as Tag's DDDPrestador + TelefonePrestador preenchida respectivamente.
+/*/
+//-----------------------------------------------------------------------
+static function getDDDTel( cTelefone )
+	
+	Local lVldExc  	  := GetAPOInfo("MATA950.prx")[4] >= Ctod("29/10/2020") 
+	Local cString     := ""
+	Private aRetGetTel  := {}
+		
+	Default cTelefone := "" 
+	
+	aRetGetTel := IIF(lVldExc, FisGetTel( cTelefone,,,.T. ), FisGetTel( cTelefone ) )
+	
+	// Para obter a correção do 0800, é preciso atualizar o Fonte MATA950.prx que visto que foi realizado a alteração para contemplação a partir do dia 29/10/2020 (ISSUE DSERFIS1-22424)
+	If( Type ("aRetGetTel[03]") == "N")
+			cString += '<DDDPrestador>'+ allTrim( str( aRetGetTel[2], 3 ) ) + '</DDDPrestador>'
+			cString += '<TelefonePrestador>'+ allTrim( str( aRetGetTel[3], 15 ) ) +'</TelefonePrestador>'
+	ElseIF ( Type("aRetGetTel[03]") == "C" )
+			cString += '<DDDPrestador>'+ IIF(aRetGetTel[2] == "", '0', substr(aRetGetTel[2], 1, 3)) +'</DDDPrestador>'
+			cString += '<TelefonePrestador>'+ IIF(aRetGetTel[3] == "", '0', substr(aRetGetTel[3], 1, 15)) +'</TelefonePrestador>'
+	EndIF
+	
+return cString 
