@@ -33,6 +33,7 @@ user function MT241LOK()
 	Local cUserAlm  := SupergetMv("MV_USTMALM", ,)
 	Local _Tm  := CTM
 	Local cUserid := RetCodUsr()
+	Local cNome   := UsrFullName(cUserid)
 	Local _MovTm := GetMv("MV_MOVTM") //002,502
 	Local cUser  := GetMv("MV_BLOQUSE")//000120,000150,000004,000000
 	Local cTMBaixa  := SupergetMv("MV_BAIXALM" , ,)
@@ -41,7 +42,11 @@ user function MT241LOK()
 	Local cRefugo := SupergetMv("MV_REFUGO", ,)
 	Local cBlq13 := SuperGetMV("MV_USER13", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 13
 	Local cBlq05  := SupergetMv("MV_USER05", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 05
+	Local cBlq12  := SupergetMv("MV_USER12", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 12
 	Local cOpTm := SupergetMv("MV_OPTM", ,) //TMs utilizadas para não permitir movimentações com campo de OP vazio
+	Local cGrupo05 := SuperGetMV("MV_TRFGR05", ," ")
+	Local cGrupo12 := SuperGetMV("MV_TRFGR12", ," ")
+	Local cGrupo   := ""
 
 
 	_Os   := Acols[n,nOstec]
@@ -50,12 +55,7 @@ user function MT241LOK()
 	_op   := Acols[n,cOp]
 	_local:= Acols[n,cLocal]
 
-	/*if empty(aCols[n,nPosOP]) .or. 'OS'$aCols[n,nPosOP]
-		if empty(cCc)
-			_lok:=.f.
-			FWAlertInfo("MT241LOK: Para este tipo de movimento o centro de custo deve ser informado!")
-		endif
-	endif*/
+	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 
 
 	//Tratamento para não fazer devolução 24/02/2021
@@ -70,7 +70,7 @@ user function MT241LOK()
 			ElseIf !Empty(_lote)
 				If dbSeek(xFilial("SD3")+_op+_cod+_lote) .AND. SD3->D3_TM = '050'
 					Help(, ,"AVISO#0035", ,"Lote : " + cvaltochar(Alltrim(_lote))+ " já foi devolvido",1, 0, , , , , , ;
-					{"Validar se já existe devolução do lote : " + cvaltochar(Alltrim(_lote)) + " utilizando a(s) TM(s) : " + cvaltochar(cOpTm)+ " para esta OP: " + cvaltochar(_op)+ ""})
+						{"Validar se já existe devolução do lote : " + cvaltochar(Alltrim(_lote)) + " utilizando a(s) TM(s) : " + cvaltochar(cOpTm)+ " para esta OP: " + cvaltochar(_op)+ ""})
 					_lok := .F.
 				EndIf
 			EndIf
@@ -210,11 +210,30 @@ user function MT241LOK()
 
 
 		/*Validação para que usuário do José Carlos só consiga movimentar no armazém 05
-	Solicitado pela Giu - Maria Luiza - 16/01/2024*/
+		Solicitado pela Giu - Maria Luiza - 16/01/2024
+		Ajuste para que o Danilo e Jose Carlos consiga movimentar para o armazém 99
+		Solicitado pelo Hugo #GLPI 14438 - Maria Luiza 03/02/2026*/
 
-	If cUserid $ cBlq05 .and. _local <> "05"
-		Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 05"})
-		_lok:=.F.
+
+	If cUserid $ cBlq05  .AND. !LinDelet(acols[n])
+		If _local <> "05"
+			Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 05"})
+			_lok:=.F.
+		EndIf
+		If !(cGrupo $ cGrupo05) .AND. !LinDelet(acols[n])
+			_lok := .F.
+			Help(, ,"AVISO#0036", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo05})
+		EndIf
+	ElseIf cUserid $ cBlq12  .AND. !LinDelet(acols[n])
+		If _local <> "12"
+			Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 12"})
+			_lok:=.F.
+		EndIf
+		If !(cGrupo $ cGrupo12) .AND. !LinDelet(acols[n])
+			_lok := .F.
+			Help(, ,"AVISO#0036", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo12})
+		EndIf
 	EndIf
+
 
 		return(_lok)

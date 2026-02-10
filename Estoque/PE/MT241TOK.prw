@@ -13,6 +13,7 @@ User Function MT241TOK()
 	Local _MovTm := GetMv("MV_MOVTM") //002,502,560
 	Local cUser  := GetMv("MV_BLOQUSE")//000120,000150,000004,000000
 	Local cUserid := RetCodUsr()
+	Local cNome   := UsrFullName(cUserid)
 	Local cLote     := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOTECTL"})
 	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
 	Local cOp       := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_OP"})
@@ -36,13 +37,19 @@ User Function MT241TOK()
 	Local cRefugo := SupergetMv("MV_REFUGO", ,)
 	Local cBlq13 := SuperGetMV("MV_USER13", ," ") // Usuários que somente irão gerar e baixar requisições no almoxarifado 13
 	Local cBlq05  := SupergetMv("MV_USER05", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 05
+	Local cBlq12  := SupergetMv("MV_USER12", ,)// Usuários que somente irão gerar e baixar requisições no almoxarifado 12
 	Local cOpTm := SupergetMv("MV_OPTM", ,) //TMs utilizadas para não permitir movimentações de produtos fora da OP selecionada
+	Local cGrupo05 := SuperGetMV("MV_TRFGR05", ," ")
+	Local cGrupo12 := SuperGetMV("MV_TRFGR12", ," ")
+	Local cGrupo   := ""
 
 	_cod  := Acols[n,cCod]
 	_lote := Acols[n,cLote]
 	_op   := Acols[n,cOp]
 	_Os   := Acols[n,nOstec]
 	_local:= Acols[n,cLocal]
+
+	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 
 
 	//Tratamento para não fazer devolução 24/02/2021
@@ -189,11 +196,29 @@ User Function MT241TOK()
 
 
 	/*Validação para que usuário do José Carlos só consiga movimentar no armazém 05
-	Solicitado pela Giu - Maria Luiza - 16/01/2024*/
+	Solicitado pela Giu - Maria Luiza - 16/01/2024
+	Ajuste para que o Danilo e Jose Carlos consiga movimentar para o armazém 99
+	Solicitado pelo Hugo #GLPI 14438 - Maria Luiza 03/02/2026*/
 
-	If cUserid $ cBlq05 .and. _local <> "05"
-		Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 05"})
-		lRet:=.F.
+
+	If cUserid $ cBlq05  
+		If _local <> "05" .AND. !LinDelet(acols[n])
+			Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 05"})
+			lRet:=.F.
+		EndIf
+		If !(cGrupo $ cGrupo05) .AND. !LinDelet(acols[n])
+			lRet := .F.
+			Help(, ,"AVISO#0036", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo05})
+		EndIf
+	ElseIf cUserid $ cBlq12  
+		If _local <> "12" .AND. !LinDelet(acols[n])
+			Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 12"})
+			lRet:=.F.
+		EndIf
+		If !(cGrupo $ cGrupo12) .AND. !LinDelet(acols[n])
+			lRet := .F.
+			Help(, ,"AVISO#0037", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo12})
+		EndIf
 	EndIf
 
 	DbSelectArea("SF5")
