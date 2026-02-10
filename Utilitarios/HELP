@@ -95,6 +95,7 @@ Solução : Utilize o armazém 13 - Usuário no parâmetro MV_USER13 só pode mo
 
 Problema : Usuário não pode movimentar neste armazém
 Solução : Utilize o armazém 05 - Usuário no parâmetro MV_USER05 só pode movimentar no armazém 05
+Solução : Utilize o armazém 12 - Usuário no parâmetro MV_USER12 só pode movimentar no armazém 12
 
 
 
@@ -216,3 +217,8 @@ Solução : O campo Observação deve conter no mínimo 15 caracteres.
 
 Problema : Campo obrigatório vazio.
 Solução : Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido. 
+
+
+"AVISO#0036"
+
+"Usuário não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " MV_TRFGR05 ou MV_TRFGR12}
