@@ -18,24 +18,24 @@
 
 User Function A261TOK()
 
-Local lRet := .T.
-local nPosLot     := AScan(aHeader, {|x| Alltrim(x[1]) == "Lote"})
-local nPosLotDes  := AScan(aHeader, {|x| Alltrim(x[1]) == "Lote Destino"})
-local nPosPrd     := AScan(aHeader, {|x| Alltrim(x[1]) == "Prod.Orig."})
-local nPosPrdDes  := AScan(aHeader, {|x| Alltrim(x[1]) == "Prod.Destino"})
-Local cCodUser := RetCodUsr() //Retorna o Codigo do Usuario
-Local cTransf  := SuperGetMV("MV_USETRAN", ," ")  
+	Local lRet := .T.
+	local nPosLot     := AScan(aHeader, {|x| Alltrim(x[1]) == "Lote"})
+	local nPosLotDes  := AScan(aHeader, {|x| Alltrim(x[1]) == "Lote Destino"})
+	local nPosPrd     := AScan(aHeader, {|x| Alltrim(x[1]) == "Prod.Orig."})
+	local nPosPrdDes  := AScan(aHeader, {|x| Alltrim(x[1]) == "Prod.Destino"})
+	Local cCodUser := RetCodUsr() //Retorna o Codigo do Usuario
+	Local cTransf  := SuperGetMV("MV_USETRAN", ," ")
 
-If  !(cCodUser $ cTransf) // NO DIA 18/11/21 GUILHERME PEDIU PARA MARLON LIBERAR A SENHA DELE (ZAP ZAP) obs. VAI DAR BODE
-   If (Acols[n,nPosLot]) <> (Acols[n,nPosLotDes])  
-      lRet := .F.
-      MSGINFO("Lotes divergentes !!"," Atenção ")
-   EndIf
+	If  !(cCodUser $ cTransf) // NO DIA 18/11/21 GUILHERME PEDIU PARA MARLON LIBERAR A SENHA DELE (ZAP ZAP) obs. VAI DAR BODE
+		If (Acols[n,nPosLot]) <> (Acols[n,nPosLotDes])
+			lRet := .F.
+			FWAlertInfo("Lotes divergentes !!"," Atenção ")
+		EndIf
 
-   If (Acols[n,nPosPrd]) <> (Acols[n,nPosPrdDes])  
-      lRet := .F.
-      MSGINFO("Produtos divergentes !!"," Atenção ")
-   EndIf
-EndIf
+		If (Acols[n,nPosPrd]) <> (Acols[n,nPosPrdDes])
+			lRet := .F.
+			FWAlertInfo("Produtos divergentes !!"," Atenção ")
+		EndIf
+	EndIf
 
 Return lRet
