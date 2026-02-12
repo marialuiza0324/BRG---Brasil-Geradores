@@ -21,7 +21,7 @@ User Function MTA410()
 	Local xTes  := " "
 	Local xCod  := " " //Cod. do Produto
 	Local i    := 0
-	Local _NfRem := M->C5_NFREM 
+	//Local _NfRem := M->C5_NFREM 
 
 	If Funname() <> "LOCA001"
 
@@ -31,12 +31,12 @@ User Function MTA410()
 				xTes  := aCols[i,GdFieldPos("C6_TES",aHeader)]
 				xCod  := aCols[i,GdFieldPos("C6_PRODUTO",aHeader)] //Cod. Do Produto
 				xLctl := aCols[i,GdFieldPos("C6_LOTECTL",aHeader)] //Lote do Produto
-				If xTes $ "530/535"
+				/*If xTes $ "530/535"
 					If empty(_NfRem)
 						uRet := .F.
 						Alert("Pedido de Fatura, Por Favor Preencher o campo nota de Remessa !!!")
 					EndIf
-				EndIf
+				EndIf*/
  
 				If substr(xCfop,2,3) = "908"
 					DbSelectArea("SB1")
