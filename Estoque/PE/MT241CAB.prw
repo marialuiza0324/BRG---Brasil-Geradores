@@ -82,17 +82,19 @@ User Function AjustaAcols()
 
        // Busca apropriação e local padrão do produto
        cProdApropri := Posicione('SB1', 1, FWxFilial('SB1') + Alltrim(_cod), 'B1_APROPRI')
-       cLocPad := Posicione('SB1', 1, FWxFilial('SB1') + Alltrim(_cod), 'B1_LOCPAD')
+       
 
        // Percorre as colunas da matriz Acols
        For i := 1 to Len(Acols)
+	   _cod := Acols[i,cCod]
+	   cLocPad := Posicione('SB1', 1, FWxFilial('SB1') + Alltrim(_cod), 'B1_LOCPAD')
               // Verifica se o tipo de movimento está permitido
               If _Tm $ cTMAlm
                      // Se o produto é de apropriação indireta
                      If cProdApropri == "I"
                             // Ajusta os campos conforme regra
-                            Acols[i][73] := Acols[i][7]
-                            Acols[i][72] := Acols[i][2]
+                            Acols[i][73] := Acols[i][2]
+                            Acols[i][72] := Acols[i][7]
                             Acols[i][7] := ""
                             Acols[i][2] := cLocPad
                      EndIf
@@ -102,7 +104,6 @@ User Function AjustaAcols()
               EndIf
        Next
 
-Return
 Return
 
 
