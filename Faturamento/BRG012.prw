@@ -26,10 +26,14 @@ User Function BRG012()
 //Local _Nf        := SC5->C5_NOTA 
 //Local _Serie     := SC5->C5_SERIE
 	Local _Desc,_End,_Bair,_Cid,cTes, cNcn :=  " "
-	Local _cMvCon := "MV_CONVEND" //Contato do vendedor por parametro
-	Local cString := ""
-	Local aString := ""
-	Local nString := ""
+	//Local _cMvCon := "MV_CONVEND" //Contato do vendedor por parametro
+	//Local cString := ""
+	//Local aString := ""
+	//Local nString := ""
+
+	Local cVend := " "
+	Local cContato := " "
+	Local cDDD := " "
 
 
 	Private oFont6		:= TFONT():New("ARIAL",7,6,.T.,.F.,5,.T.,5,.T.,.F.) ///Fonte 6 Normal
@@ -357,25 +361,24 @@ User Function BRG012()
 	oPrint:Say(nLin, 1350, Transform(_TotDif, "@e 999,999,999.99"), oFont10)   //Difal
 	nLin+=100*/
 	oPrint:Say(nLin, 0150, ("Sujeito a Disponibilidade"), oFont10)
-	nLin+=15
+	nLin+=65
 
-//INICIO alteração Marlon 08/06/2022 #2155
-/* 
-	O tratamento dos contatos do orçamento é feito atraves de parametro.
-	O parametro será o MV_CONVEND
-	O padrao para preenchimento do parametro é NOME - FONE(Separado por - Ex.: (062) 99999-9999)
-	De um contato para o outro separar com ;
+	/*Alteração na impressão do contato do vendedor, para buscar o nome, telefone e o contato direto na tabela de vendedores,
+	 ao invés de usar um MV, isso para evitar que o contato do vendedor seja preenchido errado 
+	 ou não apareça no orçamento - #GLPI 15169  Maria Luiza - 12/03/2026*/
 
- */
-	cString := GetMV(_cMvCon)
-	aString := strtokarr (cString, ";")
-	for nString := 1 to len(aString)
-		cStr1 := strtokarr (cValtoChar(aString[nString]), "-")
-		nLin+=50
-		oPrint:Say(nLin, 0150, (cStr1[1]), oFont10)
-		oPrint:Say(nLin, 0350, (cStr1[2]+"-"+cStr1[3]), oFont10)
-	next
+		If !Empty(SCJ->CJ_VEND)
+			cVend := Posicione("SA3",1,xFilial("SA3")+SCJ->CJ_VEND,"A3_NREDUZ")
+			cContato := Posicione("SA3",1,xFilial("SA3")+SCJ->CJ_VEND,"A3_TEL")
+			cDDD := Posicione("SA3",1,xFilial("SA3")+SCJ->CJ_VEND,"A3_DDDTEL")
+		EndIf
 
+
+		If !Empty(cContato) .AND. !Empty(cDDD) .AND. !Empty(cVend)
+			oPrint:Say(nLin, 0150, Capital(cVend), oFont10)
+			oPrint:Say(nLin, 0350, "(" + cDDD + ") " + cContato, oFont10)
+		EndIf
+	
 	_nPagin := 0
 
 //FIM
