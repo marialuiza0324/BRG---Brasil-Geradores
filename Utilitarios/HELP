@@ -221,4 +221,17 @@ Solução : Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pe
 
 "AVISO#0036"
 
-"Usuário não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " MV_TRFGR05 ou MV_TRFGR12}
+Problema : Usuário não tem permissão para movimentar este produto
+Solução : Utilize produtos do(s) grupo(s) :  MV_TRFGR05 
+
+
+"AVISO#0037"
+
+Problema : Usuário não tem permissão para movimentar este produto
+Solução : Utilize produtos do(s) grupo(s) : MV_TRFGR12
+
+
+"AVISO#0037"
+
+Problema : Quantidade insuficiente para devolução.
+Solução : Verifique estornos anteriores ou consumo real na OP.
