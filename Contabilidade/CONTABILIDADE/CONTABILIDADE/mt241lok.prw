@@ -28,6 +28,8 @@ User function MT241LOK()
 	Local cLote     := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOTECTL"})
 	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
 	Local cLocal    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOCAL"})
+	Local cQuant    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_QUANT"})
+	Local _quant	:= ""
 	Local _op       := ""
 	Local cLoteCtl  := ""
 	Local cTMAlm   := SupergetMv("MV_TMALM" , ,)
@@ -48,6 +50,12 @@ User function MT241LOK()
 	Local cGrupo05 := SuperGetMV("MV_TRFGR05", ," ")
 	Local cGrupo12 := SuperGetMV("MV_TRFGR12", ," ")
 	Local cGrupo   := ""
+	Local nQtdConsumida  := 0
+	Local nQtdDevolvida  := 0
+	Local nQtdDisponivel := 0
+	Local _CRLF     := Chr(13) + Chr(10)
+	Local cQuery    := ""
+	Local cTM       := ""
 
 
 	_Os   := Acols[n,nOstec]
@@ -55,30 +63,75 @@ User function MT241LOK()
 	_cod  := Acols[n,cCod]
 	_op   := Acols[n,cOp]
 	_local:= Acols[n,cLocal]
+	_quant:= Acols[n,cQuant]
 
 	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 
-		If FunName() <> "MATA185" //Validações da movimentação múltipla, não entra na validação da rotina de baixa
-			//Tratamento para não fazer devolução 24/02/2021
-			If cFilAnt == "0101"
-				If _Tm $ cOpTm .AND. !EMPTY(_op) 
-					DbSelectArea("SD3")
-					DbSetOrder(19)
-					If !dbSeek(xFilial("SD3")+_op+_cod+_lote)  .AND. !LinDelet(acols[n])//Criar o Indice 18
-						Help(, ,"AVISO#0018", ,"Produto e/ou Lote não encontrado na Ordem De Produção:" + cvaltochar(_op)+"",1, 0, , , , , , ;
-							{"A TM: " +cOpTm+ " exige que as devoluções sejam realizadas apenas para itens que foram baixados através da OP:" + cvaltochar(_op)+ ""})
-						_lok := .F.
-					ElseIf !Empty(_lote)
-						If dbSeek(xFilial("SD3")+_op+_cod+_lote) .AND. SD3->D3_TM = '050' .AND. !LinDelet(acols[n])
-							Help(, ,"AVISO#0035", ,"Lote : " + cvaltochar(Alltrim(_lote))+ " já foi devolvido",1, 0, , , , , , ;
-								{"Validar se já existe devolução do lote : " + cvaltochar(Alltrim(_lote)) + " utilizando a(s) TM(s) : " + cvaltochar(cOpTm)+ " para esta OP: " + cvaltochar(_op)+ ""})
-							_lok := .F.
+	If FunName() <> "MATA185" //Validações da movimentação múltipla, não entra na validação da rotina de baixa
+		//Tratamento para não fazer devolução 24/02/2021
+		If cFilAnt == "0101"
+			If _Tm $ cOpTm .AND. !EMPTY(_op)
+
+				If Select ("TSD3")
+					TSD3->(dbCloseArea())
+				EndIf
+
+				cQuery := "SELECT D3_QUANT, D3_TM, D3_ESTORNO " +;
+					" FROM " + retsqlname("SD3") + " SD3 " +;
+					" WHERE D3_FILIAL = '" + xFilial("SD3") + "' AND " +;
+					" D3_OP = '" + Alltrim(_op) + "' AND " +;
+					" D3_COD = '" + Alltrim(_cod) + "' AND " +;
+					" D3_LOTECTL = '" + Alltrim(_lote) + "'" +;
+					" AND D_E_L_E_T_ = ' ' "
+
+				DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQuery)),"TSD3",.T.,.T.)
+
+				DbSelectArea("TSD3")
+
+				While !TSD3->(Eof())
+					If TSD3->D3_ESTORNO != "S"  // Ignora estornos já feitos
+						If TSD3->D3_TM $ "550,999"   // <-- Substitua "XXX" pelas TM(s) de BAIXA/CONSUMO na OP (ex: '999','521' etc.)
+							nQtdConsumida += TSD3->D3_QUANT
+						ElseIf TSD3->D3_TM $ cOpTm  // TM de devolução/estorno (ex: '050' ou sua TM)
+							nQtdDevolvida += TSD3->D3_QUANT
+							cTM := TSD3->D3_TM
 						EndIf
 					EndIf
-				EndiF
+
+					TSD3->(DbSkip())
+				EndDo
+
+				nQtdDisponivel := nQtdConsumida - nQtdDevolvida
+
+				DbSelectArea("SD3")
+				DbSetOrder(19)
+				If !dbSeek(xFilial("SD3")+_op+_cod+_lote)  .AND. !LinDelet(acols[n])//Criar o Indice 18
+					Help(, ,"AVISO#0018", ,"Produto e/ou Lote não encontrado na Ordem De Produção:" + cvaltochar(_op)+"",1, 0, , , , , , ;
+						{"A TM: " +cOpTm+ " exige que as devoluções sejam realizadas apenas para itens que foram baixados através da OP:" + cvaltochar(_op)+ ""})
+					_lok := .F.
+					return(_lok)
+				ElseIf !Empty(_lote)
+					If dbSeek(xFilial("SD3")+_op+_cod+_lote) .AND. cTM = '050' .AND. !LinDelet(acols[n])
+						Help(, ,"AVISO#0035", ,"Lote : " + cvaltochar(Alltrim(_lote))+ " já foi devolvido",1, 0, , , , , , ;
+							{"Validar se já existe devolução do lote : " + cvaltochar(Alltrim(_lote)) + " utilizando a(s) TM(s) : " + cvaltochar(cOpTm)+ " para esta OP: " + cvaltochar(_op)+ ""})
+						_lok := .F.
+						return(_lok)
+					EndIf
+				EndIf
+
+				If nQtdDisponivel < _quant  // _quant = quantidade informada na devolução atual
+					Help(, ,"AVISO#0038", ,"Quantidade insuficiente para devolução. ",1, 0, , , , , , ;
+						{"Saldo consumido na OP " + cvaltochar(_op) + " para o item " + Alltrim(_cod) + ;
+						" / lote " + Alltrim(_lote) + " = " + Alltrim(Transform(nQtdDisponivel,"@E 999,999,999.99")) + ;
+						_CRLF + "Quantidade solicitada para devolução: " + Alltrim(Transform(_quant,"@E 999,999,999.99")) + ;
+						_CRLF + "Verifique estornos anteriores ou consumo real na OP."})
+					_lok := .F.
+					return(_lok)
+				EndIf
+
+				TSD3->(dbCloseArea())
 			EndiF
-
-
+		EndiF
 
 			/*Valida a movimentação de determinadas TMs para usuários autorizados, 
 			validar a movimentação de OS - Maria Luiza - 07/08/2024*/
@@ -86,6 +139,7 @@ User function MT241LOK()
 				If !(cUserid $ cUser) //verifica se usuário está contido no parâmetro
 					Help(, ,"AVISO#0005", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize uma TM permitida para este usuário"})
 					_lok := .F.//não permite salvar
+					return(_lok)
 				EndIf
 			EndIf
 
@@ -93,10 +147,12 @@ User function MT241LOK()
 				If Empty(_Os) .AND. !LinDelet(acols[n])//se movimentar, verifica se o campo de OS esta vazio
 					Help(, ,"AVISO#0007", ,"TM movimenta estoque",1, 0, , , , , , {"Preencha o campo OS"})
 					_lok := .F.//não permite salvar
+					return(_lok)
 				EndIf
 			ElseIf SF5->F5_XOS == "N" .AND. !Empty(_Os) .AND. !LinDelet(acols[n])//se TM não movimentar estoque, não permite preencher o campo se OS
 				Help(, ,"AVISO#0008", ,"TM não movimenta estoque",1, 0, , , , , , {"Campo OS não pode ser preenchido"})
 				_lok := .F.//não permite salvar
+				return(_lok)
 			EndIf
 
 
@@ -106,6 +162,7 @@ User function MT241LOK()
 				If cUserid $ cUserAlm //verifica se é usuário do almoxarifado
 					Help(, ,"AVISO#0003", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize a(s) TM(s) : " +cTMAlm})
 					_lok := .F.//não permite salvar
+					return(_lok)
 				Endif
 			EndIf
 
@@ -119,19 +176,23 @@ User function MT241LOK()
 				If _local <> "05" .AND. !LinDelet(acols[n])
 					Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 05"})
 					_lok:=.F.
+					return(_lok)
 				EndIf
 				If !(cGrupo $ cGrupo05) .AND. !LinDelet(acols[n])
 					_lok := .F.
 					Help(, ,"AVISO#0036", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo05})
+					return(_lok)
 				EndIf
 			ElseIf cUserid $ cBlq12 .AND. FunName() <> "MATA185"
 				If _local <> "12" .AND. !LinDelet(acols[n])
 					Help(, ,"AVISO#0017", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 12"})
 					_lok:=.F.
+					return(_lok)
 				EndIf
 				If !(cGrupo $ cGrupo12) .AND. !LinDelet(acols[n])
 					_lok := .F.
 					Help(, ,"AVISO#0036", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo12})
+					return(_lok)
 				EndIf
 			EndIf
 
@@ -141,6 +202,8 @@ User function MT241LOK()
 				If _Tm  $ cTMAlm .AND. Empty(_op) .AND. !LinDelet(acols[n])//Verifica se campo da OP esta vazio
 					Help(, ,"AVISO#0009", ,"Campo da OP vazio.",1, 0, , , , , , {"Preencha o campo da OP."})
 					_lok := .F.//não permite salvar
+					return(_lok)
+
 				EndIf
 			EndIf
 
@@ -152,6 +215,7 @@ User function MT241LOK()
 				If Empty(_lote) .AND. !LinDelet(acols[n])//valida se campo de lote esta vazio
 					Help(, ,"AVISO#0006", ,"Produto possui rastreabilidade",1, 0, , , , , , {"Preencha o campo de LOTE"})
 					_lok := .F.//não permite salvar
+					return(_lok)
 				EndIf
 			EndIf
 
@@ -162,13 +226,14 @@ User function MT241LOK()
 				If _local <> "21" .AND. !LinDelet(acols[n])
 					Help(, ,"AVISO#0014", ,"TM não pode ser utilizada neste armazém",1, 0, , , , , , {"Utilize o armazém 21"})
 					_lok:=.F.
+					return(_lok)
 				EndIf
 				If !(Alltrim(_cod) $ cRefugo) .AND. !LinDelet(acols[n])
 					Help(, ,"AVISO#0015", ,"TM não pode ser utilizada para este produto",1, 0, , , , , , {"Utilize um item de REFUGO"})
 					_lok:=.F.
+					return(_lok)
 				EndIf
 			EndIf
-
 		EndIf
 
 
@@ -181,6 +246,7 @@ User function MT241LOK()
 					If !(_Tm  $ cTMBaixa)//valida se usuário está usando TM que não está contida no parâmetro, só entra na validação na rotina de baixa
 						Help(, ,"AVISO#0011", ,"Usuário " +cUserName+ " não tem permissão para utilizar TM selecionada",1, 0, , , , , , {"Utilize uma TM permitida para este usuário"})
 						_lok := .F.//não permite salvar
+						return(_lok)
 					EndIf
 				EndIf
 			EndIF
@@ -193,10 +259,12 @@ User function MT241LOK()
 					If SCP->CP_LOCAL <> "01" .AND. !LinDelet(acols[n])
 						Help(, ,"AVISO#0012", ,"Usuário " +cUserName+ " não autorizado a baixar Pre Requisição nesse Almoxarifado",1, 0, , , , , , {"Realize baixa no almoxarifado 01"})
 						_lok:=.F.
+						return(_lok)
 					Else
 						If Empty(_Os) .AND. !LinDelet(acols[n])
 							Help(, ,"AVISO#0013", ,"Campo de OS vazio",1, 0, , , , , , {"Preencha o campo da OS"})
 							_lok:=.F.
+							return(_lok)
 						EndIf
 					EndIf
 				EndIf
@@ -209,6 +277,7 @@ User function MT241LOK()
 				If cUserid $ cBlq13 .and. _local <> "13" .AND. !LinDelet(acols[n])
 					Help(, ,"AVISO#0016", ,"Usuário não pode movimentar neste armazém",1, 0, , , , , , {"Utilize o armazém 13"})
 					_lok:=.F.
+					return(_lok)
 				EndIf
 			EndIf
 
@@ -221,6 +290,7 @@ User function MT241LOK()
 				If Empty(_lote) .AND. !LinDelet(acols[n])//valida se campo de lote esta vazio
 					Help(, ,"AVISO#0006", ,"Produto possui rastreabilidade",1, 0, , , , , , {"Preencha o campo de LOTE"})
 					_lok := .F.//não permite salvar
+					return(_lok)
 				EndIf
 			EndIf
 
