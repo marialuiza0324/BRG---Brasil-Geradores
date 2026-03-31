@@ -29,6 +29,8 @@ User function MT241LOK()
 	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
 	Local cLocal    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOCAL"})
 	Local cQuant    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_QUANT"})
+	Local cCentrCusto := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_CC"})
+	Local _CC      := ""
 	Local _quant	:= ""
 	Local _op       := ""
 	Local cLoteCtl  := ""
@@ -64,6 +66,7 @@ User function MT241LOK()
 	_op   := Acols[n,cOp]
 	_local:= Acols[n,cLocal]
 	_quant:= Acols[n,cQuant]
+	_CC   := Acols[n,cCentrCusto]
 
 	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 
@@ -294,6 +297,30 @@ User function MT241LOK()
 				EndIf
 			EndIf
 
-		EndIf
+			/*Validação de TMs de baixa – Almoxarifado #GLPI 14911
+		 	 Solicitado pelo Matheus - Maria Luiza - 23/03/2026
+			*/
+
+			If _Tm == "503"
+				If Empty(CCC) .OR. !Empty(_op) .OR. !Empty(_Os) .AND. !LinDelet(acols[n])
+					Help(, ,"AVISO#0039", ,"TM utilizada exclusivamente para baixa em Centro de Custo.",1, 0, , , , , , {"Para utilização da TM 503, os campos de OP e OS devem estar vazios e o Centro de Custo é obrigatório"})
+					lRet := .F.
+					Return(lRet)
+				EndIf
+			ElseIf _Tm == "506"
+				If Empty(CCC) .OR. Empty(_Os) .OR. !Empty(_op) .OR. Substr(_op,1,2) <> "OS" .AND. !LinDelet(acols[n])
+					Help(, ,"AVISO#0040", ,"TM utilizada exclusivamente para baixa em Ordem de Serviço de manutenção.",1, 0, , , , , , {"Para utilização da TM 506, o campo de OP deve estar vazio ou a OP vinculada a manutenção e o Centro de Custo e OS são obrigatórios"})
+					lRet := .F.
+					Return(lRet)
+				EndIf
+			ElseIf _Tm == "550"
+				If !Empty(CCC) .OR. Empty(_op) .OR. !Empty(_Os) .AND. !LinDelet(acols[n])
+					Help(, ,"AVISO#0041", ,"TM utilizada exclusivamente para baixa em Ordem de Produção.",1, 0, , , , , , {"Para utilização da TM 550, os campos de OS e Centro de Custo devem estar vazios e o campo de OP é obrigatório"})
+					lRet := .F.
+					Return(lRet)
+				EndIf
+			EndIf
+
+	EndIf
 
 return(_lok)
