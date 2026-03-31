@@ -39,9 +39,9 @@ Local lMsg := .F.
 
 
 	cQry := "SELECT * FROM "+retsqlname("SDT")+" SDT "
-	cQry += "WHERE DT_FORNEC = '"+DS_FORNEC+"' "
+	cQry += "WHERE DT_FORNEC = '"+SDS->DS_FORNEC+"' "
 	cQry += "AND DT_FILIAL = '"+xFilial("SDT")+"' "
-	cQry += "AND DT_DOC = '"+DS_DOC+"' "
+	cQry += "AND DT_DOC = '"+SDS->DS_DOC+"' "
 	cQry += "AND  D_E_L_E_T_= '' "
 
 	DbUseArea(.T.,"TOPCONN",TcGenQry(,,ChangeQuery(cQry)),"TSDT",.T.,.T.) //coleta dados de pedido e item da importação
