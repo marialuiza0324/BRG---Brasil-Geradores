@@ -29,8 +29,8 @@ User function MT241LOK()
 	Local cCod      := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
 	Local cLocal    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOCAL"})
 	Local cQuant    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_QUANT"})
-	Local cCentrCusto := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_CC"})
-	Local _CC      := ""
+	//Local cCentrCusto := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_CC"})
+	//Local _CC      := ""
 	Local _quant	:= ""
 	Local _op       := ""
 	Local cLoteCtl  := ""
@@ -66,7 +66,7 @@ User function MT241LOK()
 	_op   := Acols[n,cOp]
 	_local:= Acols[n,cLocal]
 	_quant:= Acols[n,cQuant]
-	_CC   := Acols[n,cCentrCusto]
+	//_CC   := Acols[n,cCentrCusto]
 
 	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 

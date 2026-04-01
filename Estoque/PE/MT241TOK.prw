@@ -20,14 +20,14 @@ User Function MT241TOK()
 	Local nOstec    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_OSTEC"})
 	Local cLocal    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOCAL"})
 	Local cQuant    := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_QUANT"})
-	Local cCentrCusto := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_CC"})
+	//Local cCentrCusto := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_CC"})
 	Local _quant	:= ""
 	Local _cod      := ""
 	Local _lote     := ""
 	Local _op       := ""
 	Local _local    := ""
 	Local _Os       := ""
-	Local _CC      := ""
+	//Local _CC      := ""
 	Local n         := 1
 	Local cLoteCtl  := ""
 	Local cTMAlm   := SupergetMv("MV_TMALM" , ,)//560
@@ -56,7 +56,7 @@ User Function MT241TOK()
 	_Os   := Acols[n,nOstec]
 	_local:= Acols[n,cLocal]
 	_quant:= Acols[n,cQuant]
-	_CC   := Acols[n,cCentrCusto]
+	//_CC   := Acols[n,cCentrCusto]
 
 	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 	cTM      := Posicione('SD3', 19, xFilial("SD3") + _op + _cod + _lote, 'D3_TM')
