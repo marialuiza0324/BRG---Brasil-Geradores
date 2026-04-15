@@ -81,7 +81,7 @@ User Function MT097APR()
 			{ "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
 			{ "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
 				{ "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
-				{ "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL },;
+				{ "E2_NATUREZ" , PadR(AllTrim("602030007"),TamSx3("E2_NATUREZ")[1])  , NIL },;
 				{ "E2_FORNECE" , _Forn , NIL },;
 				{ "E2_LOJA" , _Lj , NIL },;
 				{ "E2_EMISSAO" , dData, NIL },;
@@ -94,7 +94,7 @@ User Function MT097APR()
 			{ "E2_NUM" , PadR(AllTrim(cNumPC+"/"+substr(cItemPc,3,4)),TamSx3("E2_NUM")[1])  , NIL },; //Validando tamanho do campo na SX3
 			{ "E2_PARCELA" , PadR(AllTrim(_Parc),TamSx3("E2_PARCELA")[1])   , NIL },;
 				{ "E2_TIPO" , PadR(AllTrim(cTipo),TamSx3("E2_TIPO")[1])  , NIL },;
-				{ "E2_NATUREZ" , PadR(AllTrim("202010058"),TamSx3("E2_NATUREZ")[1])  , NIL }}
+				{ "E2_NATUREZ" , PadR(AllTrim("602030007"),TamSx3("E2_NATUREZ")[1])  , NIL }}
 
 			If Select("TSE2") > 0
 				TSE2->(dbCloseArea())

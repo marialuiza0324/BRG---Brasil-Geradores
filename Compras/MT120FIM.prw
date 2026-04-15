@@ -66,7 +66,7 @@ IF (nOpcao == 3 .and. nOpcA == 1) .or. (nOpcao == 9 .and. nOpcA == 1) .or. (nOpc
 		  { "E2_NUM" , cNumPC+"/"+CVALTOCHAR(cont) , NIL },;
 		  { "E2_PARCELA" , _Parc , NIL },;    
 		  { "E2_TIPO" , "PR" , NIL },;
-		  { "E2_NATUREZ" , "202010058" , NIL },;  //Cadastrar uma natureza com titulo provisoriao
+		  { "E2_NATUREZ" , "602030007" , NIL },;  //Cadastrar uma natureza com titulo provisoriao
 		  { "E2_FORNECE" , _Forn , NIL },;
 		  { "E2_LOJA" , _Lj , NIL },;
 		  { "E2_EMISSAO" , dData, NIL },;
