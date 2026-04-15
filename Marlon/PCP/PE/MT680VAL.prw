@@ -151,7 +151,7 @@ User Function MT680VAL()
 					Endif
 
 					If cMensagem <> ""
-						Help(, ,"AVISO#0031", ,cMensagem,1, 0, , , , , , {"Corrija as pendências para prosseguir cpom o apontamento."})
+						Help(, ,"AVISO#0031", ,cMensagem,1, 0, , , , , , {"Corrija as pendências para prosseguir com o apontamento."})
 					EndIf
 
 					If empty(cHoraFim) .OR. empty(cHoraIni) .OR. empty(cOperador)
@@ -211,7 +211,7 @@ User Function MT680VAL()
 					xHTM += "</body></html>"
 
 					// Envia e-mail informando ausência de requisições de matéria-prima para a OP
-					U_zEnvMail(cPara, cAssunto, xHTM, aAnexos)
+					//U_zEnvMail(cPara, cAssunto, xHTM, aAnexos) //Desabilitado envio de e-mail, conforme solicitação do Matheus Souza por conta do armazém 99 - 14/04/2026
 				EndIf
 
 			ElseIF cOper == "Z1" .AND. M->H6_PT = "P"
