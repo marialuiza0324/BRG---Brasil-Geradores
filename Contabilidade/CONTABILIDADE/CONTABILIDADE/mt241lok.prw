@@ -308,7 +308,7 @@ User function MT241LOK()
 					Return(lRet)
 				EndIf
 			ElseIf _Tm == "506"
-				If Empty(CCC) .OR. Empty(_Os) .OR. !Empty(_op) .OR. Substr(_op,1,2) <> "OS" .AND. !LinDelet(acols[n])
+				If Empty(CCC) .AND. (Empty(_Os) .OR. !("OS" $ _op) .OR. !Empty(_op)) .AND. !LinDelet(acols[n])
 					Help(, ,"AVISO#0040", ,"TM utilizada exclusivamente para baixa em Ordem de Serviço de manutenção.",1, 0, , , , , , {"Para utilização da TM 506, o campo de OP deve estar vazio ou a OP vinculada a manutenção e o Centro de Custo e OS são obrigatórios"})
 					lRet := .F.
 					Return(lRet)
