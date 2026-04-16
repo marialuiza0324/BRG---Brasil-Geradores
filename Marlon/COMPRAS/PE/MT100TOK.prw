@@ -53,6 +53,8 @@ User Function MT100TOK()
     Local cFilDoc  := SupergetMv("MV_FILDOCE", , ) // Parâmetro que controla filiais que irão sofrer o bloqueio de vencimento mínimo
     Local cTesDupl := ""
     local cAdiant  := ""
+    Local nPosTes        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_TES"})
+    Local cTes           := ""
 
  If Funname() <> "LOCA001" .AND. Funname() <> "MATA116" .AND. FunName() <> "RPC" .AND. Funname() <> "SPEDNFE"
 
@@ -124,11 +126,13 @@ User Function MT100TOK()
         EndIf
 
         For nX := 1 To Len(ACOLS) //percorre todas as linhas da pré-nota
+
+        cTes:= Posicione("SF4",1,FwxFilial("SF4")+ACOLS[nX][nPosTes],'F4_ESTOQUE')
             DbSelectArea("SB1")
             DbSetOrder(1)   
 
             IF dbSeek(xFilial("SB1")+ACOLS[nX][2]) //busca produto na SB1
-                If SB1->B1_RASTRO == "L" .AND. Empty(ACOLS[nX][7]) //se produto possuir ratreabilidade e lote estiver vazio
+                If SB1->B1_RASTRO == "L" .AND. Empty(ACOLS[nX][7]) .AND. cTes == "S"//se produto possuir ratreabilidade e lote estiver vazio
                     lRet  := .F. //não permite inclusão do doc 
                     lRastro := .F.
                     FWAlertInfo("Item com Rastreabilidade, informe o Lote"," Atenção!!!")

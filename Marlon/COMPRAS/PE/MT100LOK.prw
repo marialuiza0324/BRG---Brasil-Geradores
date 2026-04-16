@@ -22,16 +22,20 @@ local nPosLoteCtl    := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_LOTECTL"})
 local nCentroC       := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_CC"})
 local nRateio        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_RATEIO"})
 Local nLinha
+Local nPosTes        := AScan(aHeader, {|x| Alltrim(x[2]) == "D1_TES"})
+Local cTes           := ""
 
 If Funname() <> "LOCA001" /*.AND. Funname() <> "MATA461"*/ .AND. FunName() <> "RPC"
 
     If !FWIsInCallStack("A103Devol") //só entra na validação caso não esteja selecionada a opção de retornar NF
 
+        cTes:= Posicione("SF4",1,FwxFilial("SF4")+ACOLS[n][nPosTes],'F4_ESTOQUE')
+
         DbSelectArea("SB1")
         DbSetOrder(1)   
 
         IF dbSeek(xFilial("SB1")+Acols[n, nPosCod])//busca produto na SB1
-            If SB1->B1_RASTRO == "L" .AND. Empty(Acols[n, nPosLoteCtl])//se produto possuir ratreabilidade e lote estiver vazio
+            If SB1->B1_RASTRO == "L" .AND. Empty(Acols[n, nPosLoteCtl]) .AND. cTes == "S"//se produto possuir ratreabilidade e lote estiver vazio
                 ExpL1  := .F. //não permite inclusão do doc 
                 FWAlertInfo("Item com Rastreabilidade, informe o Lote"," Atenção!!!")
                 Return
