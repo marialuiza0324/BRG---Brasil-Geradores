@@ -22,17 +22,21 @@ User Function FSFAT001()
 	Local cTes := M->C6_TES
 	Local cTesValid := Posicione('SF4', 1, FWxFilial('SF4') + cTes , 'F4_ESTOQUE')
 
-	DbSelectArea("SF4")
-	SF4->(DbSetOrder(1))
-	SF4->(DbGoTop())
+	If Funname() <> "CNTA260"
 
-	IF SF4->(MsSeek(xFilial("SF4")+cTes))
-		If cTesValid == "N"
-			FWAlertInfo("Tes não movimenta estoque.","Atenção!")
-		EndIf
-	Endif
+		DbSelectArea("SF4")
+		SF4->(DbSetOrder(1))
+		SF4->(DbGoTop())
 
-	SF4->(DbCloseArea())
+		IF SF4->(MsSeek(xFilial("SF4")+cTes))
+			If cTesValid == "N"
+				FWAlertInfo("Tes não movimenta estoque.","Atenção!")
+			EndIf
+		Endif
+
+		SF4->(DbCloseArea())
+
+	EndIf
 
 
 Return lRet
