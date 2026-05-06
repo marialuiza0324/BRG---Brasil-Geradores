@@ -70,7 +70,7 @@ User function MT241LOK()
 
 	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 
-	If FunName() <> "MATA185" //Validações da movimentação múltipla, não entra na validação da rotina de baixa
+	If FunName() <> "MATA185" .AND. FunName() <> "MNTA435" //Validações da movimentação múltipla, não entra na validação da rotina de baixa
 		//Tratamento para não fazer devolução 24/02/2021
 		If cFilAnt == "0101"
 			If _Tm $ cOpTm .AND. !EMPTY(_op)
@@ -240,7 +240,7 @@ User function MT241LOK()
 		EndIf
 
 
-		If FunName() <> "MATA241" //Validações da baixa, não entra na validação da movimentação múltipla
+		If FunName() <> "MATA241" .AND. FunName() <> "MNTA435"//Validações da baixa, não entra na validação da movimentação múltipla
 
 			/* Validação para usuários contidos no parâmetro MV_USRBAIX conseguirem realizar baixa 
 			utilizando as TM's contidas no parâmetro MV_BAIXALM na empresa GRID - Maria Luiza - 19/12/2024*/
