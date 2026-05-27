@@ -31,7 +31,7 @@ USER FUNCTION MT410TOK()
 	local nArmazem    := AScan(aHeader, {|x| Alltrim(x[2]) == "C6_LOCAL"})
 	Local cArmLoc 	  := SupergetMv("MV_ARMLOC", , ) //Parâmetro que controla os armazéns que serão LIBERADOS para usuário de locação
 
-	If Funname() <> "LOCA001"
+	If Funname() <> "LOCA001" .AND. FunName() <> "RPC"
 		If nOpc == 1
 
 			If Select("TMP1") > 0
