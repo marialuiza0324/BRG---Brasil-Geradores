@@ -1,4 +1,4 @@
-//Bibliotecas
+Entrada//Bibliotecas
 #Include "Totvs.ch"
 #Include "RESTFul.ch"
 #Include "TopConn.ch"
@@ -161,6 +161,10 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
                   cFilDest := "1001" // Agrogera
                EndIf
 
+                 //Alterando a filial
+                 u_zAltFil(cFilDest)
+
+       
 		//Adiciona os dados do ExecAuto
 		aAdd(aCabec, {'F1_FILIAL',   cFilDest,   Nil})
 		aAdd(aCabec, {'F1_TIPO',   oCabecalho:GetJsonObject('tipo'),   Nil})
@@ -199,6 +203,9 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
 
 		//Chama a inclusão automática
         MsExecAuto({|x, y, z| MATA103(x, y, z)}, aCabec, aItens, 3)
+
+          //Voltando a filial original
+         u_zAltFil( , .T.)
 
         // Sempre captura o log, mesmo sem erro
         cErrorLog := ''
@@ -239,3 +246,56 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
     //Define o retorno
     Self:SetResponse(EncodeUTF8(jResponse:toJSON()))
 Return lRet
+
+Static cFilBkp := ""
+
+User Function zAltFil(cFilNov, lVolta)
+
+	Local aArea := FWGetArea()
+
+	Default cFilNov := cFilAnt
+	Default lVolta  := .F.
+
+	//Se for para voltar o backup
+	If lVolta
+
+		//Se tiver filial de backup
+		If !Empty(cFilBkp)
+
+			cFilAnt := cFilBkp
+
+			//Atualiza cNumEmp mantendo a empresa atual
+			cNumEmp := cEmpAnt + cFilAnt
+
+			//Limpa backup
+			cFilBkp := ""
+
+		EndIf
+
+	Else
+
+		//Realiza backup da filial original
+		If Empty(cFilBkp)
+			cFilBkp := cFilAnt
+		EndIf
+
+		//Se vier vazio, mantém filial atual
+		If Empty(cFilNov)
+			cFilNov := cFilAnt
+		EndIf
+
+		//Troca apenas a filial
+		cFilAnt := cFilNov
+
+		//Atualiza cNumEmp mantendo empresa atual
+		cNumEmp := cEmpAnt + cFilAnt
+
+	EndIf
+
+	//Realiza a troca de ambiente
+	OpenFile(cNumEmp)
+
+	FWRestArea(aArea)
+
+Return
+
