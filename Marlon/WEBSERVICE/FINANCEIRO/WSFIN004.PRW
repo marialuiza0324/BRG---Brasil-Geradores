@@ -56,6 +56,12 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN004
     Local aLogAuto          := {}
     Local jResponse         := JsonObject():New()
     Local cAliasWS          := 'SE2'
+    Local dHoje             := Date()
+    Local nDia              := Day(dHoje)
+    Local cMes              := Month2Str(dHoje)
+    Local nAno              := Year(dHoje)
+    Local dDtMes             := Date()
+    Local dVenc             := dHoje
     Private lMsErroAuto     := .F.
     Private lMsHelpAuto     := .T.
     Private lAutoErrNoFile  := .T.
@@ -87,9 +93,30 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN004
 		aAdd(aDados, {'E2_TIPO',   jJson:GetJsonObject('tipo'),   Nil})
 		aAdd(aDados, {'E2_NATUREZ',   jJson:GetJsonObject('naturez'),   Nil})
 		aAdd(aDados, {'E2_FORNECE',   jJson:GetJsonObject('fornece'),   Nil})
-		aAdd(aDados, {'E2_EMISSAO',   Date(),   Nil})
-        aAdd(aDados, {'E2_VENCTO',   Date(),   Nil})
-		aAdd(aDados, {'E2_VENCREA',   Date(),   Nil})
+        // Data de emissão = hoje
+        aAdd(aDados, {'E2_EMISSAO',   dHoje,   Nil})
+
+        // Regra de vencimento:
+        // se dia atual entre 1 e 15 -> vencimento dia 20 do mesmo mês
+        // se dia atual entre 16 e 31 -> vencimento dia 05 do próximo mês
+
+        If nDia <= 15
+            // mesmo mês, dia 20
+            dVenc := Stod(cValToChar(nAno) + cMes + "20")
+        Else
+            // próximo mês, dia 5
+            If cMes == "12"
+                cMes := "01"
+                nAno := nAno + 1
+            Else
+                dDtMes := MonthSum(dHoje,1)
+                cMes := Substr(cvaltochar(dDtMes),4,2)
+            EndIf
+            dVenc := Stod(cValToChar(nAno) + cMes + "05")
+        EndIf
+
+        aAdd(aDados, {'E2_VENCTO',    Lastday(dVenc,3),   Nil})
+        aAdd(aDados, {'E2_VENCREA',   Lastday(dVenc,3),   Nil})
 		aAdd(aDados, {'E2_VALOR',   jJson:GetJsonObject('valor'),   Nil})
 		aAdd(aDados, {'E2_HIST',   jJson:GetJsonObject('hist'),   Nil})
 		aAdd(aDados, {'E2_CCUSTO',   jJson:GetJsonObject('ccusto'),   Nil})
