@@ -94,8 +94,8 @@ User Function AjustaAcols()
                      If cProdApropri == "I"
                             // Ajusta os campos conforme regra
                             Acols[i][73] := Acols[i][2]
-                            Acols[i][72] := Acols[i][7]
-                            Acols[i][7] := ""
+                            Acols[i][72] := Acols[i][8]
+                            Acols[i][8] := ""
                             Acols[i][2] := cLocPad
                      EndIf
               Else
