@@ -194,7 +194,7 @@ User function MT241LOK()
 				EndIf
 				If !(cGrupo $ cGrupo12) .AND. !LinDelet(acols[n])
 					_lok := .F.
-					Help(, ,"AVISO#0036", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo12})
+					Help(, ,"AVISO#0037", ,"Usuário " +cNome+ " não tem permissão para movimentar este produto",1, 0, , , , , , {"Utilize produtos do(s) grupo(s) : " +cGrupo12})
 					return(_lok)
 				EndIf
 			EndIf

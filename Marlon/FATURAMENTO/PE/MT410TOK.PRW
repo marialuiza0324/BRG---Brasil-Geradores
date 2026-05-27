@@ -114,7 +114,7 @@ USER FUNCTION MT410TOK()
 			EndIf
 
 			IF Empty(M->C5_VEND1)
-				Help(, ,"AVISO#0035", ,"Campo obrigatório vazio.",1, 0, , , , , , {"Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido."})
+				Help(, ,"AVISO#0042", ,"Campo obrigatório vazio.",1, 0, , , , , , {"Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido."})
 				lRet := .F.
 			EndIf
 

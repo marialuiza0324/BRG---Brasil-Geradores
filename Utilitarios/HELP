@@ -196,8 +196,8 @@ Solução : Corrija as pendências para prosseguir cpom o apontamento.
 
 "AVISO#0032"
 
-Problema : As informações não foram enviadas.
-Solução : Verifique se a Nota foi autorizada ou contate o administrador do sistema.
+Problema : Campos de Hora inicial e Hora final vazios.
+Solução : Preencha os campos Hora Inicial,Hora Final e Operador pois são obrigatórios.
 
 
 "AVISO#0033"
@@ -215,8 +215,8 @@ Solução : O campo Observação deve conter no mínimo 15 caracteres.
 
 "AVISO#0035"
 
-Problema : Campo obrigatório vazio.
-Solução : Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido. 
+Problema : Lote já foi devolvido.
+Solução : Validar se já existe devolução desse lote utilizando as TMs 001;050 para esta OP
 
 
 "AVISO#0036"
@@ -231,7 +231,31 @@ Problema : Usuário não tem permissão para movimentar este produto
 Solução : Utilize produtos do(s) grupo(s) : MV_TRFGR12
 
 
-"AVISO#0037"
+"AVISO#0038"
 
 Problema : Quantidade insuficiente para devolução.
 Solução : Verifique estornos anteriores ou consumo real na OP.
+
+
+"AVISO#0039"
+
+Problema : TM utilizada exclusivamente para baixa em Centro de Custo.
+Solução : Para utilização da TM 503, os campos de OP e OS devem estar vazios e o Centro de Custo é obrigatório.
+
+
+"AVISO#0040"
+
+Problema : TM utilizada exclusivamente para baixa em Ordem de Serviço de manutenção.
+Solução : Para utilização da TM 506, o campo de OP deve estar vazio ou a OP vinculada a manutenção e o Centro de Custo e OS são obrigatórios.
+
+
+"AVISO#0041"
+
+Problema : TM utilizada exclusivamente para baixa em Ordem de Produção.
+Solução : Para utilização da TM 550, os campos de OS e Centro de Custo devem estar vazios e o campo de OP é obrigatório
+
+
+"AVISO#0042"
+
+Problema : Campo obrigatório vazio.
+Solução : Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido. 
