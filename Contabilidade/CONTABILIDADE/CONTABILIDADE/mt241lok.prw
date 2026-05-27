@@ -70,7 +70,7 @@ User function MT241LOK()
 
 	cGrupo   := Posicione('SB1', 1, FWxFilial('SB1') + _cod, 'B1_GRUPO')
 
-	If FunName() <> "MATA185" .AND. FunName() <> "MNTA435" //Validações da movimentação múltipla, não entra na validação da rotina de baixa
+	If FunName() <> "MATA185" .AND. FunName() <> "MNTA435" .AND. FUNNAME() <> "MNTA420"//Validações da movimentação múltipla, não entra na validação da rotina de baixa
 		//Tratamento para não fazer devolução 24/02/2021
 		If cFilAnt == "0101"
 			If _Tm $ cOpTm .AND. !EMPTY(_op)
