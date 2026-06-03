@@ -47,7 +47,8 @@ If cGet1 == _Senha // 1a2b2c
   URET := .T.
   oDlg:End() 
 Else
-  MSGINFO("Senha Incorreta"," Atenção ")  
+  Help(, ,"AVISO#0043", ,"Senha Incorreta",1, 0, , , , , , {"Senha contida no parâmetro MV_BXREC, contate o administrador do sistema."})
+  
 EndIF     
 
 Return URET 
