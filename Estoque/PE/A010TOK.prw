@@ -53,6 +53,7 @@ If M->B1_MSBLQL = "1" .AND. ALTERA
         cQuery := "SELECT C7_NUM, C7_PRODUTO "
         cQuery += "FROM " + RetSqlName("SC7") + " SC7 "
         cQuery += "WHERE SC7.D_E_L_E_T_ = ' ' "
+        cQuery += "AND SC7.C7_FILIAL = '" + cFilAnt + "' "
         cQuery += "AND SC7.C7_PRODUTO = '" + cProduto + "' "
         cQuery += "AND SC7.C7_QUJE < SC7.C7_QUANT " // Quantidade entregue menor que quantidade pedida
         cQuery += "AND SC7.C7_RESIDUO = ' ' " // Pedido não estornado
