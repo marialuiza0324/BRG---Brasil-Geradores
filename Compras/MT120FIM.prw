@@ -28,7 +28,7 @@ Private cNumPC := PARAMIXB[2]
 
 //Excluindo da SE2 - Inicio
 
-IF (nOpcao == 5 .and. nOpcA == 1) .or. (nOpcao == 4 .and. nOpcA == 1)       //nOpcA - Confirmar      nOpcao == 4 (alterar)
+IF (nOpcao == 5 .and. nOpcA == 1)       //nOpcA - Confirmar      nOpcao == 4 (alterar)
    SE2->(DBSetOrder(1))	
    SE2->(DbGoTop())
    SE2->(dbSeek( xFilial("SC7")+"PRV"+cNumPC+"/1"))
@@ -44,7 +44,7 @@ IF (nOpcao == 5 .and. nOpcA == 1) .or. (nOpcao == 4 .and. nOpcA == 1)       //nO
 EndIf
 //Excluindo da SE2 - Fim
 
-IF (nOpcao == 3 .and. nOpcA == 1) .or. (nOpcao == 9 .and. nOpcA == 1) .or. (nOpcao == 4 .and. nOpcA == 1)
+IF (nOpcao == 3 .and. nOpcA == 1) .or. (nOpcao == 9 .and. nOpcA == 1) 
    
 SC7->(DBSetOrder(1))	
 SC7->(DbGoTop())
