@@ -158,7 +158,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
                 If oCabecalho:GetJsonObject('cliente') == "27379581"
                   cFilDest := "0501" // Grid
                Else
-                  cFilDest := "1001" // Agrogera
+                  cFilDest := "1002" // Agrogera
                EndIf
 
                  //Alterando a filial
