@@ -45,7 +45,6 @@ Cria um novo registro na tabela
 WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN004
     Local lRet              := .T.
     Local aDados            := {}
-    Local aDadosBco         := {}
     Local jJson             := Nil
     Local cJson             := Self:GetContent()
     Local cError            := ''
@@ -124,7 +123,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN004
             aAdd(aDados, {'AUTBANCO',   "341",   Nil})
             aAdd(aDados, {'AUTAGENCIA',   "0208",   Nil})
             aAdd(aDados, {'AUTCONTA',   "54002",   Nil})
-            //aAdd(aDados, {'AUTCHEQUE',  jJson:GetJsonObject('num'),   Nil})
+            aAdd(aDados, {'AUTCHEQUE',  jJson:GetJsonObject('num'),   Nil})
         EndIf
 	
 		//Chama a inclusão automática
