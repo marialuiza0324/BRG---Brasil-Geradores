@@ -259,3 +259,9 @@ Solução : Para utilização da TM 550, os campos de OS e Centro de Custo devem
 
 Problema : Campo obrigatório vazio.
 Solução : Preencha o campo VENDEDOR 1 para dar continuidade na inclusão do pedido. 
+
+
+"AVISO#0043"
+
+Problema : Senha Incorreta.
+Solução : Senha contida no parâmetro MV_BXREC, contate o administrador do sistema.
