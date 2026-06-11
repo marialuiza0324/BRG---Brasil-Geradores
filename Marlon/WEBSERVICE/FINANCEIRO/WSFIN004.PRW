@@ -114,8 +114,8 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN004
             dVenc := Stod(cValToChar(nAno) + cMes + "05")
         EndIf
 
-        aAdd(aDados, {'E2_VENCTO',    Lastday(dVenc,3),   Nil})
-        aAdd(aDados, {'E2_VENCREA',   Lastday(dVenc,3),   Nil})
+        aAdd(aDados, {'E2_VENCTO',   DataValida(dVenc,.F.),   Nil})
+        aAdd(aDados, {'E2_VENCREA',   DataValida(dVenc,.F.),   Nil})
 		aAdd(aDados, {'E2_VALOR',   jJson:GetJsonObject('valor'),   Nil})
 		aAdd(aDados, {'E2_HIST',   jJson:GetJsonObject('hist'),   Nil})
 		aAdd(aDados, {'E2_CCUSTO',   jJson:GetJsonObject('ccusto'),   Nil})
