@@ -74,6 +74,11 @@ User Function AjustaAcols()
        Local cLocPad := ""
        Local i
        Local cCod := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_COD"})
+	   Local cOp  := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_OP"})
+	   Local cLocal := AScan(aHeader, {|x| Alltrim(x[2]) == "D3_LOCAL"})
+	   Local _Op := ""
+	   Local _Local := ""
+	   Local _cod := ""
        Local _Tm := CTM
        Local cTMAlm := SupergetMv("MV_TMALM" , ,)
 
@@ -87,16 +92,18 @@ User Function AjustaAcols()
        // Percorre as colunas da matriz Acols
        For i := 1 to Len(Acols)
 	   _cod := Acols[i,cCod]
+	   _Op := Acols[i,cOp]
+	   _Local := Acols[i,cLocal]
 	   cLocPad := Posicione('SB1', 1, FWxFilial('SB1') + Alltrim(_cod), 'B1_LOCPAD')
               // Verifica se o tipo de movimento está permitido
               If _Tm $ cTMAlm
                      // Se o produto é de apropriação indireta
                      If cProdApropri == "I"
                             // Ajusta os campos conforme regra
-                            Acols[i][73] := Acols[i][2]
-                            Acols[i][72] := Acols[i][8]
-                            Acols[i][8] := ""
-                            Acols[i][2] := cLocPad
+                            Acols[i][73] := Acols[i,cLocal]
+                            Acols[i][72] := Acols[i,cOp]
+                            Acols[i,cOp] := ""
+                            Acols[i,cLocal] := cLocPad
                      EndIf
               Else
                      // Exibe mensagem de aviso se não tiver permissão
