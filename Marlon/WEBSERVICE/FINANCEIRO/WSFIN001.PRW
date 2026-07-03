@@ -167,7 +167,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 			//[13] - ARRAY com os titulos da fatura - Geradores
 			//[14] - Valor de decrescimo
 			//[15] - Valor de acrescimo
-			aFatPag := { "FAT", PADR("FT",nTamTipo), PADR(cNumFat,nTamTit), cNaturez, dEmissao, dEmissao, PADR(cFornece,nTamForn), PADR(cLoja,nTamLoja), cFornece, cLojaFat, "001", 01, aTits ,0 ,0 }
+			aFatPag := { "BOT", PADR("FT",nTamTipo), PADR(cNumFat,nTamTit), cNaturez, dEmissao, dEmissao, PADR(cFornece,nTamForn), PADR(cLoja,nTamLoja), cFornece, cLojaFat, "001", 01, aTits ,0 ,0 }
 
 			MsExecAuto( { |x,y| FINA290(x,y)}, 3, aFatPag )
 
@@ -194,7 +194,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 
 				//Senão, define o retorno
 			Else
-				If SE2->(MsSeek(FwXFilial()+"FAT"+cNumFat))
+				If SE2->(MsSeek(FwXFilial()+"BOT"+cNumFat))
 					Reclock("SE2",.F.)
 					SE2->E2_NOMFOR := cNomForn
 					SE2->E2_VENCTO := dVencto
