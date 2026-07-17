@@ -9,7 +9,6 @@ Serviço REST para consulta de usuários
 @since 17/07/2026
 @version 1.0
 @type wsrestful
-@obs Codigo gerado automaticamente pelo Autumn Code Maker
 /*/
 
 WSRESTFUL WSCOM003 DESCRIPTION 'Serviço REST para consulta de usuários'
@@ -31,7 +30,6 @@ Busca todos os registros através de paginação
 @param updated_at, Caractere, Data de alteração no formato string 'YYYY-MM-DD' (somente se tiver o campo USERLGA / USERGA na tabela)
 @param limit, Numérico, Limite de registros que irá vir (por exemplo trazer apenas 100 registros)
 @param page, Numérico, Número da página que irá buscar (se existir 1000 registros dividido por 100 terá 10 páginas de pesquisa)
-@obs Codigo gerado automaticamente pelo Autumn Code Maker
 
     Poderia ser usado o FWAdapterBaseV2(), mas em algumas versões antigas não existe essa funcionalidade
     então a paginação foi feita manualmente
