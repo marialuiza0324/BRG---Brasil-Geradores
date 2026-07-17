@@ -96,9 +96,10 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 	Local nY                := 0
 	Local nZ                := 0
 	Local cDoc              := ''
-	Local aRateio           := {}
+	Local aRateioCX           := {}
 	Local cRateio           := ''
 	Local aRatJson          := {}
+	Local aLinhaCX          := {}
 	Private lMsErroAuto     := .F.
 	Private lMsHelpAuto     := .T.
 	Private lAutoErrNoFile  := .T.
@@ -176,21 +177,22 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 
 			If ValType(aRatJson) == 'A' .And. Len(aRatJson) > 0
 
-				aRateio := {}
-				aAdd(aRateio, Array(2))
-				aRateio[1][1] := aItensJson[nY]:GetJsonObject('itemC1')
-				aRateio[1][2] := {}
-				
+				aRateioCX := {}
+				aAdd(aRateioCX, Array(2))
+				aRateioCX[1][1] := aItensJson[nY]:GetJsonObject('itemC1')
+				aRateioCX[1][2] := {}
+
 				For nZ := 1 To Len(aRatJson)
-					
+
 					aLinhaCX := {}
 
-					aAdd(aLinhaCX, {"CX_ITEM",   StrZero(nZ, TamSX3("CX_ITEM")[1]), NIL})
-					aAdd(aLinhaCX, {"CX_PERC",   aRatJson[nZ]:GetJsonObject('perc'), NIL})
-					aAdd(aLinhaCX, {"CX_CC",     aRatJson[nZ]:GetJsonObject('cc'), NIL})
+					aAdd(aLinhaCX, {"CX_ITEM", StrZero(nZ,TamSX3("CX_ITEM")[1]), Nil})
+					aAdd(aLinhaCX, {"CX_PERC", aRatJson[nZ]:GetJsonObject('perc'), Nil})
+					aAdd(aLinhaCX, {"CX_CC",   aRatJson[nZ]:GetJsonObject('cc'), Nil})
 
-					aAdd(aRateio[1][2], aLinhaCX)
-				Next nZ
+					aAdd(aRateioCX[1][2], aLinhaCX)
+
+				Next
 
 			Else
 				ConOut("Erro: Campo 'rateioCX' inválido ou vazio para item com rateio=1")
@@ -206,7 +208,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 	Next nY
 
 //Chama a inclusão automática
-	MSExecAuto({|w,x,y,z| MATA110(w,x,y,z)}, aCabSC, aItensSC, 3, aRateio)
+	MSExecAuto({|w,x,y,z| MATA110(w,x,y,,,z)}, aCabSC, aItensSC, 3, aRateioCX)
 
 //Se houve erro, gera um arquivo de log dentro do diretório da protheus data
 	If lMsErroAuto
