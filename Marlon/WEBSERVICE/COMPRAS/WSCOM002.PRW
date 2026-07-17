@@ -269,17 +269,7 @@ WSMETHOD GET ALL WSRECEIVE updated_at, limit, page WSSERVICE WSCOM002
             oRegistro['cod'] := AllTrim(QRY_TAB->CodigoProduto)
             oRegistro['desc'] := AllTrim(QRY_TAB->NomeProduto)
             oRegistro['um'] := AllTrim(QRY_TAB->UM)
-            oRegistro['bloq'] := AllTrim(QRY_TAB->Bloq)
-            oRegistro['local'] := AllTrim(QRY_TAB->DescArmazem)
-            oRegistro['tipo'] := AllTrim(QRY_TAB->DescTipo)
-            oRegistro['grupo'] := AllTrim(QRY_TAB->DescGrupo)
-            oRegistro['valor'] := QRY_TAB->ValorUni
-            oRegistro['saldoest'] := QRY_TAB->SaldoEmEstoque
-            oRegistro['empres'] := QRY_TAB->EmpenhoReqPvReserva
             oRegistro['estoquedisponivel'] := QRY_TAB->EstoqueDisponivel
-            oRegistro['lote'] := AllTrim(QRY_TAB->Lote)
-            oRegistro['qtdenderecar'] := QRY_TAB->QtdAEnderecar
-            oRegistro['valorUltCompra'] := QRY_TAB->VlrUnitUltimaCompra
             oRegistro['dtUltCompra'] := QRY_TAB->DtUltimaCompra
             aAdd(jResponse['objects'], oRegistro)
 
