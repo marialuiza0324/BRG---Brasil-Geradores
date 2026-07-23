@@ -49,9 +49,8 @@ WSMETHOD GET ALL WSRECEIVE updated_at, limit, page WSSERVICE WSCON002
 	Local jJsonMeta
 
 	cQueryTab := "SELECT Concat(CTJ.CTJ_FILIAL, '-' , M0_FILIAL) AS Filial, " + CRLF
-	cQueryTab += " CTJ.CTJ_RATEIO AS CodRateio, " + CRLF
+	cQueryTab += "Concat(CTJ.CTJ_RATEIO, '-', CTJ.CTJ_DESC) AS Rateio,  " + CRLF
 	cQueryTab += " CTJ.CTJ_SEQUEN AS Sequencia, " + CRLF
-	cQueryTab += " CTJ.CTJ_DESC AS Descricao, " + CRLF
 	cQueryTab += " CTJ.CTJ_PERCEN AS Percentual, " + CRLF
 	cQueryTab += " CTJ.CTJ_CCD AS CentroCustoDebito, " + CRLF
 	cQueryTab += " CTJ.CTJ_CCC AS CentroCustoCredito, " + CRLF
@@ -142,9 +141,8 @@ WSMETHOD GET ALL WSRECEIVE updated_at, limit, page WSSERVICE WSCON002
 
 			oRegistro := JsonObject():New()
 			oRegistro['Filial'] := AllTrim(QRY_TAB->Filial)
-			oRegistro['CodRateio'] := AllTrim(QRY_TAB->CodRateio)
+			oRegistro['Rateio'] := AllTrim(QRY_TAB->Rateio)
 			oRegistro['Sequencia'] := AllTrim(QRY_TAB->Sequencia)
-			oRegistro['Descricao'] := AllTrim(QRY_TAB->Descricao)
 			oRegistro['Percentual'] := QRY_TAB->Percentual
 			oRegistro['CentroCustoDebito'] := AllTrim(QRY_TAB->CentroCustoDebito)
 			oRegistro['CentroCustoCredito'] := AllTrim(QRY_TAB->CentroCustoCredito)
