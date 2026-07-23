@@ -29,6 +29,8 @@ USER FUNCTION MT410TOK()
 	Local cEmp := FwCodEmp()
 	local nTes        := AScan(aHeader, {|x| Alltrim(x[2]) == "C6_TES"})
 	local nArmazem    := AScan(aHeader, {|x| Alltrim(x[2]) == "C6_LOCAL"})
+	Local nDtEntrega  := AScan(aHeader, {|x| Alltrim(x[2]) == "C6_ENTREG"})
+	Local nNvDTEntrega := AScan(aHeader, {|x| Alltrim(x[2]) == "C6_XNVENT"})
 	Local cArmLoc 	  := SupergetMv("MV_ARMLOC", , ) //Parâmetro que controla os armazéns que serão LIBERADOS para usuário de locação
 
 	If Funname() <> "LOCA001" .AND. FunName() <> "RPC"
@@ -68,6 +70,7 @@ USER FUNCTION MT410TOK()
 				pelo pedido 28/05/2025 Solicitante - Brenda #GLPI 9692*/
 
 			M->C5_XUSER := cNome
+			Acols[n][nNvDTEntrega]:= acols[n][nDtEntrega]
 
 			/*Validação criada para quando for feita cópia do pedido de venda, validar a TES
 			28/05/2025 Solicitante - Brenda #GLPI 9694*/
