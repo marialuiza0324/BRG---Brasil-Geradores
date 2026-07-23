@@ -38,6 +38,9 @@ WSRESTFUL WSRESTDOCENT DESCRIPTION 'Serviço rest para manipulação do  Documento 
     WSDATA total    AS NUMERIC
     WSDATA tes      AS STRING
     WSDATA rateio   AS STRING
+    WSDATA natureza AS STRING
+    WSDATA emissao  AS DATE 
+    WSDATA rastro   AS STRING
 
     //Métodos
     WSMETHOD POST   NEW    DESCRIPTION 'Inclusão de registro'          WSSYNTAX '/WSRESTDOCENT/new'                               PATH 'new'           PRODUCES APPLICATION_JSON
@@ -62,8 +65,6 @@ Cria um novo registro na tabela
         "doc": "123456789",
         "serie": "001",
         "emissao": "2025-08-27",
-        "dtdigit": "2025-08-27",
-        "fornece": "000001",
         "loja": "01",
         "especie": "NF",
         "cond": "001",
@@ -74,7 +75,9 @@ Cria um novo registro na tabela
         "moeda": "1",
         "txmoeda": "1.00",
         "status": "A",
-        "chave": "35150812345678901234560010000012345678901234"
+        "chave": "35150812345678901234560010000012345678901234",
+        "cliente": "00000000",
+        "natureza":"conteudo"
     },
     "itens": [
         {
@@ -86,7 +89,8 @@ Cria um novo registro na tabela
             "vunit": 50.00,
             "total": 500.00,
             "tes": "501",
-            "rateio": "N"
+            "rateio": "N",
+            "rastro": "L"
         },
         {
             "item": "0002",
@@ -97,7 +101,8 @@ Cria um novo registro na tabela
             "vunit": 30.00",
             "total": 150.00,
             "tes": "502",
-            "rateio": "2"
+            "rateio": "2",
+            "rastro": "N"
         }
     ]
 }
@@ -171,7 +176,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
 		aAdd(aCabec, {'F1_FORMUL',   oCabecalho:GetJsonObject('formul'),   Nil})
 		aAdd(aCabec, {'F1_DOC',   oCabecalho:GetJsonObject('doc'),   Nil})
 		aAdd(aCabec, {'F1_SERIE',   oCabecalho:GetJsonObject('serie'),   Nil})
-		aAdd(aCabec, {'F1_EMISSAO',   dDataBase,   Nil})
+		aAdd(aCabec, {'F1_EMISSAO',  sToD(StrTran(oCabecalho:GetJsonObject('emissao'), '-', '')),   Nil})
 		aAdd(aCabec, {'F1_DTDIGIT',   dDataBase,   Nil})
 		aAdd(aCabec, {'F1_FORNECE',   "04675878 ",   Nil})
 		aAdd(aCabec, {'F1_LOJA',   oCabecalho:GetJsonObject('loja'),   Nil})
@@ -185,6 +190,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
 		aAdd(aCabec, {'F1_TXMOEDA',   oCabecalho:GetJsonObject('txmoeda'),   Nil})
 		aAdd(aCabec, {'F1_STATUS',   oCabecalho:GetJsonObject('status'),   Nil})
         aAdd(aCabec, {'F1_CHVNFE',   oCabecalho:GetJsonObject('chave'),   Nil})
+        aAdd(aCabec, {'E2_NATUREZ',  oCabecalho:GetJsonObject('natureza', Nil)})
 
 
         For nI := 1 To Len(aItensJson)
@@ -198,9 +204,13 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSRESTDOCENT
             aAdd(aLinha, {'D1_TOTAL',   aItensJson[nI]:GetJsonObject('total'),   Nil})
             aAdd(aLinha, {'D1_TES',     aItensJson[nI]:GetJsonObject('tes'),     Nil})
             aAdd(aLinha, {'D1_RATEIO',  aItensJson[nI]:GetJsonObject('rateio'),  Nil})
+            If !Empty(aItensJson[nI]:GetJsonObject('rastro'))
+                aAdd(aLinha, {'D1_LOTECTL', aItensJson[nI]:GetJsonObject('rastro'), Nil})
+            Endif 
             aAdd(aItens, aLinha)
         Next nI
 
+    
 		//Chama a inclusão automática
         MsExecAuto({|x, y, z| MATA103(x, y, z)}, aCabec, aItens, 3)
 
