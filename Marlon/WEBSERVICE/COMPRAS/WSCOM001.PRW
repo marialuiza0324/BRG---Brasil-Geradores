@@ -23,6 +23,7 @@ WSRESTFUL WSCOM001 DESCRIPTION 'Serviço rest para criação de solicitação de comp
 	WSDATA      ccusto      AS STRING
 	WSDATA      perc        AS NUMERIC
 	WSDATA      cc          AS STRING
+	WSDATA      dtentrega   AS DATE
 
 	//Métodos
 	WSMETHOD POST   NEW    DESCRIPTION 'Inclusão de registro'          WSSYNTAX '/WSCOM001/new'                               PATH 'new'           PRODUCES APPLICATION_JSON
@@ -51,13 +52,15 @@ Cria um novo registro na tabela
                     "produto": "conteudo",
                     "quant": "conteudo",
                     "rateio": "2",
-                    "ccusto": "conteudo"
+                    "ccusto": "conteudo",
+                    "dtentrega": "2023-10-01"
                 },
                 {
                     "itemC1": "conteudo",
                     "produto": "conteudo",
                     "quant": "conteudo",
                     "rateio": "1",
+                    "dtentrega": "2023-10-01",
                     "rateioCX": [
                         {
                             "item": "conteudo",
@@ -159,6 +162,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 		aAdd(aLinhaC1, {'C1_ITEM',  aItensJson[nY]:GetJsonObject('itemC1') ,   Nil})
 		aAdd(aLinhaC1, {'C1_PRODUTO',   aItensJson[nY]:GetJsonObject('produto'),   Nil})
 		aAdd(aLinhaC1, {'C1_QUANT',     aItensJson[nY]:GetJsonObject('quant'),     Nil})
+		aAdd(aLinhaC1, {'C1_DATPRF',  STOD(StrTran(aItensJson[nY]:GetJsonObject('dtentrega'), '-', '')) ,    Nil})
 
 		cRateio := aItensJson[nY]:GetJsonObject('rateio')
 		aAdd(aLinhaC1, {'C1_RATEIO', cRateio, Nil})
