@@ -90,7 +90,7 @@ Cria um novo registro na tabela
             "total": 500.00,
             "tes": "501",
             "rateio": "N",
-            "rastro": "L"
+            "rastro": "23106380009"
         },
         {
             "item": "0002",
@@ -98,11 +98,11 @@ Cria um novo registro na tabela
             "um": "UN",
             "armazem": "01",
             "quant": 5.00,
-            "vunit": 30.00",
+            "vunit": 30.00,
             "total": 150.00,
             "tes": "502",
             "rateio": "2",
-            "rastro": "N"
+            
         }
     ]
 }
