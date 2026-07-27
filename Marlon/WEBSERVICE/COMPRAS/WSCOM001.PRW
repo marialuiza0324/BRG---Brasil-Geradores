@@ -230,7 +230,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 		//Define o retorno para o WebService
 		Self:setStatus(500)
 		jResponse['errorId']  := 'NEW005'
-		jResponse['error']    := 'Erro na inclusão do registro'
+		jResponse['error']    :=  cErrorLog
 		jResponse['solution'] := 'Nao foi possivel incluir o registro, foi gerado um arquivo de log em ' + cDirLog + cArqLog + ' '
 		lRet := .F.
 
