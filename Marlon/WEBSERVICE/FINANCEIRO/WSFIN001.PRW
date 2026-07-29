@@ -194,7 +194,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSFIN001
 
 				//Senão, define o retorno
 			Else
-				If SE2->(MsSeek(FwXFilial()+"BOT"+cNumFat))
+				If SE2->(MsSeek(FwXFilial()+"BOT"+ PADR(cNumFat,nTamTit)+cParcela+PADR("FT",nTamTipo)+PADR(cFornece,nTamForn)+PADR(cLojaFat,nTamLoja)))
 					Reclock("SE2",.F.)
 					SE2->E2_NOMFOR := cNomForn
 					SE2->E2_VENCTO := dVencto
