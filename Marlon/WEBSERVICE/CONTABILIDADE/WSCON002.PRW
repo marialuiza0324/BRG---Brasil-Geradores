@@ -49,13 +49,14 @@ WSMETHOD GET ALL WSRECEIVE updated_at, limit, page WSSERVICE WSCON002
 	Local jJsonMeta
 
 	cQueryTab := "SELECT Concat(CTJ.CTJ_FILIAL, '-' , M0_FILIAL) AS Filial, " + CRLF
-	cQueryTab += "Concat(CTJ.CTJ_RATEIO, '-', CTJ.CTJ_DESC) AS Rateio,  " + CRLF
-	cQueryTab += " CTJ.CTJ_SEQUEN AS Sequencia, " + CRLF
-	cQueryTab += " CTJ.CTJ_PERCEN AS Percentual, " + CRLF
-	cQueryTab += " CTJ.CTJ_CCD AS CentroCustoDebito, " + CRLF
-	cQueryTab += " CTJ.CTJ_CCC AS CentroCustoCredito, " + CRLF
-	cQueryTab += " CTJ.CTJ_DEBITO AS ContaDebito, " + CRLF
-	cQueryTab += " CTJ.CTJ_CREDIT AS ContaCredito " + CRLF
+	cQueryTab += "CTJ.CTJ_RATEIO, " + CRLF
+	cQueryTab += "CTJ.CTJ_SEQUEN, " + CRLF
+	cQueryTab += "CTJ.CTJ_DESC, " + CRLF
+	cQueryTab += "CTJ.CTJ_PERCEN, " + CRLF
+	cQueryTab += "CTJ.CTJ_CCD, " + CRLF
+	cQueryTab += "CTJ.CTJ_CCC, " + CRLF
+	cQueryTab += "CTJ.CTJ_DEBITO, " + CRLF
+	cQueryTab += "CTJ.CTJ_CREDIT " + CRLF
 	cQueryTab += " FROM CTJ010 CTJ " + CRLF
 	cQueryTab += " LEFT JOIN SYS_COMPANY SM0 " + CRLF
 	cQueryTab += " ON SM0.M0_CODFIL = CTJ.CTJ_FILIAL " + CRLF
@@ -141,15 +142,16 @@ WSMETHOD GET ALL WSRECEIVE updated_at, limit, page WSSERVICE WSCON002
 
 			oRegistro := JsonObject():New()
 			oRegistro['Filial'] := AllTrim(QRY_TAB->Filial)
-			oRegistro['Rateio'] := AllTrim(QRY_TAB->Rateio)
-			oRegistro['Sequencia'] := AllTrim(QRY_TAB->Sequencia)
-			oRegistro['Percentual'] := QRY_TAB->Percentual
-			oRegistro['CentroCustoDebito'] := AllTrim(QRY_TAB->CentroCustoDebito)
-			oRegistro['CentroCustoCredito'] := AllTrim(QRY_TAB->CentroCustoCredito)
-			oRegistro['ContaDebito'] := AllTrim(QRY_TAB->ContaDebito)
-			oRegistro['ContaCredito'] := AllTrim(QRY_TAB->ContaCredito)
-			aAdd(jResponse['objects'], oRegistro)
+			oRegistro["CodRateio"]           := AllTrim(QRY_TAB->CTJ_RATEIO)
+			oRegistro["Sequencia"]           := AllTrim(QRY_TAB->CTJ_SEQUEN)
+			oRegistro["Descricao"]           := AllTrim(QRY_TAB->CTJ_DESC)
+			oRegistro["Percentual"]          := QRY_TAB->CTJ_PERCEN
+			oRegistro["CentroCustoDebito"]   := AllTrim(QRY_TAB->CTJ_CCD)
+			oRegistro["CentroCustoCredito"]  := AllTrim(QRY_TAB->CTJ_CCC)
+			oRegistro["ContaDebito"]         := AllTrim(QRY_TAB->CTJ_DEBITO)
+			oRegistro["ContaCredito"]        := AllTrim(QRY_TAB->CTJ_CREDIT)
 
+			aAdd(jResponse['objects'], oRegistro)
 			QRY_TAB->(DbSkip())
 		EndDo
 	EndIf
