@@ -7151,6 +7151,12 @@ If !Empty(aNota)
 	cString += "</infNFe>"
 EndIf
 
+//  15/07/2026 - CUSTOMIZADO JOAO PACO: Tratamento provisorio para evitar rejeicao 1111
+	If At("<gDevTrib><vDevTrib>0.00</vDevTrib></gDevTrib>",cString) > 0
+		cString := Replace(cString, "<gDevTrib><vDevTrib>0.00</vDevTrib></gDevTrib>", "")
+	Endif
+//  15/07/2026 - FIM CUSTOMIZADO: Tratamento provisorio para evitar rejeicao 1111
+
 cStringUTF := EncodeUTF8(cString)
 if cStringUTF == nil
 	cString := SpecialChar( cString )
