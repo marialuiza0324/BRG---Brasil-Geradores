@@ -12,7 +12,7 @@ User Function RelOs()
 
     Local aArea := FWGetArea()
 
-    Local cURL  := "http://geradores.datasetsolucoes.com.br:7061//"+STJ->TJ_ORDEM+"?filial="+cFilAnt"
+    Local cURL  := "https://relatorio.brggeradores.com.br//"+STJ->TJ_ORDEM+"?filial="+cFilAnt"
  
 
         //Abre o link pelo navegador
