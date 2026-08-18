@@ -79,9 +79,9 @@ User Function MT100TOK()
                 If Dow(Date()) == 5 // Quinta-feira
                     // Se o vencimento mínimo cair no sábado ou domingo, ajusta para segunda-feira
                     If Dow(dVencMin) == 7 // Sábado
-                        dVencMin := dVencMin + 3
-                    ElseIf Dow(dVencMin) == 1 // Domingo
                         dVencMin := dVencMin + 2
+                    ElseIf Dow(dVencMin) == 1 // Domingo
+                        dVencMin := dVencMin + 1
                     EndIf
                 EndIf
             EndIf
