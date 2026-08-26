@@ -55,7 +55,7 @@ User Function AlteraPA()
 
 		DbSelectArea("SE2")
 		SE2->(DBSetOrder(1))
-		If SE2->(DbSeek(xFilial("SE2") + SE2->E2_PREFIXO + SE2->E2_NUM + SE2->E2_PARCELA))
+		If SE2->(DbSeek(xFilial("SE2") + SE2->E2_PREFIXO + SE2->E2_NUM + SE2->E2_PARCELA + SE2->E2_TIPO + SE2->E2_FORNECE + SE2->E2_LOJA))
 			RecLock("SE2", .F.)
 
 				E2_VENCREA := Lastday(dNovoVen,3)
