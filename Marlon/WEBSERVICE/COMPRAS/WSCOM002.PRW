@@ -272,6 +272,8 @@ WSMETHOD GET ALL WSRECEIVE updated_at, limit, page WSSERVICE WSCOM002
             oRegistro['descArmazem'] := AllTrim(QRY_TAB->DescArmazem)
             oRegistro['estoquedisponivel'] := QRY_TAB->EstoqueDisponivel
             oRegistro['dtUltCompra'] := QRY_TAB->DtUltimaCompra
+            //Ultimo preco de compra, ja retornado pela CTE UltimaCompra (D1_VUNIT da SD1)
+            oRegistro['vlrUltCompra'] := QRY_TAB->VlrUnitUltimaCompra
             aAdd(jResponse['objects'], oRegistro)
 
             QRY_TAB->(DbSkip())
