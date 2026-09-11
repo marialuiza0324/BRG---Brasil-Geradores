@@ -48,6 +48,7 @@ do campo.
 | JSON | Campo | Tipo | Descrição |
 |---|---|---|---|
 | `solicit` | `C1_SOLICIT` | string | Solicitante |
+| `xurgen` | `C1_XURGEN` | string | Urgência da SC — `"1"` Sim · `"2"` Não. Vale para todos os itens enviados |
 
 ### itens[]
 
@@ -59,6 +60,7 @@ do campo.
 | `dtentrega` | `C1_DATPRF` | string | Data de necessidade no formato `YYYY-MM-DD` |
 | `rateio` | `C1_RATEIO` | string | `"1"` rateado · `"2"` centro de custo único |
 | `ccusto` | `C1_CC` | string | Centro de custo — considerado somente quando `rateio` = `"2"` |
+| `xurgen` | `C1_XURGEN` | string | Urgência da SC — `"1"` Sim · `"2"` Não. Sobrepõe o valor informado no cabeçalho |
 
 ### itens[].rateioCX[] — quando `rateio` = `"1"`
 
@@ -96,6 +98,23 @@ quando informado, ele **substitui integralmente** o rateio do item — não faz 
 
 ---
 
+## Comportamento do xurgen
+
+O `xurgen` grava o `C1_XURGEN`, que indica se a Solicitação de Compras é urgente:
+`"1"` = Sim, `"2"` = Não. Como todo campo do serviço, é opcional.
+
+| Situação | Resultado |
+|---|---|
+| Omitido no cabeçalho e nos itens | O valor gravado na SC1 é mantido |
+| Informado no cabeçalho | Aplicado a todos os itens enviados na requisição |
+| Informado no item | Sobrepõe o valor do cabeçalho, somente naquele item |
+| Diferente de `"1"` e `"2"` | Erro `NEW017` — nada é gravado |
+
+> O valor pode chegar como string (`"1"`) ou como número (`1`); ambos são aceitos, mesmo
+> tratamento dado ao `rateio`.
+
+---
+
 ## Exemplos
 
 ### Alterar somente a quantidade — tudo o mais é preservado
@@ -130,7 +149,8 @@ Content-Type: application/json
       "local": "01",
       "dtentrega": "2026-09-30",
       "rateio": "2",
-      "ccusto": "20010006"
+      "ccusto": "20010006",
+      "xurgen": "2"
     }
   ]
 }
@@ -218,6 +238,7 @@ Na ordem em que as validações ocorrem. As três primeiras acontecem antes de q
 | `NEW012` | 404 | O item não existe na Solicitação de Compras |
 | `NEW013` | 400 | `dtentrega` inválida. Use `YYYY-MM-DD` |
 | `NEW014` | 400 | `rateio` diferente de `"1"` e `"2"` |
+| `NEW017` | 400 | `xurgen` diferente de `"1"` e `"2"` — no cabeçalho ou no item |
 | `NEW008` | 400 | `rateioCX` informado mas vazio ou não-array |
 | `NEW016` | 400 | Item marcado como rateado, sem rateio na SCX e sem `rateioCX` no JSON |
 | `NEW011` | 400 | Uma linha do `rateioCX` não é um objeto |

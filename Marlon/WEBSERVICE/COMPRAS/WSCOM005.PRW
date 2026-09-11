@@ -24,6 +24,7 @@ Serviço REST para Alteração de Solicitação de Compra
 
     CABECALHO - alteravel:
       solicit ................ C1_SOLICIT   Solicitante
+      xurgen ................. C1_XURGEN    Urgencia: 1 = Sim / 2 = Nao - vale para todos os itens
 
     ITEM - alteraveis:
       produto ................ C1_PRODUTO   Codigo do produto
@@ -32,6 +33,9 @@ Serviço REST para Alteração de Solicitação de Compra
       dtentrega .............. C1_DATPRF    Data de necessidade
       rateio ................. C1_RATEIO    1 = rateado / 2 = centro de custo unico
       ccusto ................. C1_CC        Centro de custo (somente quando rateio = 2)
+      xurgen ................. C1_XURGEN    Urgencia: 1 = Sim / 2 = Nao - sobrepoe o cabecalho
+      xobmemo ................ C1_XOBMEMO   Observacao da SC - aceita tambem como "C1_XOBMEMO"
+      vunit .................. C1_VUNIT     Preco estimado   - aceita tambem como "C1_VUNIT"
 
     RATEIO (SCX) - alteraveis quando rateio = 1:
       rateioCX[].perc ........ CX_PERC      Percentual
@@ -77,6 +81,9 @@ WSRESTFUL WSCOM005 DESCRIPTION 'Serviço REST para Alteração de Solicitação de Co
 	WSDATA      ccusto      AS STRING
 	WSDATA      perc        AS NUMERIC
 	WSDATA      cc          AS STRING
+	WSDATA      xurgen      AS STRING
+	WSDATA      xobmemo     AS STRING
+	WSDATA      vunit       AS NUMERIC
 
 	//Métodos
 	WSMETHOD PUT    UPDATE DESCRIPTION 'Atualização de registro'       WSSYNTAX '/WSCOM005/update'                            PATH 'update'        PRODUCES APPLICATION_JSON
@@ -98,11 +105,21 @@ Atualiza a Solicitacao de Compras e o rateio dos itens
     * 4: O "rateioCX" tambem e opcional. Se o item for rateado (rateio=1)
          e o "rateioCX" nao vier, o rateio atual da SCX e mantido
     * 5: "ccusto" so e considerado quando "rateio" = "2"
+    * 6: "xurgen" (C1_XURGEN) e a urgencia da SC: "1" = Sim / "2" = Nao.
+         Pode vir no cabecalho, valendo para todos os itens enviados,
+         ou no item, sobrepondo o cabecalho. Omitido, o valor gravado
+         no registro e mantido
+    * 7: "C1_XOBMEMO" (observacao) e "C1_VUNIT" (preco estimado) sao
+         OPCIONAIS. Aceitam o nome do campo da SC1 ou o alias curto
+         "xobmemo" / "vunit" e sao procurados no item, no cabecalho e
+         na raiz do JSON - nessa ordem. Omitidos, nao sao enviados ao
+         ExecAuto e o conteudo gravado na SC1 permanece inalterado
 
     {
         "cabecalho": {
             "filial": "0101",
-            "solicit": "000001"
+            "solicit": "000001",
+            "xurgen": "1"
         },
         "itens": [
             {
@@ -112,7 +129,10 @@ Atualiza a Solicitacao de Compras e o rateio dos itens
                 "local": "01",
                 "dtentrega": "2026-09-30",
                 "rateio": "2",
-                "ccusto": "20010006"
+                "ccusto": "20010006",
+                "xurgen": "2",
+                "C1_XOBMEMO": "Observacao da solicitacao",
+                "C1_VUNIT": 1500.00
             },
             {
                 "itemC1": "02",
@@ -174,6 +194,11 @@ WSMETHOD PUT UPDATE WSRECEIVE id WSSERVICE WSCOM005
 	Local dDatPrf           := CToD('')
 	Local cCCusto           := ''
 	Local lRatJson          := .F.
+	Local cUrgen            := ''
+	Local cUrgCab           := ''
+	Local lUrgCab           := .F.
+	Local xObMemo           := Nil
+	Local xVUnit            := Nil
 	Private lMsErroAuto     := .F.
 	Private lMsHelpAuto     := .T.
 	Private lAutoErrNoFile  := .T.
@@ -236,6 +261,22 @@ WSMETHOD PUT UPDATE WSRECEIVE id WSSERVICE WSCOM005
 		Return C5Fault(Self, 409, 'UPD011', 'Filial divergente', 'A filial informada (' + AllTrim(cFilSC) + ') e diferente da filial do ambiente (' + AllTrim(FWxFilial(cAliasWS)) + '). Nao e possivel alterar Solicitacao de Compras de outra filial')
 	EndIf
 
+	/*
+	    Urgencia da Solicitacao de Compras (C1_XURGEN): 1 = Sim / 2 = Nao.
+	    O campo e opcional. Informado no cabecalho vale para todos os itens
+	    enviados e informado no item sobrepoe o cabecalho. Quando nao vem
+	    no JSON, o valor gravado no registro e mantido.
+	*/
+	If C5Tem(oCabecalho, 'xurgen') .And. ! Empty(C5GetC(oCabecalho, 'xurgen'))
+		cUrgCab := C5GetC(oCabecalho, 'xurgen')
+
+		If cUrgCab <> '1' .And. cUrgCab <> '2'
+			Return C5Fault(Self, 400, 'NEW017', 'Urgencia invalida', 'O campo "xurgen" do cabecalho deve ser "1" (Sim) ou "2" (Nao)')
+		EndIf
+
+		lUrgCab := .T.
+	EndIf
+
 	DbSelectArea(cAliasWS)
 	(cAliasWS)->(DbSetOrder(1))
 
@@ -295,6 +336,7 @@ WSMETHOD PUT UPDATE WSRECEIVE id WSSERVICE WSCOM005
 		dDatPrf  := SC1->C1_DATPRF
 		cRateio  := SC1->C1_RATEIO
 		cCCusto  := SC1->C1_CC
+		cUrgen   := SC1->C1_XURGEN
 
 		If C5Tem(oItem, 'produto')
 			cProduto := C5GetC(oItem, 'produto')
@@ -343,6 +385,19 @@ WSMETHOD PUT UPDATE WSRECEIVE id WSSERVICE WSCOM005
 			EndIf
 		EndIf
 
+		//Urgencia: o cabecalho sobrepoe o gravado e o item sobrepoe o cabecalho
+		If lUrgCab
+			cUrgen := cUrgCab
+		EndIf
+
+		If C5Tem(oItem, 'xurgen') .And. ! Empty(C5GetC(oItem, 'xurgen'))
+			cUrgen := C5GetC(oItem, 'xurgen')
+
+			If cUrgen <> '1' .And. cUrgen <> '2'
+				Return C5Fault(Self, 400, 'NEW017', 'Urgencia invalida', 'O campo "xurgen" do item ' + AllTrim(cItemC1) + ' deve ser "1" (Sim) ou "2" (Nao)')
+			EndIf
+		EndIf
+
 		aLinhaC1 := {}
 		aAdd(aLinhaC1, {'C1_ITEM',    cItemC1,  Nil})
 		aAdd(aLinhaC1, {'C1_PRODUTO', cProduto, Nil})
@@ -351,6 +406,40 @@ WSMETHOD PUT UPDATE WSRECEIVE id WSSERVICE WSCOM005
 		aAdd(aLinhaC1, {'C1_DATPRF',  dDatPrf,  Nil})
 		aAdd(aLinhaC1, {'C1_RATEIO',  cRateio,  Nil})
 		aAdd(aLinhaC1, {'C1_CC',      cCCusto,  Nil})
+
+		//So envia a urgencia quando ha conteudo, para nao gravar branco em registro antigo
+		If ! Empty(cUrgen)
+			aAdd(aLinhaC1, {'C1_XURGEN', cUrgen,   Nil})
+		EndIf
+
+		/*
+		    Observacao (C1_XOBMEMO) e preco estimado (C1_VUNIT) sao
+		    campos OPCIONAIS: procurados no item, no cabecalho e na raiz
+		    do JSON, nessa ordem. Diferente dos campos padrao acima, eles
+		    so entram no array quando vierem no JSON - assim a ausencia da
+		    propriedade nao gera erro e nunca sobrepoe o que esta gravado
+		    na SC1, ja que a MATA110 mantem o conteudo dos campos que nao
+		    recebe. Mesmo tratamento dado ao C1_XURGEN.
+		*/
+		xObMemo := C5Get({oItem, oCabecalho, jJson}, 'xobmemo', 'C1_XOBMEMO')
+
+		/*
+		    O body JSON chega em UTF-8 e a resposta e devolvida com
+		    EncodeUTF8, mas o conteudo lido precisa ser convertido para o
+		    encoding do Protheus (CP1252) antes de gravar na SC1 - sem isso
+		    a observacao fica gravada com os bytes crus do UTF-8 e aparece
+		    como "ObservaAcAo" na tela. Os demais campos de caractere sao
+		    codigos ASCII, onde a conversao nao tem efeito.
+		*/
+		If ValType(xObMemo) <> 'U'
+			aAdd(aLinhaC1, {'C1_XOBMEMO', DecodeUTF8(C5ToC(xObMemo)), Nil})
+		EndIf
+
+		xVUnit := C5Get({oItem, oCabecalho, jJson}, 'vunit', 'C1_VUNIT')
+
+		If ValType(xVUnit) <> 'U'
+			aAdd(aLinhaC1, {'C1_VUNIT', Round(C5ToN(xVUnit), TamSX3("C1_VUNIT")[2]), Nil})
+		EndIf
 
 		aadd(aItensSC, aLinhaC1)
 
@@ -514,15 +603,7 @@ Le um campo do JSON devolvendo sempre caractere
 @return Caractere, Conteudo do campo
 /*/
 Static Function C5GetC(jObj, cCampo)
-	Local xVal := jObj:GetJsonObject(cCampo)
-	Local cRet := ''
-
-	If ValType(xVal) == 'C'
-		cRet := AllTrim(xVal)
-	ElseIf ValType(xVal) == 'N'
-		cRet := AllTrim(Str(xVal))
-	EndIf
-Return cRet
+Return C5ToC(jObj:GetJsonObject(cCampo))
 
 /*/{Protheus.doc} C5GetN
 Le um campo do JSON devolvendo sempre numerico
@@ -539,15 +620,7 @@ Le um campo do JSON devolvendo sempre numerico
 @return Numerico, Conteudo do campo
 /*/
 Static Function C5GetN(jObj, cCampo)
-	Local xVal := jObj:GetJsonObject(cCampo)
-	Local nRet := 0
-
-	If ValType(xVal) == 'N'
-		nRet := xVal
-	ElseIf ValType(xVal) == 'C'
-		nRet := Val(StrTran(AllTrim(xVal), ',', '.'))
-	EndIf
-Return nRet
+Return C5ToN(jObj:GetJsonObject(cCampo))
 
 /*/{Protheus.doc} C5RatAtu
 Le o rateio ja gravado na SCX para o item da SC e devolve no formato
@@ -594,3 +667,86 @@ Static Function C5RatAtu(cFil, cNum, cItem, aDest)
 	QRY_RATCX->(DbCloseArea())
 
 Return (Len(aDest) > 0)
+
+/*/{Protheus.doc} C5Get
+Le um campo opcional do JSON procurando nos objetos recebidos, na
+ordem de precedencia, aceitando o alias curto ou o nome do campo
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+
+    Devolve Nil (ValType 'U') quando a propriedade nao existe em
+    nenhum dos objetos, permitindo ao chamador distinguir 'campo nao
+    informado' de 'campo informado vazio' - o que garante que a
+    ausencia no body nao sobreponha o conteudo gravado na SC1.
+    Objeto ausente ou invalido apenas nao contribui com o valor, por
+    isso a leitura nunca gera erro.
+
+@param aObjs, Array, Objetos JSON na ordem de precedencia
+@param cAlias, Caractere, Nome curto aceito no JSON
+@param cCampo, Caractere, Nome do campo da SC1 aceito no JSON
+@return Indefinido, Conteudo encontrado ou Nil quando nao informado
+/*/
+Static Function C5Get(aObjs, cAlias, cCampo)
+	Local nI   := 0
+	Local nJ   := 0
+	Local aChv := {cAlias, cCampo}
+	Local xVal := Nil
+
+	For nI := 1 To Len(aObjs)
+
+		If ! (ValType(aObjs[nI]) $ 'CNDLUA')
+
+			For nJ := 1 To Len(aChv)
+				xVal := aObjs[nI]:GetJsonObject(aChv[nJ])
+
+				If ValType(xVal) <> 'U'
+					Return xVal
+				EndIf
+			Next nJ
+		EndIf
+	Next nI
+Return Nil
+
+/*/{Protheus.doc} C5ToC
+Converte o conteudo lido do JSON para caractere
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+@param xVal, Indefinido, Conteudo lido do JSON
+@return Caractere, Conteudo convertido, vazio quando nao informado
+/*/
+Static Function C5ToC(xVal)
+	Local cRet := ''
+
+	If ValType(xVal) == 'C'
+		cRet := AllTrim(xVal)
+	ElseIf ValType(xVal) == 'N'
+		cRet := AllTrim(Str(xVal))
+	EndIf
+Return cRet
+
+/*/{Protheus.doc} C5ToN
+Converte o conteudo lido do JSON para numerico
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+
+    Trata os dois formatos que o consumidor pode enviar: numero puro
+    (1500.00) ou string ("1500.00" / "1500,00").
+
+@param xVal, Indefinido, Conteudo lido do JSON
+@return Numerico, Conteudo convertido, zero quando nao informado
+/*/
+Static Function C5ToN(xVal)
+	Local nRet := 0
+
+	If ValType(xVal) == 'N'
+		nRet := xVal
+	ElseIf ValType(xVal) == 'C'
+		nRet := Val(StrTran(AllTrim(xVal), ',', '.'))
+	EndIf
+Return nRet
