@@ -18,6 +18,7 @@ User Function PEDCOMGRAF()
 Local lImprime	:= .F.
 
 Private cStatus
+Private cStatPed	:= ""	//Situacao do pedido impressa no cabecalho (ver StatPedid())
 Private cNumSC7		:= ""
 Private cSystem		:= GetSrvProfString("StartPath","")
 Private cDiretorio	:= ""
@@ -29,6 +30,7 @@ Private cLclEntreg	:= Padr("",68)
 Private cEndEntreg	:= Padr("",68)
 Private cCepEntreg	:= PesqPict("SM0","M0_CEPENT")
 Private cContEntre	:= Padr("",68)
+Private cObsEntreg	:= Padr("",400)	//Observacao geral digitada na tela, impressa no rodape
 Private CONTFL     	:= 01
 Private nMinCol		:= 0010
 Private nMinLin		:= 0000
@@ -54,9 +56,18 @@ Private nColIt7 	:= nColIt6  + 160	//VLR UNITARIO
 Private nColIt8 	:= nColIt7  + 170	//DESCONTO
 Private nColIt9 	:= nColIt8  + 170	//VLR TOTAL
 Private nColIt10 	:= nColIt9  + 120	//ICMS	         -40
-Private nColIt11 	:= nColIt10 + 270 	//C. CUSTO
-Private nColIt12 	:= nColIt11 + 205	//SOLICITANTE
-Private nColIt13 	:= nMaxCol 			//DT ENTREGA
+Private nColIt11 	:= nColIt10 + 446	//OBS. ITEM		(substituiu C. CUSTO 270 + SOLIC 205)
+Private nColIt12 	:= nMaxCol 			//DT ENTREGA		(largura resultante: 200)
+
+//Parametros de quebra de texto das colunas de item
+Private nTamDesIt	:= 48				//Caracteres por linha da coluna DESCRICAO (848 dots / ~17 por char)
+Private nTamObsIt	:= 25				//Caracteres por linha da coluna OBS. ITEM (441 dots uteis / ~17 por char)
+Private nMaxLinIt	:= 20				//Limite de linhas de um item (trava para nao estourar a pagina)
+Private nLinLimIt	:= 3050				//Ultima linha utilizavel para itens (quebra de pagina)
+Private nTamObsCab	:= 95				//Caracteres por linha da OBSERVACAO do rodape (1850 dots / ~18,7 por char)
+Private nMaxLiObsCab := 20				//Limite de linhas da OBSERVACAO do rodape
+Private nAltObsCab	:= 50				//Altura de cada linha da OBSERVACAO do rodape (Arial 11)
+Private nMinAltRod	:= 240				//Altura minima da faixa do rodape (exigida pelo box de TOTAIS)
 
 	// (INICIO) LEANDROM 12/12/2017 Valida se pedido de compras não bloqueado ou se já foi atendido)
 	aAreaSC7 := SC7->(GetArea())	//Salva area da SC7
@@ -182,6 +193,9 @@ Local nTxMoeda	:= 0
 Local nQtdItens := 0
 Local nI
 Local nX
+Local cObsItem	:= ""
+Local aObsItem	:= {}
+Local cDscComp	:= ""
 
 Private lEmail	:= .F.	//Controla se envia pedido por email
 Private nPagina	:= 0
@@ -189,7 +203,6 @@ Private nTotIPI	:= 0
 Private nTotICM	:= 0
 Private nTotFrt	:= 0
 Private nTotPed	:= 0
-Private cObsCab	:= ""
 Private nDesc   := 0
 Private cComp	:= ""
 Private cAlter  := ""
@@ -315,6 +328,10 @@ Private cNumPedido
     	cStatus := "0"
     EndIf
 
+	//Situacao do pedido para o cabecalho, seguindo a legenda padrao da rotina de
+	//Pedidos de Compra. Alimenta a Private cStatPed.
+	StatPedid(cNumPed)
+
 	cChave 	:= ""
 	lCabec	:= .T.
 	If !Empty(QRY->C7_NUM)
@@ -325,8 +342,6 @@ Private cNumPedido
 		cChave := QRY->(C7_FILIAL + C7_NUM)
 		While !QRY->(eof())
 			If lCabec
-				cObsCab := AllTrim(QRY->C7_OBS)
-
 				//Cabeçalho do pedido
 				ImpCabec(@nLinSup, @nLinInf)
 
@@ -431,7 +446,7 @@ Private cNumPedido
 				nCol1 := 50
 				nCol2 := 250
 
-				oPrn:Box(nLinSup-2, nMinCol, nLinInf, (nMaxCol / 3)+2)
+				oPrn:Box(nLinSup-2, nMinCol, nLinInf, nMaxCol/2)	//Metade esquerda da faixa, alinhado com o box ENTREGA acima
 				nLinSup += 45
 				oPrn:Say(nLinSup, nMinCol+nCol1-30, "INF. GERAL"	, oFont11N	, 100, CLR_BLUE)
 
@@ -447,13 +462,14 @@ Private cNumPedido
 
 				// Box de dados COBRANÇA
 				nLinSup	:= nLinAtu
-				nCol1 := (nMaxCol / 3) - 80
+				nColCob := nMaxCol / 2	//Borda esquerda do box - mesma divisao do box ENTREGA acima
+				nCol1 := nColCob + 50	//Mantem o mesmo recuo interno de antes (borda + 50)
 				nCol2 := nCol1 + 150
 				nCol3 := nCol2 + 650
 				nCol4 := nCol3 + 250
 				nEspac:= 40
 
-				oPrn:Box(nLinSup-2, (nMaxCol/3)-130, nLinInf, nMaxCol)
+				oPrn:Box(nLinSup-2, nColCob, nLinInf, nMaxCol)
 				nLinSup += nEspac
 				oPrn:Say(nLinSup, nCol1-30, "COBRANÇA"	, oFont11N	, 100, CLR_BLUE)
 
@@ -480,41 +496,6 @@ Private cNumPedido
 				oPrn:Say(nLinSup, nCol2+140, AllTrim(SM0->M0_CIDCOB)+'/'+AllTrim(SM0->M0_ESTCOB), oFont10	, 100)
 
 
-				// Box de dados COLETA
-				nLinSup	:= nLinAtu
-				nCol1 := ((nMaxCol / 3) * 2) + 50
-				nCol2 := nCol1 + 200
-
-				oPrn:Box(nLinSup-2, ((nMaxCol / 3) * 2)+20, nLinInf, nMaxCol)
-				nLinSup += 45
-				oPrn:Say(nLinSup, nMinCol+nCol1-30, "COLETA"	, oFont11N	, 100, CLR_BLUE)
-
-			   /*	nLinSup += 50
-				oPrn:Say(nLinSup, nMinCol+nCol1, "TIPO:"	, oFont10N	, 100)
-				cTipoCol := ""
-				If AllTrim(QRY->C7_XTPFRET) == "CIF"
-					cTipoCol := "CIF - FRETE POR CONTA DO FORNECEDOR"
-				ElseIf AllTrim(QRY->C7_XTPFRET) == "FOB"
-					cTipoCol := "FOB - FRETE A PAGAR"
-				EndIf
-				oPrn:Say(nLinSup, nMinCol+nCol2, cTipoCol, oFont10	, 100)
-                                
-				nLinSup += 45
-				oPrn:Say(nLinSup, nMinCol+nCol1, "LOCAL:"	, oFont10N	, 100)
-				oPrn:Say(nLinSup, nMinCol+nCol2, QRY->C7_XLOCCOL, oFont10	, 100)
-                    
-				nLinSup += 45
-				oPrn:Say(nLinSup, nMinCol+nCol1, "TRANSP.:"	, oFont10N	, 100)
-				cTransp := ""
-				If ! Empty(QRY->C7_XTRANSP)
-					cTransp := Posicione("SA4",1,xFilial("SA4") + QRY->C7_XTRANSP, "A4_NOME")
-				EndIf
-				oPrn:Say(nLinSup, nMinCol+nCol2, cTransp, oFont10	, 100)
-
-				nLinSup += 45
-				oPrn:Say(nLinSup, nMinCol+nCol1, "OBS.:"	, oFont10N	, 100)
-				oPrn:Say(nLinSup, nMinCol+nCol2, QRY->C7_XOBSCOL, oFont10	, 100)
-                */
 				// Box de dados ITENS
 				ImpCabecIt(@nLinSup, @nLinInf)
 
@@ -528,6 +509,10 @@ Private cNumPedido
 			//Verifica tamanho do campo OBS
 			cDescri:= AllTrim(Posicione("SB1",1,xFilial("SB1")+QRY->C7_PRODUTO,"B1_DESC"))
 
+			//Observacao do item - mesmo campo exibido na coluna "Observacoes" do grid do MATA120.
+			//SC7 e uma tabela de itens, portanto C7_OBS pertence ao item corrente da query.
+			cObsItem := QRY->C7_OBS
+
 			_areaSC7 := SC7->(GetArea())
 			_areaSC1 := SC1->(GetArea())
 
@@ -539,12 +524,25 @@ Private cNumPedido
 			dbGoTo(QRY->RECNOSC1)
 			cDscItSC1 := SC1->C1_DESCRI
 
-			cDescri += If(!Empty(cDscItSC7)," - " + AllTrim(cDscItSC7), If(!Empty(cDscItSC1)," - " + AllTrim(cDscItSC1),""))
+			//Complementa a descricao do produto com a descricao do item (SC7 ou, na falta,
+			//SC1) somente quando ela acrescenta informacao. O Protheus copia B1_DESC para
+			//C7_DESCRI truncado no tamanho do campo, o que duplicava o texto na impressao.
+			cDscComp := IIf(!Empty(cDscItSC7), AllTrim(cDscItSC7), AllTrim(cDscItSC1))
+
+			If !Empty(cDscComp)
+				If Upper(cDscComp) $ Upper(cDescri)
+					//Copia (integral ou truncada) da descricao do produto: ignora
+				ElseIf Upper(cDescri) $ Upper(cDscComp)
+					cDescri := cDscComp	//Descricao do item eh a mais completa
+				Else
+					cDescri += " - " + cDscComp	//Informacoes distintas: concatena
+				EndIf
+			EndIf
 
 			RestArea(_areaSC1)
 			RestArea(_areaSC7)
 
-			nDiv:= len(cDescri)/69
+			nDiv:= len(cDescri)/nTamDesIt
 			nInteiro:= Int(nDiv)
 			nDecimais := nDiv - nInteiro
 			if nDecimais > 0 .AND. nDecimais < 1
@@ -553,26 +551,29 @@ Private cNumPedido
 				nQtdLin1 := nInteiro
 			endif
 
-			//Verifica tamanho do campo CC
-			cCentrC := Alltrim(QRY->C7_CC) //+ " - "+ AllTrim(Posicione("CTT",1,xFilial("CTT")+ QRY->C7_CC,"CTT_DESC01")) //CTT_DESC01)
-			nDiv2:= Len(cCentrC)/17
-			nInteiro2 := Int(nDiv2)
-			nDecimais2 := nDiv2 - nInteiro2
-			if nDecimais2 > 0 .AND. nDecimais2 < 1
-				nQtdLin2 := nInteiro2 + 1
-			else
-				nQtdLin2 := nInteiro2
-			endif
+			//Verifica tamanho da OBS. ITEM (C7_OBS do item) - quebra por palavra
+			aObsItem := QbraTexto(cObsItem, nTamObsIt, nMaxLinIt)
+			nQtdLin2 := Len(aObsItem)
 
-			//Verifica a quantidade de linhas
-			If nQtdLin1 > nQtdLin2
-				nQtdLinhas := nQtdLin1
-			ElseIf nQtdLin1 == nQtdLin2
-				nQtdLinhas	:= nQtdLin1
-			Else
-				nQtdLinhas := nQtdLin2
-			EndIf
+			//Verifica a quantidade de linhas (a maior entre DESCRICAO e OBS. ITEM)
+			nQtdLinhas := Max(nQtdLin1, nQtdLin2)
+			nQtdLinhas := Max(nQtdLinhas, 1)			//Item sem descricao e sem observacao: 1 linha
+			nQtdLinhas := Min(nQtdLinhas, nMaxLinIt)	//Trava: a linha do item nunca estoura a pagina
+
 			nAltLiBox:= nAltLinha * nQtdLinhas
+
+			//Quebra de pagina preventiva: garante que a linha inteira do item caiba na pagina,
+			//evitando sobreposicao quando a OBS. ITEM ocupa varias linhas.
+			If (nLinSup + nAltLiBox) > nLinLimIt
+				oPrn:EndPage() //Finaliza a pagina
+
+				ImpCabec(@nLinSup, @nLinInf)
+				ImpCabecIt(@nLinSup, @nLinInf)
+
+				nLinSup := nLinInf
+				nQtdItens := 0
+			EndIf
+
 			nLinInf:= nLinSup + nAltLiBox
 
 			oPrn:Box(nLinSup, nMinCol,nLinInf , nColIt1+1)
@@ -633,65 +634,14 @@ Private cNumPedido
 
 			nTotFrt += QRY->C7_VALFRE
 
+			//Coluna OBS. ITEM - observacao do item (QRY->C7_OBS) com quebra de linha por palavra
 			oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
-			// LEANDROM 11/12/2017 (AJUSTE PARA QUEBRA DE LINHA NA DESCRIÇÃO DO CENTRO DE CUSTO)
-			aDescric := {}
-			nTamCol := 17	//Tamanho da coluna do centro de custo
-			nQtdLinCC := 0
-  			While ! Empty(cCentrC)
-  				nQtdLinCC ++
-
-  				If nQtdLinCC == 1
-					aadd(aDescric, SubStr(cCentrC, 1, IIf(EspacoAt(cCentrC, nTamCol) > 1, EspacoAt(cCentrC, nTamCol) - 1, nTamCol)))
-					cCentrC := SubStr(cCentrC, IIf(EspacoAt(cCentrC, nTamCol) > 1, EspacoAt(cCentrC, nTamCol), nTamCol) + 1)
-
-				Else
-					aadd(aDescric, cCentrC)
-					cCentrC := ""
-				EndIf
-			EndDo
-
-			For nI := 1 To Len(aDescric)
-				oPrn:Say(nLinSup+(nI*42), nColIt10+5, aDescric[nI], oFont10	, 100)
+			For nI := 1 To Len(aObsItem)
+				oPrn:Say(nLinSup+42+((nI-1)*nAltLinha), nColIt10+5, aObsItem[nI], oFont10	, 100)
 			Next nI
 
-			/*
-			If Len(cCentrC) > 17
-				cCentrC1 := ""
-				cCentrC2 := ""
-				nI:=17
-				While nI >= 1
-					If Substr(cCentrC,nI,1) == " "
-						cCentrC1 := Substr(cCentrC,1,nI)
-						cCentrC2 := Substr(cCentrC,nI+1,Len(cCentrC))
-						nI:= 1
-					EndIf
-					nI--
-				EndDo
-				oPrn:Say(nLinSup+42, nColIt10+5, cCentrC1, oFont10	, 100)//cCentroC
-				oPrn:Say(nLinSup+84, nColIt10+5, cCentrC2 , oFont10	, 100)
-			Else
-				oPrn:Say(nLinSup+42, nColIt10+5, cCentrC , oFont10	, 100)
-			EndIf
-			*/
-			//oPrn:SayAlign(nLinSup+42, nColIt10+5, cCentrC , oFont10	,nColIt11-nColIt10,nLinInf-nLinSup,0,0,0)//cCentroC
-
-			/*cSolicit := ""
-			If !Empty(QRY->C7_NUMSC)
-				cSolicit := Posicione("SC1",1,xFilial("SC1") + QRY->C7_NUMSC, "C1_SOLICIT")
-			EndIf*/
-
-			aDescric := {}
-			aAdd(aDescric, QRY->C7_NUMSC)
-			//aAdd(aDescric, cSolicit)
-
-			oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
-			For nI := 1 To Len(aDescric)
-				oPrn:Say(nLinSup+(nI*42), nColIt11+5, aDescric[nI], oFont10	, 100)
-			Next nI
-
-			oPrn:Box(nLinSup, nColIt12, nLinInf, nColIt13)
- 			oPrn:Say(nLinSup+42, nColIt12+5, DTOC(STOD(QRY->C7_DATPRF))	, oFont10	, 100)
+			oPrn:Box(nLinSup, nColIt11, nLinInf, nColIt12)
+ 			oPrn:Say(nLinSup+42, nColIt11+5, DTOC(STOD(QRY->C7_DATPRF))	, oFont10	, 100)
 
 			QRY->(dbSkip())
 			If Empty(QRY->C7_NUM)
@@ -710,14 +660,8 @@ Private cNumPedido
 
 			Else
 				nQtdItens++
-				If ((nPagina == 1 .And. nLinInf > 3050) .Or. (nPagina > 1 .And. nLinInf > 3050))
-					oPrn:EndPage() //Finaliza a página
-
-					ImpCabec(@nLinSup, @nLinInf)
-					ImpCabecIt(@nLinSup, @nLinInf)
-
-					nQtdItens := 0
-				EndIf
+				//Quebra de pagina tratada de forma preventiva no inicio de cada item,
+				//considerando a altura real da linha (DESCRICAO / OBS. ITEM).
 			EndIf
 		EndDo
 	EndIf
@@ -762,6 +706,7 @@ Local cSemLogo	:= cSystem + "logo\semlogo.BMP"
 	oPrn:Say(nLinSup+060,nCol2+160, "PÁGINA: " + CVALTOCHAR(nPagina), oFont14, 100)
 	oPrn:Say(nLinSup+125,nCol2+25, "NRO PEDIDO: " + cNumPedido, oFont16N, 100, CLR_BLUE)
 	oPrn:Say(nLinSup+190,nCol2+60, "EMISSAO: " + cEmissCab, oFont14, 100)
+	oPrn:Say(nLinSup+250,nCol2+60, "STATUS: " + cStatPed, oFont11N, 100)
 
 	nLinSup += 130
 	oPrn:Say(nLinSup, nCol1+0050, AllTrim(SM0->M0_CODFIL) + " " + AllTrim(Upper(SM0->M0_NOMECOM)),oFont11N)
@@ -858,18 +803,11 @@ Static Function ImpCabecIt(nLinSup, nLinInf)
 
 	oPrn:Box(nLinSup, nColIt10, nLinInf, nColIt11+1)
 	oPrn:FillRect({nLinSup+4,nColIt10+2,nLinInf,nColIt11-2},oBrush)
-	oPrn:Say(nLinSup+40, nColIt10+5, "C. CUSTO"	, oFont10N	, 100)
-	//oPrn:SayAlign(nLinSup,nColIt10,"DT ENTR." ,oFont13N,nLinInf-nLinSup, nColIt9-nColIt10,, 2, 2 )
+	oPrn:Say(nLinSup+40, nColIt10+5, "OBS. ITEM"	, oFont10N	, 100)
 
 	oPrn:Box(nLinSup, nColIt11-1, nLinInf, nColIt12)
 	oPrn:FillRect({nLinSup+4,nColIt11+2,nLinInf,nColIt12-5},oBrush)
-	oPrn:Say(nLinSup+40, nColIt11+5, "SOLIC"	, oFont10N	, 100)
-	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVAÇÃO" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )
-
-	oPrn:Box(nLinSup, nColIt12-1, nLinInf, nColIt13)
-	oPrn:FillRect({nLinSup+4,nColIt12+2,nLinInf,nColIt13-5},oBrush)
-	oPrn:Say(nLinSup+40, nColIt12+5, "DT ENTR."	, oFont10N	, 100)
-	//oPrn:SayAlign(nLinSup,nColIt11,"OBSERVAÇÃO" ,oFont13N,nLinInf-nLinSup, nColIt10-nColIt11,, 2, 2 )
+	oPrn:Say(nLinSup+40, nColIt11+5, "DT ENTR."	, oFont10N	, 100)
 
 Return
 
@@ -881,11 +819,35 @@ Static Function ImpRodape(nLinSup, nLinInf)
 Local aTexto := {}
 Local nX
 Local nI
+Local aLinObs	:= {}	//Linhas ja quebradas da OBSERVACAO do rodape
+Local aQbra		:= {}
+Local nAltRod	:= 0
+Local lCortou	:= .F.
 
-	If (nMaxLin - nLinInf) < 220
+	//OBSERVACAO do rodape: exclusivamente o texto digitado pelo usuario na tela de
+	//impressao (ENTREGA). A observacao de cada item sai na coluna OBS. ITEM.
+	//Quebra por palavra na largura util do box.
+	aQbra := QbraTexto(cObsEntreg, nTamObsCab, nMaxLiObsCab)
+	For nX := 1 To Len(aQbra)
+		If Len(aLinObs) < nMaxLiObsCab
+			aAdd(aLinObs, aQbra[nX])
+		Else
+			lCortou := .T.
+		EndIf
+	Next nX
+
+	//Sinaliza o corte pelo limite de linhas, para nao dar a impressao de que o
+	//texto saiu completo.
+	If lCortou .And. Len(aLinObs) > 0
+		aLinObs[Len(aLinObs)] := "(...)"
+	EndIf
+
+	//Altura da faixa: cresce conforme a quantidade de linhas, respeitando o
+	//minimo exigido pelo box de TOTAIS ao lado.
+	nAltRod := Max(nMinAltRod, 150 + (Len(aLinObs) * nAltObsCab))
+
+	If (nMaxLin - nLinInf) < nAltRod
 		oPrn:EndPage() //Finaliza a página
-
-		//nPagina++
 
 		ImpCabec(@nLinSup,@nLinInf)
 
@@ -895,7 +857,7 @@ Local nI
 	// Box de OBSERVAÇÃO
 	nLinAtu	:= nLinInf + 20
 	nLinSup	:= nLinAtu
-	nLinInf	+= 240
+	nLinInf	+= nAltRod
 	nCol1	:= nMinCol
 	nCOl2	:= 2000
 	nCol3	:= (nMaxCol/4)*3
@@ -905,8 +867,10 @@ Local nI
 	//oPrn:FillRect({nLinSup+2,nCol1+2,nLinInf-2,nCol3-2},oBrush)
 	nLinSup += 10
 	oPrn:Say(nLinSup+38, nCol1+20, "OBSERVAÇÃO:", ofont11N, 100)
-	//oPrn:Say(nLinSup+45, nCol1+50, cObsCab, ofont11, 100)
-	oPrn:SayAlign(nLinSup+58, nCol1+50, cObsCab, ofont11, nCol3-nCol1, nLinInf-nLinSup,0,0,0)
+
+	For nI := 1 To Len(aLinObs)
+		oPrn:Say(nLinSup+38+(nI*nAltObsCab), nCol1+50, aLinObs[nI], ofont11, 100)
+	Next nI
 
 	// Box de dados TOTAIS
 	nLinSup	:= nLinAtu
@@ -1028,51 +992,94 @@ Return
 
 Static Function ENTREGA()
 
-Local 	lRet := .T.
-Local 	nOpca := 0
+Local lRet		:= .T.
+Local nOpca		:= 2	//Default cancela: qualquer saida que nao seja confirmacao explicita
+Local oModal
+Local oPnlEnt
+Local nLin		:= 0
+Local nCol1		:= 010	//Coluna dos rotulos
+Local nCol2		:= 050	//Coluna dos campos
+Local nLarCpo	:= 150	//Largura dos campos de entrega
+Local nLarObs	:= (nCol2 + nLarCpo) - nCol1	//Observacao ocupa da margem ate o fim dos campos
 
-//Configuração das fontes
-oFont21		:= TFont():New ("Arial",, 16,, .F.)
-oFont21B	:= TFont():New ("Arial",, 16,, .T.)
+	//Configuracao das fontes
+	oFont21		:= TFont():New ("Arial",, 16,, .F.)
+	oFont21B	:= TFont():New ("Arial",, 16,, .T.)
 
-cLimMin00 		:= 000 	//032
-cLimMax00		:= 165
-cColunMin00		:= 113
-cColunMax00		:= 430
+	//Janela de TAMANHO FIXO. O MSDIALOG deste build nao oferece bloqueio de
+	//redimensionamento (TDialog/TWindow nao expoem bResize nem equivalente), por
+	//isso a tela usa FWDialogModal, que cria a janela em tamanho unico e sem
+	//permitir arraste das bordas. Padrao seguido do FSFIN001.prw (Marlon\FINANCEIRO),
+	//ja em producao neste ambiente.
+	oModal := FWDialogModal():New()
+	oModal:SetEscClose(.T.)		//ESC fecha a tela (equivale a cancelar)
+	oModal:SetCloseButton(.T.)	//Mantem o "X" como saida - sem ele o usuario fica preso
+	oModal:SetBackground(.T.)	//Escurece o fundo
+	oModal:EnableFormBar(.T.)	//Habilita a barra de botoes proprios (precede o createDialog)
 
-DEFINE MSDIALOG oDlg TITLE OemToAnsi(cTitulo) FROM C(cLimMin00),C(cColunMin00) TO C(cLimMax00),C(cColunMax00) PIXEL Style DS_MODALFRAME // Cria Dialog sem o botão X
+	//Altura e largura em pixels: unico tamanho em que a tela abre. As medidas
+	//passam por C() para acompanhar a resolucao, como o restante do fonte.
+	oModal:setSize(C(220), C(250))
+	oModal:createDialog()
 
-	oDlg:lEscClose     := .F. //Nao permite sair ao se pressionar a tecla ESC.
+	//Par de botoes da tela. addYesNoButton() entrega dois botoes, mas com os
+	//rotulos fixos "Sim" e "Nao". Para exibir "Confirmar" e "Cancelar" a barra eh
+	//montada com CreateFormBar() + AddButton(), que recebe o texto de cada botao.
+	//A acao grava nOpca e fecha a janela com DeActivate(), no lugar do
+	//getButtonSelected(): 1 = Confirmar, 2 = Cancelar. Fechar pelo "X" ou pelo ESC
+	//nao passa por bloco nenhum, e nesse caso o default de nOpca mantem o cancelamento.
+	//O botao "Outras Acoes" nao existe mais: ele vinha da EnchoiceBar do MSDIALOG.
+	oModal:CreateFormBar()
+	oModal:AddButton("Confirmar", {|| nOpca := 1, oModal:DeActivate() }, "Confirmar", , .T., .F., .T.)
+	oModal:AddButton("Cancelar" , {|| nOpca := 2, oModal:DeActivate() }, "Cancelar" , , .T., .F., .T.)
 
-	nLin 	:= 030
-	nCol1	:= 010
-	nCol2	:= 040
-	@ C(nLin),C(nCol1) SAY OemToAnsi("Local de entrega")								SIZE C(150), C(008) OF oDlg PIXEL FONT oFont21B
+	//Todos os controles sao filhos do painel principal do modal, dimensionado
+	//pelo setSize acima. Nenhum deles ultrapassa nCol2 + nLarCpo.
+	oPnlEnt := oModal:getPanelMain()
 
-	nLin += 010
-	@ C(nLin),C(nCol1) SAY OemToAnsi("Local: ")									SIZE C(040), C(008) OF oDlg PIXEL
-	@ C(nLin-2),C(nCol2) MSGET oLclEntreg VAR cLclEntreg When .T.							SIZE C(cColunMax00-315), C(008) OF oDlg PIXEL hasbutton
+	nLin := 008
+	@ C(nLin),C(nCol1) SAY OemToAnsi("Local de entrega")	SIZE C(150), C(010) OF oPnlEnt PIXEL FONT oFont21B
 
-	nLin += 010
-	@ C(nLin),C(nCol1) SAY OemToAnsi("End: ")										SIZE C(040), C(008) OF oDlg PIXEL
-	@ C(nLin-2),C(nCol2) MSGET oEndEntreg VAR cEndEntreg  When .T. 					SIZE C(cColunMax00-315), C(008) OF oDlg PIXEL hasbutton
+	nLin += 018
+	@ C(nLin),C(nCol1) SAY OemToAnsi("Local: ")		SIZE C(040), C(010) OF oPnlEnt PIXEL
+	@ C(nLin-2),C(nCol2) MSGET oLclEntreg VAR cLclEntreg When .T.	SIZE C(nLarCpo), C(010) OF oPnlEnt PIXEL hasbutton
 
-	nLin += 010
-	@ C(nLin),C(nCol1) SAY OemToAnsi("CEP: ")										SIZE C(040), C(008) OF oDlg PIXEL
-	@ C(nLin-2),C(nCol2) MSGET oCepEntreg VAR cCepEntreg When .T. 							SIZE C(cColunMax00-315), C(008) OF oDlg PIXEL
+	nLin += 012
+	@ C(nLin),C(nCol1) SAY OemToAnsi("End.: ")		SIZE C(040), C(010) OF oPnlEnt PIXEL
+	@ C(nLin-2),C(nCol2) MSGET oEndEntreg VAR cEndEntreg When .T.	SIZE C(nLarCpo), C(010) OF oPnlEnt PIXEL hasbutton
 
-	nLin += 010
-	@ C(nLin),C(nCol1) SAY OemToAnsi("Contato: ")										SIZE C(040), C(008) OF oDlg PIXEL
-	@ C(nLin-2),C(nCol2) MSGET oContEntre VAR cContEntre When .T. 							SIZE C(cColunMax00-315), C(008) OF oDlg PIXEL
+	nLin += 012
+	@ C(nLin),C(nCol1) SAY OemToAnsi("CEP: ")		SIZE C(040), C(010) OF oPnlEnt PIXEL
+	@ C(nLin-2),C(nCol2) MSGET oCepEntreg VAR cCepEntreg When .T.	SIZE C(nLarCpo), C(010) OF oPnlEnt PIXEL
 
-//ACTIVATE MSDIALOG oDlg CENTERED
-ACTIVATE DIALOG oDlg ON INIT EnchoiceBar(oDlg,{||nOpca:=1,oDlg:End() },{||nOpca:=2,oDlg:End() }) CENTERED
+	nLin += 012
+	@ C(nLin),C(nCol1) SAY OemToAnsi("Contato: ")	SIZE C(040), C(010) OF oPnlEnt PIXEL
+	@ C(nLin-2),C(nCol2) MSGET oContEntre VAR cContEntre When .T.	SIZE C(nLarCpo), C(010) OF oPnlEnt PIXEL
+
+	nLin += 018
+	@ C(nLin),C(nCol1) SAY OemToAnsi("Observação do pedido")	SIZE C(200), C(010) OF oPnlEnt PIXEL FONT oFont21B
+
+	//Campo de observacao: unica area que cresce em conteudo. Altura fixa, texto
+	//quebrando em varias linhas e barra de rolagem vertical quando passar da
+	//altura visivel - a janela nao muda de tamanho por causa dele.
+	//Assinatura conforme o dump de classes do ambiente: nRow, nCol, bSetGet,
+	//oWnd, nWidth, nHeight, oFont e lPixel na 12a posicao.
+	nLin += 012
+	oObsEntreg := TMultiGet():New(C(nLin), C(nCol1), ;
+					{|u| If(PCount() > 0, cObsEntreg := u, cObsEntreg)}, ;
+					oPnlEnt, C(nLarObs), C(050),,,,,,.T.)
+
+	oObsEntreg:EnableVScroll(.T.)	//Barra de rolagem vertical
+
+	oModal:Activate()
 
 	If nOpca == 1
 		lRet := .T.
 	Else
 		lRet := .F.
 	EndIf
+
+	FwFreeVar(oModal)
 
 Return lRet
 
@@ -1171,6 +1178,59 @@ Local	cServidorx	:= SuperGetMv("MV_RELSERV",.T.,"192.168.10.227:465",)
 Return
 
 //*************************************************************************************
+//Quebra um texto em linhas de no maximo (nTamCol) caracteres, respeitando o espaco
+//entre palavras. Limita o retorno a (nMaxLin) linhas, sinalizando o corte com "...".
+//Reaproveita a funcao EspacoAt() ja existente neste fonte.
+//*************************************************************************************
+Static Function QbraTexto(cTexto, nTamCol, nMaxLin)
+
+Local aLinhas	:= {}
+Local nPos		:= 0
+Local nUlt		:= 0
+
+	//Tratamento de conteudo nao caractere / NIL (memo de registro inexistente)
+	If ValType(cTexto) <> "C"
+		Return aLinhas
+	EndIf
+
+	//Campo memo aceita quebra de linha digitada: normaliza para espaco simples
+	cTexto := StrTran(cTexto, Chr(13), " ")
+	cTexto := StrTran(cTexto, Chr(10), " ")
+	cTexto := StrTran(cTexto, Chr(09), " ")
+	While At("  ", cTexto) > 0
+		cTexto := StrTran(cTexto, "  ", " ")
+	EndDo
+	cTexto := AllTrim(cTexto)
+
+	If Empty(cTexto) .Or. nTamCol < 1 .Or. nMaxLin < 1
+		Return aLinhas
+	EndIf
+
+	While ! Empty(cTexto) .And. Len(aLinhas) < nMaxLin
+		If Len(cTexto) <= nTamCol
+			aAdd(aLinhas, cTexto)
+			cTexto := ""
+		Else
+			//Localiza o espaco imediatamente anterior ao limite da coluna
+			nPos := EspacoAt(cTexto, nTamCol + 1)
+			If nPos <= 1
+				nPos := nTamCol	//Palavra unica maior que a coluna: corta no limite
+			EndIf
+			aAdd(aLinhas, AllTrim(SubStr(cTexto, 1, nPos)))
+			cTexto := AllTrim(SubStr(cTexto, nPos + 1))
+		EndIf
+	EndDo
+
+	//Sinaliza que o texto foi cortado pelo limite de linhas
+	nUlt := Len(aLinhas)
+	If ! Empty(cTexto) .And. nUlt > 0
+		aLinhas[nUlt] := SubStr(aLinhas[nUlt], 1, Max(1, nTamCol - 3)) + "..."
+	EndIf
+
+Return aLinhas
+
+
+//*************************************************************************************
 //Pega uma posição (nTam) na string cString, e retorna o caractere de espaço anterior.
 //*************************************************************************************
 Static Function EspacoAt(cString, nTam)
@@ -1207,3 +1267,79 @@ EndDo
 nRetorno := 0
 
 Return nRetorno
+
+//*************************************************************************************
+//Situacao do pedido conforme a legenda padrao da rotina de Pedidos de Compra.
+//As regras da legenda sao por ITEM da SC7 e o cabecalho imprime uma unica situacao,
+//entao vale a primeira regra da legenda (de cima para baixo) que bater em algum item
+//do pedido - mesmo criterio de precedencia do browse, onde a primeira condicao
+//verdadeira define o icone do registro.
+//A varredura le a SC7 direto, e nao o alias QRY da impressao, porque a query descarta
+//os itens bloqueados (C7_CONAPRO diferente de B) e as situacoes "Em aprovacao" e
+//"Rejeitado" nunca apareceriam.
+//Os textos sao abreviados porque o box do numero do pedido tem 500 dots de largura
+//(de nCol2 ate nMaxCol) e ja carrega o rotulo "STATUS: " na Arial 11.
+//Alimenta a Private cStatPed, impressa por ImpCabec() no cabecalho de cada pagina.
+//*************************************************************************************
+
+Static Function StatPedid(cNumPedid)
+
+Local aArea		:= GetArea()
+Local aAreaC7	:= SC7->(GetArea())
+Local aLegenda	:= {}
+Local nRegra	:= 0	//Regra vencedora: menor indice (mais alto na legenda) achado nos itens
+Local nX		:= 0
+
+	//Cada linha eh {texto, condicao}. A ordem eh a da legenda apresentada pelo
+	//Protheus, com uma unica excecao: "Pedido de Contrato" vem antes de "Eliminado
+	//por residuo" porque sua condicao (C7_CONTRA e C7_RESIDUO preenchidos) eh um caso
+	//particular da condicao do cinza (C7_RESIDUO preenchido); na ordem original o
+	//branco nunca apareceria.
+	//A legenda padrao ainda tem o roxo ("AE eliminada por residuo"), que nao foi
+	//implementado por nao haver regra definida para ele - AE com residuo cai no cinza.
+	AAdd(aLegenda, {"EM APROVACAO"	, {|| SC7->C7_CONAPRO == "B" .And. SC7->C7_QUJE < SC7->C7_QUANT }})					//Azul
+	AAdd(aLegenda, {"REJEITADO"		, {|| SC7->C7_CONAPRO == "R" }})														//X vermelho
+	AAdd(aLegenda, {"PENDENTE"		, {|| SC7->C7_QUJE == 0 .And. SC7->C7_QTDACLA == 0 .And. SC7->C7_CONAPRO <> "B" .And. SC7->C7_TIPO == 1 .And. Empty(SC7->C7_RESIDUO) }})	//Verde
+	AAdd(aLegenda, {"EM RECEBIMENTO", {|| SC7->C7_QTDACLA > 0 }})														//Laranja (pre-nota)
+	AAdd(aLegenda, {"REC. PARCIAL"	, {|| SC7->C7_QUJE > 0 .And. SC7->C7_QUJE < SC7->C7_QUANT }})						//Amarelo
+	AAdd(aLegenda, {"RECEBIDO"		, {|| SC7->C7_QUJE >= SC7->C7_QUANT }})												//Vermelho
+	AAdd(aLegenda, {"PED. CONTRATO"	, {|| !Empty(SC7->C7_CONTRA) .And. !Empty(SC7->C7_RESIDUO) }})						//Branco (GCT)
+	AAdd(aLegenda, {"ELIM. RESIDUO"	, {|| !Empty(SC7->C7_RESIDUO) }})													//Cinza
+	AAdd(aLegenda, {"AUT. ENTREGA"	, {|| SC7->C7_TIPO <> 1 }})															//Preto
+
+	//Default de pedido sem item lido: nao inventa situacao
+	cStatPed := "SEM SITUACAO"
+
+	dbSelectArea("SC7")
+	SC7->(dbSetOrder(1))
+	If SC7->(dbSeek(xFilial("SC7") + cNumPedid))
+		While !SC7->(Eof()) .And. SC7->(C7_FILIAL + C7_NUM) == (xFilial("SC7") + cNumPedid)
+			For nX := 1 To Len(aLegenda)
+				//Abaixo da regra ja encontrada nao ha o que ganhar: para a busca deste item
+				If nRegra > 0 .And. nX >= nRegra
+					Exit
+				EndIf
+
+				If Eval(aLegenda[nX][2])
+					nRegra := nX
+					Exit
+				EndIf
+			Next nX
+
+			//Primeira regra da legenda: nenhum outro item tem precedencia maior
+			If nRegra == 1
+				Exit
+			EndIf
+
+			SC7->(dbSkip())
+		EndDo
+	EndIf
+
+	If nRegra > 0
+		cStatPed := aLegenda[nRegra][1]
+	EndIf
+
+	RestArea(aAreaC7)
+	RestArea(aArea)
+
+Return
