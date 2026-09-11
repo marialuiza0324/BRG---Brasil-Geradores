@@ -24,6 +24,9 @@ WSRESTFUL WSCOM001 DESCRIPTION 'Serviço rest para criação de solicitação de comp
 	WSDATA      perc        AS NUMERIC
 	WSDATA      cc          AS STRING
 	WSDATA      dtentrega   AS DATE
+	WSDATA      xurgen      AS STRING
+	WSDATA      xobmemo     AS STRING
+	WSDATA      vunit       AS NUMERIC
 
 	//Métodos
 	WSMETHOD POST   NEW    DESCRIPTION 'Inclusão de registro'          WSSYNTAX '/WSCOM001/new'                               PATH 'new'           PRODUCES APPLICATION_JSON
@@ -44,7 +47,8 @@ Cria um novo registro na tabela
         {
             "cabecalho": {
                 "solicit": "conteudo",
-				"filial": "conteudo"
+				"filial": "conteudo",
+				"xurgen": "1"
             },
             "itens": [
                 {
@@ -53,7 +57,10 @@ Cria um novo registro na tabela
                     "quant": "conteudo",
                     "rateio": "2",
                     "ccusto": "conteudo",
-                    "dtentrega": "2023-10-01"
+                    "dtentrega": "2023-10-01",
+                    "xurgen": "2",
+                    "C1_XOBMEMO": "Observacao da solicitacao",
+                    "C1_VUNIT": 1500.00
                 },
                 {
                     "itemC1": "conteudo",
@@ -76,6 +83,19 @@ Cria um novo registro na tabela
                 }
             ]
         }
+
+    O campo "xurgen" (C1_XURGEN) indica se a Solicitacao de Compras
+    e urgente: "1" = Sim / "2" = Nao. E opcional - informado no
+    cabecalho vale para todos os itens e informado no item sobrepoe
+    o cabecalho. Quando nao informado, o campo fica com o conteudo
+    padrao do dicionario.
+
+    Os campos "C1_XOBMEMO" (observacao da SC) e "C1_VUNIT" (preco
+    estimado) sao OPCIONAIS. Aceitam o nome do campo da SC1 ou o
+    alias curto "xobmemo" / "vunit" e sao procurados no item, no
+    cabecalho e na raiz do JSON - nessa ordem de precedencia.
+    Quando nao informados em nenhum deles o campo nao e enviado ao
+    ExecAuto e fica com o conteudo padrao do dicionario, sem erro.
 /*/
 
 WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
@@ -98,11 +118,16 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 	Local aItensJson        := {}
 	Local nY                := 0
 	Local nZ                := 0
+	Local nPosRat           := 0
 	Local cDoc              := ''
 	Local aRateioCX           := {}
 	Local cRateio           := ''
 	Local aRatJson          := {}
 	Local aLinhaCX          := {}
+	Local cUrgCab           := ''
+	Local cUrgen            := ''
+	Local xObMemo           := Nil
+	Local xVUnit            := Nil
 	Private lMsErroAuto     := .F.
 	Private lMsHelpAuto     := .T.
 	Private lAutoErrNoFile  := .T.
@@ -129,6 +154,23 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 
 	// Obtém o objeto cabecalho
 	oCabecalho := jJson:GetJsonObject('cabecalho')
+
+	/*
+	    Urgencia da Solicitacao de Compras (C1_XURGEN): 1 = Sim / 2 = Nao.
+	    O campo e opcional. Informado no cabecalho vale para todos os itens
+	    e informado no item sobrepoe o cabecalho.
+	*/
+	cUrgCab := W1Urgen(oCabecalho)
+
+	If ! Empty(cUrgCab) .And. cUrgCab <> '1' .And. cUrgCab <> '2'
+		Self:SetStatus(400)
+		jResponse['errorId']  := 'NEW017'
+		jResponse['error']    := 'Urgencia invalida'
+		jResponse['solution'] := 'O campo "xurgen" do cabecalho deve ser "1" (Sim) ou "2" (Nao)'
+		lRet := .F.
+		Self:SetResponse(EncodeUTF8(jResponse:toJSON()))
+		Return lRet
+	EndIf
 
 	// Obtém o array de itens
 	aItensJson := jJson:GetJsonObject('itens')
@@ -173,6 +215,55 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 			aAdd(aLinhaC1, {'C1_CC', '', Nil})
 		EndIf
 
+		//Urgencia: o item sobrepoe o cabecalho
+		cUrgen := W1Urgen(aItensJson[nY])
+
+		If Empty(cUrgen)
+			cUrgen := cUrgCab
+		EndIf
+
+		If ! Empty(cUrgen)
+			If cUrgen <> '1' .And. cUrgen <> '2'
+				Self:SetStatus(400)
+				jResponse['errorId']  := 'NEW017'
+				jResponse['error']    := 'Urgencia invalida'
+				jResponse['solution'] := 'O campo "xurgen" do item ' + AllTrim(Str(nY)) + ' deve ser "1" (Sim) ou "2" (Nao)'
+				lRet := .F.
+				RollBackSX8()
+				Self:SetResponse(EncodeUTF8(jResponse:toJSON()))
+				Return lRet
+			EndIf
+
+			aAdd(aLinhaC1, {'C1_XURGEN', cUrgen, Nil})
+		EndIf
+
+		/*
+		    Observacao (C1_XOBMEMO) e preco estimado (C1_VUNIT) sao
+		    campos OPCIONAIS: procurados no item, no cabecalho e na raiz
+		    do JSON, nessa ordem. Quando nao vem em nenhum deles o campo
+		    nao e enviado ao ExecAuto e segue o comportamento padrao dos
+		    campos nao preenchidos, sem gerar erro.
+		*/
+		xObMemo := W1Get({aItensJson[nY], oCabecalho, jJson}, 'xobmemo', 'C1_XOBMEMO')
+
+		/*
+		    O body JSON chega em UTF-8 e a resposta e devolvida com
+		    EncodeUTF8, mas o conteudo lido precisa ser convertido para o
+		    encoding do Protheus (CP1252) antes de gravar na SC1 - sem isso
+		    a observacao fica gravada com os bytes crus do UTF-8 e aparece
+		    como "ObservaAcAo" na tela. Os demais campos de caractere sao
+		    codigos ASCII, onde a conversao nao tem efeito.
+		*/
+		If ValType(xObMemo) <> 'U'
+			aAdd(aLinhaC1, {'C1_XOBMEMO', DecodeUTF8(W1ToC(xObMemo)), Nil})
+		EndIf
+
+		xVUnit := W1Get({aItensJson[nY], oCabecalho, jJson}, 'vunit', 'C1_VUNIT')
+
+		If ValType(xVUnit) <> 'U'
+			aAdd(aLinhaC1, {'C1_VUNIT', Round(W1ToN(xVUnit), TamSX3("C1_VUNIT")[2]), Nil})
+		EndIf
+
 		aadd(aItensSC, aLinhaC1)
 
 		// Dentro do loop nY
@@ -181,10 +272,16 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 
 			If ValType(aRatJson) == 'A' .And. Len(aRatJson) > 0
 
-				aRateioCX := {}
+				/*
+				    Acumula o rateio de CADA item rateado. Zerar o array aqui
+				    e usar o indice fixo [1] fazia com que apenas o ULTIMO
+				    item rateado da SC tivesse o rateio gravado na SCX - os
+				    anteriores ficavam sem faixa nenhuma.
+				*/
 				aAdd(aRateioCX, Array(2))
-				aRateioCX[1][1] := aItensJson[nY]:GetJsonObject('itemC1')
-				aRateioCX[1][2] := {}
+				nPosRat := Len(aRateioCX)
+				aRateioCX[nPosRat][1] := aItensJson[nY]:GetJsonObject('itemC1')
+				aRateioCX[nPosRat][2] := {}
 
 				For nZ := 1 To Len(aRatJson)
 
@@ -194,7 +291,7 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 					aAdd(aLinhaCX, {"CX_PERC", aRatJson[nZ]:GetJsonObject('perc'), Nil})
 					aAdd(aLinhaCX, {"CX_CC",   aRatJson[nZ]:GetJsonObject('cc'), Nil})
 
-					aAdd(aRateioCX[1][2], aLinhaCX)
+					aAdd(aRateioCX[nPosRat][2], aLinhaCX)
 
 				Next
 
@@ -244,3 +341,97 @@ WSMETHOD POST NEW WSRECEIVE WSSERVICE WSCOM001
 	Self:SetResponse(EncodeUTF8(jResponse:toJSON()))
 
 Return lRet
+
+/*/{Protheus.doc} W1Urgen
+Le o campo de urgencia (xurgen) do objeto JSON devolvendo sempre caractere
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+@param jObj, Objeto, Objeto JSON de entrada (cabecalho ou item)
+@return Caractere, Conteudo do campo, vazio quando nao informado
+/*/
+Static Function W1Urgen(jObj)
+Return W1ToC(W1Get({jObj}, 'xurgen', 'C1_XURGEN'))
+
+/*/{Protheus.doc} W1Get
+Le um campo opcional do JSON procurando nos objetos recebidos, na
+ordem de precedencia, aceitando o alias curto ou o nome do campo
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+
+    Devolve Nil (ValType 'U') quando a propriedade nao existe em
+    nenhum dos objetos, permitindo ao chamador distinguir 'campo nao
+    informado' de 'campo informado vazio'. Objeto ausente ou invalido
+    apenas nao contribui com o valor, por isso a leitura nunca gera
+    erro quando o cabecalho ou o item nao trazem o campo.
+
+@param aObjs, Array, Objetos JSON na ordem de precedencia
+@param cAlias, Caractere, Nome curto aceito no JSON
+@param cCampo, Caractere, Nome do campo da SC1 aceito no JSON
+@return Indefinido, Conteudo encontrado ou Nil quando nao informado
+/*/
+Static Function W1Get(aObjs, cAlias, cCampo)
+	Local nI   := 0
+	Local nJ   := 0
+	Local aChv := {cAlias, cCampo}
+	Local xVal := Nil
+
+	For nI := 1 To Len(aObjs)
+
+		If ! (ValType(aObjs[nI]) $ 'CNDLUA')
+
+			For nJ := 1 To Len(aChv)
+				xVal := aObjs[nI]:GetJsonObject(aChv[nJ])
+
+				If ValType(xVal) <> 'U'
+					Return xVal
+				EndIf
+			Next nJ
+		EndIf
+	Next nI
+Return Nil
+
+/*/{Protheus.doc} W1ToC
+Converte o conteudo lido do JSON para caractere
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+@param xVal, Indefinido, Conteudo lido do JSON
+@return Caractere, Conteudo convertido, vazio quando nao informado
+/*/
+Static Function W1ToC(xVal)
+	Local cRet := ''
+
+	If ValType(xVal) == 'C'
+		cRet := AllTrim(xVal)
+	ElseIf ValType(xVal) == 'N'
+		cRet := AllTrim(Str(xVal))
+	EndIf
+Return cRet
+
+/*/{Protheus.doc} W1ToN
+Converte o conteudo lido do JSON para numerico
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+
+    Trata os dois formatos que o consumidor pode enviar: numero puro
+    (1500.00) ou string ("1500.00" / "1500,00").
+
+@param xVal, Indefinido, Conteudo lido do JSON
+@return Numerico, Conteudo convertido, zero quando nao informado
+/*/
+Static Function W1ToN(xVal)
+	Local nRet := 0
+
+	If ValType(xVal) == 'N'
+		nRet := xVal
+	ElseIf ValType(xVal) == 'C'
+		nRet := Val(StrTran(AllTrim(xVal), ',', '.'))
+	EndIf
+Return nRet
