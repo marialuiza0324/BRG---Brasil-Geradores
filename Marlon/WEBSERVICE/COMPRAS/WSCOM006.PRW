@@ -37,6 +37,19 @@ Busca o registro específico através de filial e número
 
     Poderia ser usado o FWAdapterBaseV2(), mas em algumas versões antigas não existe essa funcionalidade
     então a paginação foi feita manualmente
+
+    O retorno traz, por item da SC:
+      xobmemo ..... C1_XOBMEMO   Observacao da SC (memo, lido pela workarea)
+      vunit ....... C1_VUNIT     Preco estimado / preco unitario estimado
+      xurgen ...... C1_XURGEN    Urgencia no formato codigo-descricao: 1-Sim / 2-Nao
+      xurgencod ... C1_XURGEN    Urgencia com o conteudo exato da SC1: 1 / 2
+    Acompanham os campos gravados pelo WSCOM001 (inclusao) e pelo
+    WSCOM005 (alteracao). Quando nao preenchidos na SC1 voltam
+    vazios ('', 0 e ''), sem omitir a propriedade do JSON.
+
+    O C1_XURGEN sai em duas propriedades de proposito: o "xurgen"
+    preserva o formato codigo-descricao ja consumido e o "xurgencod"
+    expoe o valor cru gravado na tabela, sem tratamento.
 /*/
 
 WSMETHOD GET ID WSRECEIVE updated_at, limit, page, filial, num WSSERVICE WSCOM006
@@ -51,6 +64,7 @@ WSMETHOD GET ID WSRECEIVE updated_at, limit, page, filial, num WSSERVICE WSCOM00
 	Local cObs       := ''
 	Local nRecno	 := 0
 	Local cRateio    := ''
+	Local cUrgente   := ''
 	Local aRateios   := {}
 	Local oRegistro
 	Local cQueryRateio := ""
@@ -63,11 +77,13 @@ WSMETHOD GET ID WSRECEIVE updated_at, limit, page, filial, num WSSERVICE WSCOM00
 	cQueryTab += " C1_LOCAL AS Armazem, " + CRLF
 	cQueryTab += " C1_UM AS Unidade, " + CRLF
 	cQueryTab += " C1_QUANT AS Quantidade, " + CRLF
+	cQueryTab += " C1_VUNIT AS PrecoUnitario, " + CRLF
 	cQueryTab += " C1_CC AS CentroCusto, " + CRLF
 	cQueryTab += " SC1.R_E_C_N_O_ AS RECNO,  " + CRLF
 	cQueryTab += " C1_EMISSAO AS DataEmissao , " + CRLF
 	cQueryTab += " C1_DATPRF AS DataNecessidade, " + CRLF
 	cQueryTab += " C1_SOLICIT AS Solicitante, " + CRLF
+	cQueryTab += " C1_XURGEN AS Urgente, " + CRLF
 	cQueryTab += " C1_RATEIO AS Rateio " + CRLF
 	cQueryTab += " FROM SC1010 SC1 " + CRLF
 	cQueryTab += " INNER JOIN SYS_COMPANY AS SYS " + CRLF
@@ -152,6 +168,7 @@ WSMETHOD GET ID WSRECEIVE updated_at, limit, page, filial, num WSSERVICE WSCOM00
 
 			nRecno := QRY_TAB->RECNO
 			cRateio := QRY_TAB->Rateio
+			cUrgente := QRY_TAB->Urgente
 
 			//Se ultrapassar o limite, encerra o laço
 			If nAtual > nTamanho
@@ -167,13 +184,27 @@ WSMETHOD GET ID WSRECEIVE updated_at, limit, page, filial, num WSSERVICE WSCOM00
 			oRegistro['local'] := AllTrim(QRY_TAB->Armazem)
 			oRegistro['um'] := AllTrim(QRY_TAB->Unidade)
 			oRegistro['quant'] := QRY_TAB->Quantidade
+			//Preco estimado da SC (C1_VUNIT), mesmo campo gravado na inclusao/alteracao
+			oRegistro['vunit'] := QRY_TAB->PrecoUnitario
 			oRegistro['cc'] := AllTrim(QRY_TAB->CentroCusto)
-			DbGoto(nRecno)
+			/*
+			    O C1_XOBMEMO e campo memo, por isso e lido pela workarea e
+			    nao pela query. O DbGoto PRECISA ser escopado no alias SC1:
+			    sem o escopo ele posiciona a area corrente, que aqui e a
+			    QRY_TAB, jogando o cursor da query para fora do resultado -
+			    o que zerava os campos lidos depois deste ponto (emissao,
+			    datprf e solicit) e encerrava o laco no primeiro item.
+			*/
+			SC1->(DbGoto(nRecno))
 			cObs := SC1->C1_XOBMEMO
 			cObs := StrTran(cObs, CRLF, " ")
 			cObs := StrTran(cObs, Chr(13), " ")
 			cObs := StrTran(cObs, Chr(10), " ")
 			oRegistro['xobmemo'] := AllTrim(cObs)
+			//Urgencia da SC no formato codigo-descricao: 1-Sim / 2-Não
+			oRegistro['xurgen'] := W6Urgen(cUrgente)
+			//Mesmo campo com o conteudo exato da SC1: 1 = Sim / 2 = Nao
+			oRegistro['xurgencod'] := AllTrim(cUrgente)
 			oRegistro['emissao'] := AllTrim(QRY_TAB->DataEmissao)
 			oRegistro['datprf'] := AllTrim(QRY_TAB->DataNecessidade)
 			oRegistro['solicit'] := AllTrim(QRY_TAB->Solicitante)
@@ -230,3 +261,23 @@ WSMETHOD GET ID WSRECEIVE updated_at, limit, page, filial, num WSSERVICE WSCOM00
 	Self:SetContentType('application/json')
 	Self:SetResponse(EncodeUTF8(jResponse:toJSON()))
 Return lRet
+
+/*/{Protheus.doc} W6Urgen
+Devolve a urgencia da Solicitacao de Compras no formato codigo-descricao
+@author Maria Luiza
+@since 08/09/2026
+@version 1.0
+@type function
+@param cUrgen, Caractere, Conteudo gravado no C1_XURGEN
+@return Caractere, '1-Sim', '2-Não' ou o proprio conteudo quando nao mapeado
+/*/
+Static Function W6Urgen(cUrgen)
+	Local cRet := AllTrim(cUrgen)
+
+	Do Case
+		Case cRet == '1'
+			cRet := '1-Sim'
+		Case cRet == '2'
+			cRet := '2-Não'
+	EndCase
+Return cRet
