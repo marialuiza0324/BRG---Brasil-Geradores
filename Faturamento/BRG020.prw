@@ -124,12 +124,13 @@ User Function BRG020()
 	_Cnpj     := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_CGC")
 	_CEP      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_CEP")
 	_TEL      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_TEL")
+	_DDD      := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_DDD")
 	_TpCli    := Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_TIPO")
 
 	oPrint:Say(nLin, 100,  ("Emissão:"), oFont12)
 	oPrint:Say(nLin, 1570,  ("Telefone:"), oFont12)
 	oPrint:Say(nLin, 300,  CVALTOCHAR(SC5->C5_EMISSAO), oFont12N)
-	oPrint:Say(nLin, 1800, TRANSFORM(_TEL,"@R (99)9999-9999"), oFont12N)
+	oPrint:Say(nLin, 1800, FmtFone(_DDD, _TEL), oFont12N)
 	nLin+=70
 	oPrint:Say(nLin, 100, ("Cliente:"), oFont12)
 	oPrint:Say(nLin, 300,  SC5->C5_CLIENTE+"/"+SC5->C5_LOJACLI +"-"+_Desc, oFont12N)
@@ -265,8 +266,14 @@ Return()
 // Função auxiliar para imprimir o rodapé
 Static Function PrintRodape()
 
-	Local nValor, cNfRem := "", aNfRem, nInicio := 1, nFim, nCont := 1, nPosicao, cTexto := SC5->C5_MENNOTA
-	Local nMaxLen := 95
+	Local nValor, cNfRem := "", aNfRem, nInicio := 1, nFim, nCont := 1, nPosicao, cTexto := GetObs()
+	Local oFontObs := oFont10N			//Fonte do corpo das observacoes: mesma altura usada nas linhas de item
+	Local nMaxLen := 130				//Caracteres por linha: 110 ate 2200 e a largura util do relatorio
+	Local nAltLinha := 38				//Altura de uma linha de observacao
+	Local nAltTitulo := 50				//Altura do titulo, que continua em fonte 14
+	Local nEspTotais := 140				//Espaco do bloco T O T A I S (50 + 30 + 30 + 30)
+	Local nLinTopo := 50				//Primeira linha util de uma pagina nova
+	Local nLinLimObs := nLinMax - nEspTotais	//Ultima linha em que cabe observacao
 
 	// Imprime o rodapé com o novo layout
 	oPrint:Say(nLin, 0110, "FATURA DE LOCAÇÃO N.º: " + SC5->C5_NOTA + "/" + SC5->C5_SERIE, oFont14N)
@@ -297,25 +304,54 @@ Static Function PrintRodape()
 	oPrint:Say(nLin, 0110, "OUTRAS OBSERVAÇÕES:", oFont14N)
 	nLin += 50
 
-	// Imprime as observações, se houver
-	nFim := LEN(SC5->C5_MENNOTA)
+	// Quebras de linha e tabulacoes gravadas no campo sairiam impressas como
+	// caractere invalido e ainda desalinhavam a contagem de caracteres por linha.
+	cTexto := StrTran(StrTran(StrTran(cTexto, Chr(13), " "), Chr(10), " "), Chr(9), " ")
+
+	// Imprime as observações, se houver, quebrando por palavra e abrindo nova
+	// página quando o texto ultrapassar a área útil, para que nada seja cortado.
 	do while nInicio <= LEN(cTexto)
 		nPosicao := 0
 		nFim := nInicio + nMaxLen
-		while nFim > nInicio
-			if SubStr(cTexto, nFim, 1) == " "
-				nPosicao := nFim
-				exit
+
+		if nFim > LEN(cTexto)
+			// Ultimo pedaco do texto: imprime o que restou, sem procurar espaco
+			nPosicao := LEN(cTexto) + 1
+		else
+			// Recua ate o espaco anterior ao limite, para nao cortar palavra
+			while nFim > nInicio
+				if SubStr(cTexto, nFim, 1) == " "
+					nPosicao := nFim
+					exit
+				endif
+				nFim--
+			enddo
+			if nPosicao == 0
+				// Palavra unica maior que a linha: corta no limite
+				nPosicao := nInicio + nMaxLen
 			endif
-			nFim--
-		enddo
-		if nPosicao = 0
-			nPosicao := nInicio + nMaxLen
 		endif
-		oPrint:Say(nLin, 0110, SubStr(cTexto, nInicio, nPosicao - nInicio), oFont14N)
-		nLin += 50
+
+		// Nao havendo espaco para mais uma linha, continua na proxima pagina
+		if nLin + nAltLinha > nLinLimObs
+			oPrint:EndPage()
+			oPrint:StartPage()
+			nLin := nLinTopo
+			oPrint:Say(nLin, 0110, "OUTRAS OBSERVAÇÕES (continuação):", oFont14N)
+			nLin += nAltTitulo
+		endif
+
+		oPrint:Say(nLin, 0110, SubStr(cTexto, nInicio, nPosicao - nInicio), oFontObs)
+		nLin += nAltLinha
 		nInicio := nPosicao + 1
 	enddo
+
+	// Garante que o bloco de TOTAIS caiba inteiro na página
+	if nLin + nEspTotais > nLinMax
+		oPrint:EndPage()
+		oPrint:StartPage()
+		nLin := nLinTopo
+	endif
 
 	// Adiciona a seção TOTAIS conforme a configuração anterior
 	nLin += 50
@@ -349,3 +385,100 @@ Static Function RetVenc()
 	TcQuery _cQry New Alias "TMP2"
 	dDtVenc := TMP2->DataVenc
 Return dDtVenc
+
+//---------------------------------------------------------------------------
+// Monta o texto das observacoes a partir dos dois campos de mensagem do
+// pedido, conforme o que o usuario preencheu:
+//
+//   - somente C5_MENNOTA preenchido -> imprime C5_MENNOTA
+//   - somente C5_XMENNOT preenchido -> imprime C5_XMENNOT
+//   - os dois preenchidos           -> imprime os dois, C5_XMENNOT primeiro
+//
+// C5_XMENNOT e campo customizado (vide M460FIM.prw e PE01NFESEFAZ.prw), por
+// isso o FieldPos: em ambiente onde ele nao exista o relatorio segue
+// imprimindo apenas C5_MENNOTA, sem erro de execucao.
+//---------------------------------------------------------------------------
+Static Function GetObs()
+
+Local cRet		:= ""
+Local cMenNota	:= AllTrim(SC5->C5_MENNOTA)
+Local cXMenNot	:= ""
+
+	If SC5->(FieldPos("C5_XMENNOT")) > 0
+		cXMenNot := AllTrim(SC5->C5_XMENNOT)
+	EndIf
+
+	cRet := cXMenNot
+
+	// Havendo os dois textos, separa por espaco: a quebra por palavra do
+	// rodape se encarrega de distribuir o conteudo nas linhas.
+	If !Empty(cMenNota)
+		cRet += If(Empty(cRet), "", " ") + cMenNota
+	EndIf
+
+Return cRet
+
+//---------------------------------------------------------------------------
+// Monta o telefone para impressao a partir do DDD (A1_DDD) e do numero
+// (A1_TEL), aplicando a mascara conforme a quantidade de digitos.
+//
+// A mascara fixa "@R (99)9999-9999" usada antes comportava apenas 10 digitos:
+// com celular (DDD + 9 digitos = 11) o excedente era descartado pelo Transform.
+// Alem disso o DDD nunca era lido, pois fica em A1_DDD e nao em A1_TEL - a
+// montagem DDD + numero segue a mesma adotada no NFE40, fonte nfesefaz.prw.
+//---------------------------------------------------------------------------
+Static Function FmtFone(cDDD, cFone)
+
+Local cNumero	:= ""
+Local cRet		:= ""
+
+	// Mantem apenas digitos: descarta mascara ja gravada no cadastro do cliente
+	cDDD  := SoDigito(If(ValType(cDDD)  == "C", cDDD , ""))
+	cFone := SoDigito(If(ValType(cFone) == "C", cFone, ""))
+
+	// A1_TEL muitas vezes ja vem digitado com o DDD na frente. Como numero local
+	// tem 8 ou 9 digitos, qualquer coisa com 10+ ja traz o DDD: nesse caso nao
+	// concatena de novo, senao sobra 12/13 digitos e a mascara nao e aplicada.
+	If Len(cFone) >= 10 .And. !Empty(cDDD) .And. SubStr(cFone, 1, Len(cDDD)) == cDDD
+		cNumero := cFone
+	Else
+		cNumero := cDDD + cFone
+	EndIf
+
+	// Descarta o codigo do pais (55), quando gravado junto do numero
+	If Len(cNumero) > 11 .And. SubStr(cNumero, 1, 2) == "55"
+		cNumero := SubStr(cNumero, 3)
+	EndIf
+
+	Do Case
+		Case Len(cNumero) == 11		// DDD + celular de 9 digitos
+			cRet := Transform(cNumero, "@R (99)99999-9999")
+		Case Len(cNumero) == 10		// DDD + fixo de 8 digitos
+			cRet := Transform(cNumero, "@R (99)9999-9999")
+		Case Len(cNumero) == 9		// Celular sem DDD
+			cRet := Transform(cNumero, "@R 99999-9999")
+		Case Len(cNumero) == 8		// Fixo sem DDD
+			cRet := Transform(cNumero, "@R 9999-9999")
+		OtherWise					// Formato nao previsto: imprime integral, sem perder digito
+			cRet := cNumero
+	EndCase
+
+Return cRet
+
+//---------------------------------------------------------------------------
+// Retorna somente os digitos numericos de cValor.
+//---------------------------------------------------------------------------
+Static Function SoDigito(cValor)
+
+Local cRet	:= ""
+Local nX	:= 0
+
+	cValor := AllTrim(cValor)
+
+	For nX := 1 To Len(cValor)
+		If IsDigit(SubStr(cValor, nX, 1))
+			cRet += SubStr(cValor, nX, 1)
+		EndIf
+	Next nX
+
+Return cRet
